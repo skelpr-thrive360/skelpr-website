@@ -1,0 +1,132 @@
+# LoCoDex website
+
+The public product website for [LoCoDex](https://github.com/locodex-thrive360/LoCoDex) —
+surgical code retrieval for AI agents. Isolated React/Vite app: product copy and benchmark
+figures are grounded in the repository's README and `docs/`, never invented.
+
+## Tech stack
+
+- **React 19 + TypeScript** on **Vite**, no other runtime dependencies beyond `lucide-react` (icons) and `react-markdown` + `remark-gfm` (renders the verbatim benchmark answers).
+- Plain CSS in `src/styles.css` (design tokens as CSS variables at the top; no CSS framework).
+- Static output: `npm run build` produces a fully static `dist/` — host anywhere (Netlify, Vercel, GitHub Pages, S3…).
+
+## Project structure
+
+```
+website/
+├── index.html                      # Vite entry; SEO meta tags live here
+├── public/
+│   ├── robots.txt                  # placeholder domain — see "Canonical URL"
+│   └── sitemap.xml                 # placeholder domain — see "Canonical URL"
+├── src/
+│   ├── main.tsx / App.tsx          # bootstrap + section order
+│   ├── components/                 # one file per page section
+│   │   ├── BenchmarkSection.tsx    # 05 — benchmark table + task detail
+│   │   ├── VerbatimAnswers.tsx     # side-by-side verbatim answer panes
+│   │   ├── Shared.tsx              # WaitlistForm, Metric, small shared bits
+│   │   └── WaitlistInstall.tsx     # waitlist panel + install section + footer
+│   ├── data/
+│   │   ├── siteData.tsx            # page copy, benchmark metrics, per-task Q&A
+│   │   └── benchmarkAnswers.ts     # AUTO-GENERATED verbatim answers (see below)
+│   └── lib/waitlist.ts             # waitlist submit/withdraw client + local stub
+├── scripts/extract-benchmark-answers.mjs
+├── waitlist-apps-script.gs         # backend for the waitlist (Google Sheet)
+└── .env.example                    # VITE_WAITLIST_ENDPOINT documentation
+```
+
+## Local development
+
+```bash
+cd website
+npm install
+npm run dev        # dev server
+npm run build      # typecheck + production build into dist/
+npm run preview    # serve the production build locally
+```
+
+## Benchmark answers are generated
+
+The side-by-side verbatim answers in the "05 — Benchmark evidence" section are **not
+hand-written** — they are extracted verbatim from the repo's benchmark artifacts:
+
+```bash
+npm run extract:answers   # docs/comparisons/COMP_ANTIGRAVITY.md → src/data/benchmarkAnswers.ts
+```
+
+`src/data/benchmarkAnswers.ts` is committed, so this only needs re-running when the
+benchmark doc changes. The task questions/metrics/verdicts themselves live in
+`src/data/siteData.tsx` (`benchmarkQa`), grounded in `tests/benchmarking/constants.py`
+and `tests/benchmarking/generate_comparison_doc.py`.
+
+## Waitlist
+
+Both waitlist forms (hero and section) post to the endpoint from the
+`VITE_WAITLIST_ENDPOINT` env variable (`.env`, see [`.env.example`](./.env.example)).
+While it is unset, submissions stay in a local stub (sessionStorage) so the UI can be
+tested without a backend. Joining twice shows a "You're already on the list" state with a
+withdraw option; withdrawing deletes the row from the Sheet.
+
+### Backend: Google Apps Script → Google Sheet (recommended)
+
+Free with no meaningful cap (Apps Script allows ~20k executions/day), the list lives in a
+Sheet you can export to Excel anytime, and the script never exposes the sheet contents.
+The backend script is in [`waitlist-apps-script.gs`](./waitlist-apps-script.gs).
+
+Deploy checklist (~10 minutes, one time):
+
+1. Create a Google Sheet, name the tab (or let the script create it) `Waitlist`.
+2. In the Sheet: **Extensions → Apps Script**. Delete the sample code.
+3. Paste the full contents of `waitlist-apps-script.gs` and save (💾).
+4. Click **Deploy → New deployment** → gear icon → **Web app**.
+5. Set: *Execute as* → **Me**, *Who has access* → **Anyone**. Click **Deploy**.
+   (This setting is the usual culprit for "Network error" on submit — "Only myself"
+   redirects anonymous visitors to a Google sign-in page.)
+6. Authorize when prompted. Google will show *"Google hasn't verified this app"* — this is
+   normal for **any** personal Apps Script. Click **Advanced → Go to … (unsafe) → Allow**.
+7. Copy the **Web app URL** (`https://script.google.com/macros/s/AKfycb…/exec`).
+8. Paste it into `VITE_WAITLIST_ENDPOINT` in `website/.env` (copy `.env.example` to `.env`).
+   The env var is read at build/dev time, so restart `npm run dev` (or rebuild) after changing it.
+9. Test: open the `/exec` URL in an **incognito** window → should show
+   `{"ok":true,"service":"waitlist"}` with **no sign-in prompt**; then submit an email from
+   the site and confirm the row appears with Progress = `Pending`.
+
+Notes:
+
+- **After editing the script you must redeploy — the right way:** **Deploy → Manage
+  deployments → ✏️ (pencil) → Version: New version → Deploy**. Saving code in the editor
+  alone does NOT update the live deployment.
+  - ⚠️ Do **not** use **Deploy → New deployment** for updates — that creates a *second*
+    deployment with a *different URL*, while your site keeps calling the original URL
+    (which keeps running the old code forever). If you did create a new deployment,
+    either copy its URL into `.env` or archive it (Manage deployments → … → Archive)
+    and re-edit the original.
+  - **Verify what's live:** open the `/exec` URL in a browser. It must show
+    `"schema":"progress-v2"`. No `schema` field = old code is still live.
+- Columns are `Timestamp | Email | Progress`. A legacy `Source` header is renamed
+  automatically; new rows start with Progress = `Pending` and the column carries a
+  dropdown (`Pending / Reached out / Success / Declined`) for tracking outreach.
+- Submitting an email that's already listed answers `{ok, duplicate}` — the site then
+  shows a duplicate state with a **Withdraw** option. Withdrawing posts `action:"withdraw"`
+  and deletes the row server-side.
+- A hidden honeypot (`trap`) silently drops bots.
+- If Google shows a quota/permission error email, re-authorize under Apps Script → ⚙️ → *Check auth*.
+
+### Alternative: Formspree
+
+If you'd rather not touch Google at all, a Formspree form also works with the same
+`VITE_WAITLIST_ENDPOINT` variable — but its free tier is only ~50 submissions/month
+(Getform and Basin are similar). Paste the form endpoint, e.g.:
+
+```bash
+# .env
+VITE_WAITLIST_ENDPOINT=https://formspree.io/f/yourFormId
+```
+
+Note: with Formspree the `trap` field is simply recorded as form data; honeypot
+filtering then has to happen on their dashboard (spam settings).
+
+## Canonical URL
+
+`sitemap.xml` and `robots.txt` currently use `https://locodex.dev` as a placeholder
+because the repository does not specify the deployed public domain. Replace both before
+launch (they feed SEO — sitemap submission, social preview crawlers).
