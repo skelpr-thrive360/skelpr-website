@@ -47,9 +47,9 @@ function App() {
               <a className="button text-button" href="#benchmark">See the benchmark <ArrowRight size={16} /></a>
             </div>
             <div className="hero-proof">
-              <span><strong>-48%</strong> agent tokens</span>
-              <span><strong>-42%</strong> wall-clock</span>
-              <span><strong>114 → 34</strong> files opened</span>
+              <span><strong>-52%</strong> agent tokens</span>
+              <span><strong>-43%</strong> wall-clock</span>
+              <span><strong>113 → 32</strong> files opened</span>
             </div>
             <p className="hero-boundary">LoCoDex retrieves and cites — your agent still does the reasoning.<br />It speaks MCP (Model Context Protocol), so Claude Code, Cursor and Windsurf can call it as they are.</p>
           </div>

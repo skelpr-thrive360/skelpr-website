@@ -74,7 +74,7 @@ export const benchmarkTasks = [
   ['request_flow', 'retrieval', 100, 95, '140.5k → 39.3k'],
   ['monitoring_stack', 'retrieval', 88, 82, '158.9k → 64.5k'],
   ['dependency_impact', 'dependency', 92, 84, '176.1k → 63.6k'],
-  ['fix_catalogue_image', 'fix', 84, 84, '46.8k → 76.6k'],
+  ['fix_catalogue_image', 'fix', 84, 84, '72.9k → 59.3k'],
   ['negative_missing_service', 'negative', 60, 100, '88.7k → 44.5k'],
   ['exact_file_catalogue', 'exact_file', 100, 100, '49.4k → 46.8k'],
 ] as const
@@ -170,20 +170,21 @@ export const benchmarkQa: { task: string; question: string; verdict: QaVerdict; 
   {
     task: 'fix_catalogue_image',
     question: 'The catalogue service needs to be updated to use a new container image version. Identify the exact deployment file(s) that reference the catalogue image in this repository and provide the precise YAML change required, including the manifest path.',
-    verdict: 'same',
+    verdict: 'better',
     delta: '84 → 84',
-    why: 'Back to parity 84/84 — WITH names 3 of 5 image sites but adds probe/contract-test verification',
+    why: 'Parity 84/84 — WITH names 3 of 5 image sites but adds probe/contract-test verification, at 19% fewer tokens',
     diffs: [
       'The YAML change itself is precise in all three named files (manifest path, line numbers, before/after, placeholder), and WITH adds the liveness/readiness probe values and the OpenAPI contract-test verification WITHOUT only gestures at.',
       'The residual gap is unchanged: the image lives in 5 files, WITH names 3 — the two misses never surface in the retrieval index even at top-25, an index recall gap, not a prompting one.',
+      'Search results stay under the agent CLI’s inline cap, so all three searches are inlined rather than spilled to step files it has to re-read: 0 re-read steps vs 3, native calls 8 → 4, cache reads 207.4k → 101.6k.',
     ],
-    judgement: 'Parity, different strengths — WITHOUT still catches 5 of 5 image references, while WITH adds concrete probe/contract-test verification and finishes with 16% fewer tokens.',
+    judgement: 'Parity on accuracy, cheaper on every cost dimension — 19% fewer tokens, 38% faster, half the files read — and WITH adds concrete probe/contract-test verification WITHOUT only gestures at. WITHOUT still catches 5 of 5 image references; WITH names 3.',
     metrics: [
       { label: 'Accuracy', without: '84', withValue: '84' },
-      { label: 'Tokens', without: '46.8k', withValue: '76.6k (↑64%)' },
-      { label: 'Duration', without: '21.2s', withValue: '29.1s (↑38%)' },
-      { label: 'Files read', without: '9', withValue: '6 (↓33%)' },
-      { label: 'Tool calls', without: '10 native', withValue: '8 native + 2 LoCoDex' },
+      { label: 'Tokens', without: '72.9k', withValue: '59.3k (↓19%)' },
+      { label: 'Duration', without: '301s', withValue: '186s (↓38%)' },
+      { label: 'Files read', without: '8', withValue: '4 (↓50%)' },
+      { label: 'Tool calls', without: '9 native', withValue: '4 native + 3 LoCoDex' },
     ],
   },
   {
