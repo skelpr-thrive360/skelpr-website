@@ -9,11 +9,17 @@ import { WorkflowSection } from './components/WorkflowSection'
 import { BenchmarkSection } from './components/BenchmarkSection'
 import { ArchitectureSection } from './components/ArchitectureSection'
 import { RealWorldSection } from './components/RealWorldSection'
-import { WhySection } from './components/WhySection'
 import { Footer, InstallSection, WaitlistSection } from './components/WaitlistInstall'
-import { scrollToSection, WaitlistForm } from './components/Shared'
+import { useScrollReveal } from './hooks/useScrollReveal'
+import { useHashScroll } from './hooks/useHashScroll'
+import { useSectionSpy } from './hooks/useSectionSpy'
+import { useThemeEffect } from './lib/theme'
 
 function App() {
+  useScrollReveal()
+  useSectionSpy()
+  useHashScroll()
+  useThemeEffect()
   const [openDetails, setOpenDetails] = useState<Set<string>>(new Set())
 
   const toggleDetails = (section: string) => {
@@ -28,25 +34,24 @@ function App() {
 
   return (
     <div className="site-shell">
-      <div className="noise" aria-hidden="true" />
       <Header />
 
       <main id="top">
-        <section className="hero section-grid">
+        <section className="hero">
           <div className="hero-copy">
             <div className="eyebrow"><span className="status-dot" /> Code intelligence for agents</div>
             <h1>Don’t give an agent the whole repo.<br /><em>Give it the right code.</em></h1>
-            <p className="hero-lede">LoCoDex is surgical code retrieval for AI agents, PR reviews, and fixes — grounded in AST-aware context and precise <code>file:line</code> citations.</p>
+            <p className="hero-lede">LoCoDex finds the right code for AI agents, PR reviews, and fixes — grounded in syntax-aware context and precise <code>file:line</code> citations.</p>
             <div className="hero-actions">
-              <button className="button primary" onClick={() => scrollToSection('workflow')}>Explore LoCoDex <ArrowDown size={16} /></button>
-              <button className="button text-button" onClick={() => scrollToSection('benchmark')}>See the benchmark <ArrowRight size={16} /></button>
+              <a className="button primary" href="#workflow">Explore LoCoDex <ArrowDown size={16} /></a>
+              <a className="button text-button" href="#benchmark">See the benchmark <ArrowRight size={16} /></a>
             </div>
-            <WaitlistForm compact />
             <div className="hero-proof">
-              <span><strong>-48%</strong> agent tokens</span>
-              <span><strong>-42%</strong> wall-clock</span>
-              <span><strong>+16</strong> accuracy points<sup>*</sup></span>
+              <span><strong>-52%</strong> agent tokens</span>
+              <span><strong>-43%</strong> wall-clock</span>
+              <span><strong>113 → 32</strong> files opened</span>
             </div>
+            <p className="hero-boundary">LoCoDex retrieves and cites — your agent still does the reasoning.<br />It speaks MCP (Model Context Protocol), so Claude Code, Cursor and Windsurf can call it as they are.</p>
           </div>
           <HeroVisual />
         </section>
@@ -54,13 +59,12 @@ function App() {
         <div className="signal-strip"><span>REPOSITORY UNDERSTANDING</span><span className="signal-line" /><span>RETRIEVAL ≠ REASONING</span><span className="signal-line" /><span>EVERY CLAIM HAS A LOCATION</span></div>
 
         <ProblemSection open={isDetailed('problem')} onToggle={() => toggleDetails('problem')} />
+        <RealWorldSection />
         <IdentitySection open={isDetailed('product')} onToggle={() => toggleDetails('product')} />
         <ModesSection open={isDetailed('modes')} onToggle={() => toggleDetails('modes')} />
         <WorkflowSection open={isDetailed('workflow')} onToggle={() => toggleDetails('workflow')} />
         <BenchmarkSection />
         <ArchitectureSection open={isDetailed('architecture')} onToggle={() => toggleDetails('architecture')} />
-        <RealWorldSection />
-        <WhySection />
         <InstallSection />
         <WaitlistSection />
       </main>

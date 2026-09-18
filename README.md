@@ -24,11 +24,18 @@ website/
 │   │   ├── BenchmarkSection.tsx    # 05 — benchmark table + task detail
 │   │   ├── VerbatimAnswers.tsx     # side-by-side verbatim answer panes
 │   │   ├── Shared.tsx              # WaitlistForm, Metric, small shared bits
+│   │   ├── ThemeToggle.tsx         # light / dark / system control
 │   │   └── WaitlistInstall.tsx     # waitlist panel + install section + footer
 │   ├── data/
 │   │   ├── siteData.tsx            # page copy, benchmark metrics, per-task Q&A
 │   │   └── benchmarkAnswers.ts     # AUTO-GENERATED verbatim answers (see below)
+│   ├── lib/theme.ts                # theme choice + persistence
 │   └── lib/waitlist.ts             # waitlist submit/withdraw client + local stub
+├── scripts/palette.config.mjs      # surfaces, hue anchors, contrast targets
+├── scripts/derive-palette.mjs      # solves the palette into src/styles.css
+├── scripts/contrast-audit.mjs      # measures the committed palette
+├── scripts/check-links.mjs         # in-page hash + section registry audit
+├── scripts/lib/                    # colour maths, palette region reader/writer
 ├── scripts/extract-benchmark-answers.mjs
 ├── waitlist-apps-script.gs         # backend for the waitlist (Google Sheet)
 └── .env.example                    # VITE_WAITLIST_ENDPOINT documentation
@@ -43,6 +50,52 @@ npm run dev        # dev server
 npm run build      # typecheck + production build into dist/
 npm run preview    # serve the production build locally
 ```
+
+## Checks
+
+Every check is a plain Node script — no linter, no test runner to install — and all
+four run in CI (`.github/workflows/ci.yml`) on every push and pull request:
+
+```bash
+npm run check:palette    # the palette in styles.css still matches palette.config.mjs
+npm run build            # tsc --build (typecheck) + vite build
+npm run check:links      # every in-page #hash resolves, sections and registry agree
+npm run audit:contrast   # every token meets its contrast target, accent stays distinct
+```
+
+## Theming
+
+The site ships `light`, `dark` and `system`, chosen from the three-way control in the
+header and remembered in `localStorage` (`locodex-theme`). `system` — the default —
+follows `prefers-color-scheme`; a stored choice pins the theme, and a short inline
+script in `index.html` applies it before the first paint so the page never flashes the
+wrong theme.
+
+One palette table drives both themes. Every token in `src/styles.css` is a
+`light-dark(light, dark)` pair between the `generated:start` / `generated:end` markers,
+and the switch only moves `color-scheme`, which is also what tells the browser to darken
+scrollbars and form controls.
+
+```bash
+npm run derive:palette   # solve the palette from scripts/palette.config.mjs
+npm run check:palette    # fail if the committed table has drifted from the config
+```
+
+`scripts/palette.config.mjs` is the design intent: the surfaces and the hue anchors,
+plus the ratio every token has to reach on the worst surface it is painted on — text and
+rules alike. A divider targets 1.6:1, and an edge you have to see without looking at it
+(control outlines, quote rules, diagram lines) targets 3:1, the WCAG non-text floor. The
+architecture map's dot grid is the third kind of non-text mark — a texture, one step
+below the dividers at 1.4:1, measured against the panel it is painted on. It was a tint
+before, which is a description rather than a budget, and it landed at 1.07:1 in the dark
+theme: invisible.
+`scripts/derive-palette.mjs` keeps each token's hue and chroma and moves only its OKLab
+lightness until it sits exactly at its target, then derives the washes, veils and shadow
+tints from the solved tokens. Because the targets are ratios rather than steps, light and
+dark reach the same *measured* strength: they used to differ by a third, which is what
+made paper read as washed out next to the dark theme. Nothing is hand-tuned: edit the config, re-derive,
+and the CSS, its comments and the audit move together. The derived table is committed,
+so the site builds without running the generator — `check:palette` keeps the two honest.
 
 ## Benchmark answers are generated
 
@@ -60,8 +113,8 @@ and `tests/benchmarking/generate_comparison_doc.py`.
 
 ## Waitlist
 
-Both waitlist forms (hero and section) post to the endpoint from the
-`VITE_WAITLIST_ENDPOINT` env variable (`.env`, see [`.env.example`](./.env.example)).
+The waitlist form (in the waitlist section — the hero used to carry a second copy) posts
+to the endpoint from the `VITE_WAITLIST_ENDPOINT` env variable (`.env`, see [`.env.example`](./.env.example)).
 While it is unset, submissions stay in a local stub (sessionStorage) so the UI can be
 tested without a backend. Joining twice shows a "You're already on the list" state with a
 withdraw option; withdrawing deletes the row from the Sheet.
@@ -101,7 +154,13 @@ Notes:
     either copy its URL into `.env` or archive it (Manage deployments → … → Archive)
     and re-edit the original.
   - **Verify what's live:** open the `/exec` URL in a browser. It must show
-    `"schema":"progress-v2"`. No `schema` field = old code is still live.
+    `"schema":"progress-v4"`. Anything else (or missing) = old code is still live.
+- **The Sheet styles itself.** After the first submission the script applies: a bold
+  frozen teal header row, banded data rows, `yyyy-mm-dd hh:mm` timestamps, and
+  color-coded Progress chips (amber Pending, blue Reached out, green Success,
+  red Declined). The Progress dropdown exists ONLY on rows that have a recorded
+  email — never on empty rows. Re-styling runs on every join/withdraw, so deleted
+  rows shrink the bands and validation back to the remaining data.
 - Columns are `Timestamp | Email | Progress`. A legacy `Source` header is renamed
   automatically; new rows start with Progress = `Pending` and the column carries a
   dropdown (`Pending / Reached out / Success / Declined`) for tracking outreach.

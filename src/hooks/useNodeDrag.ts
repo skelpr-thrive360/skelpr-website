@@ -28,31 +28,106 @@ function clampPosition(position: MapPosition, bounds: Bounds): MapPosition {
   }
 }
 
+/**
+ * The pitch the map's dot grid is painted at, read off the element rather than
+ * passed in. The same token drives the background pattern (see `.architecture-map`),
+ * and a second copy of the number is exactly how a snap and a texture drift apart.
+ */
+function gridPitch(map: HTMLElement | null): number {
+  if (!map) return 0
+  const value = Number.parseFloat(getComputedStyle(map).getPropertyValue('--grid-pitch'))
+  return Number.isFinite(value) && value > 0 ? value : 0
+}
+
+/**
+ * Nearest dot centre. The pattern is centred in each tile, so a dot sits at
+ * pitch/2 + n·pitch; snapping a card's centre there is what makes the grid read as
+ * a plane the nodes sit on instead of wallpaper behind them. Without this the two
+ * were unrelated — the texture said "grid" and the drag said "freeform".
+ */
+function snapToGrid(
+  position: MapPosition,
+  pitch: number,
+  rect: { width: number; height: number },
+): MapPosition {
+  if (pitch <= 0 || rect.width <= 0 || rect.height <= 0) return position
+  const axis = (value: number, span: number) => {
+    const px = (value / 100) * span
+    const nearest = Math.round((px - pitch / 2) / pitch) * pitch + pitch / 2
+    return (nearest / span) * 100
+  }
+  return { x: axis(position.x, rect.width), y: axis(position.y, rect.height) }
+}
+
+/**
+ * The configured range is a percentage of the map box, but a node half-size is
+ * pixels: without subtracting it, a card pinned at the wall hangs off the edge
+ * and the map clips it. Bounds are therefore per node, from its measured size.
+ */
+function clampBoundsFor(
+  id: string,
+  sizes: Record<string, NodeSize>,
+  fallbackSize: NodeSize,
+  bounds: Bounds,
+  mapWidth: number,
+  mapHeight: number,
+): Bounds {
+  const size = sizes[id] ?? fallbackSize
+  const halfW = (size.width / 2 / mapWidth) * 100
+  const halfH = (size.height / 2 / mapHeight) * 100
+  return {
+    minX: Math.max(bounds.minX, halfW),
+    maxX: Math.min(bounds.maxX, 100 - halfW),
+    minY: Math.max(bounds.minY, halfH),
+    maxY: Math.min(bounds.maxY, 100 - halfH),
+  }
+}
+
+type NodeSize = { width: number; height: number }
+
+/**
+ * Measure every node, keyed by id. Sampling a single node is not enough: the
+ * layouts place rows at a percentage of the map box, so a card whose meta line
+ * wraps to two lines is taller than its neighbours and needs more clearance
+ * than whichever card happened to be measured first.
+ */
+function measureNodes(map: HTMLElement | null): Record<string, NodeSize> {
+  const sizes: Record<string, NodeSize> = {}
+  if (!map) return sizes
+  map.querySelectorAll<HTMLElement>('[data-drag-node]').forEach((node) => {
+    const id = node.dataset.dragNodeId
+    if (id) sizes[id] = { width: node.offsetWidth, height: node.offsetHeight }
+  })
+  return sizes
+}
+
 // Keeps every pair of nodes at least `gap` px apart. The dragged node (pinnedId)
 // never moves; its neighbors absorb the push so the layout settles around the drag.
 function resolveOverlaps(
   positions: Record<string, MapPosition>,
+  sizes: Record<string, NodeSize>,
+  fallbackSize: NodeSize,
   pinnedId: string | null,
   mapWidth: number,
   mapHeight: number,
   optionsGap: number,
-  optionsSize: { width: number; height: number },
   bounds: Bounds,
-  pinnedSize?: { width: number; height: number },
 ): Record<string, MapPosition> {
   const next = Object.fromEntries(Object.entries(positions).map(([id, p]) => [id, { ...p }]))
   const ids = Object.keys(next)
   if (mapWidth <= 0 || mapHeight <= 0 || ids.length === 0) return next
-  const nodeWidth = pinnedSize?.width ?? optionsSize.width
-  const nodeHeight = pinnedSize?.height ?? optionsSize.height
-  const minDX = ((nodeWidth + optionsGap) / mapWidth) * 100
-  const minDY = ((nodeHeight + optionsGap) / mapHeight) * 100
   for (let pass = 0; pass < MAX_PASSES; pass += 1) {
     let moved = false
     for (let i = 0; i < ids.length; i += 1) {
       for (let j = i + 1; j < ids.length; j += 1) {
         const a = next[ids[i]]
         const b = next[ids[j]]
+        const sizeA = sizes[ids[i]] ?? fallbackSize
+        const sizeB = sizes[ids[j]] ?? fallbackSize
+        // Half of each card plus the gap: the minimum centre distance for this
+        // pair, in percent of the map box.
+        const minDX = (((sizeA.width + sizeB.width) / 2 + optionsGap) / mapWidth) * 100
+        const minDY = (((sizeA.height + sizeB.height) / 2 + optionsGap) / mapHeight) * 100
         const dx = b.x - a.x
         const dy = b.y - a.y
         if (Math.abs(dx) >= minDX || Math.abs(dy) >= minDY) continue
@@ -81,7 +156,7 @@ function resolveOverlaps(
     // Clamp every pass: wall clamping can itself create overlaps, and the next
     // pass must see (and fix) them.
     ids.forEach((id) => {
-      next[id] = clampPosition(next[id], bounds)
+      next[id] = clampPosition(next[id], clampBoundsFor(id, sizes, fallbackSize, bounds, mapWidth, mapHeight))
     })
     if (!moved) break
   }
@@ -92,6 +167,10 @@ function resolveOverlaps(
  * Draggable node positions with keep-away collision resolution. Nodes are placed by
  * percentage; the dragged node follows the pointer while neighbors are pushed aside
  * so a minimum pixel gap always holds. Also settles overlaps on mount and resize.
+ *
+ * The drag lands on the panel's dot grid: the card's centre snaps to the nearest
+ * dot, so the map reads as a surface the nodes belong to rather than a picture with
+ * a texture behind it.
  */
 export function useNodeDrag(nodes: DragNode[], mapRef: React.RefObject<HTMLElement | null>, options: UseNodeDragOptions = {}) {
   const initialRef = useRef<DragNode[]>(nodes)
@@ -120,6 +199,10 @@ export function useNodeDrag(nodes: DragNode[], mapRef: React.RefObject<HTMLEleme
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [layoutKey])
   const dragRef = useRef<{ id: string; pointerId: number; startX: number; startY: number; baseX: number; baseY: number } | null>(null)
+  const sizesRef = useRef<Record<string, NodeSize>>({})
+  // Read once per drag rather than per move: it costs a computed style, and the
+  // pitch cannot change between pointerdown and pointerup.
+  const pitchRef = useRef(0)
 
   // Nudge any overlapping nodes apart on mount/resize so the minimum gap always
   // holds at rest too; already-separated nodes (e.g. after a custom drag) stay put.
@@ -128,23 +211,30 @@ export function useNodeDrag(nodes: DragNode[], mapRef: React.RefObject<HTMLEleme
       const map = mapRef.current
       if (!map) return
       const rect = map.getBoundingClientRect()
-      const sample = map.querySelector<HTMLElement>('[data-drag-node]')
+      sizesRef.current = measureNodes(map)
       setPositions((current) =>
-        resolveOverlaps(
-          current,
-          null,
-          rect.width,
-          rect.height,
-          gap,
-          defaultSize,
-          bounds,
-          sample ? { width: sample.offsetWidth, height: sample.offsetHeight } : undefined,
-        ),
+        resolveOverlaps(current, sizesRef.current, defaultSize, null, rect.width, rect.height, gap, bounds),
       )
     }
     settle()
-    window.addEventListener('resize', settle)
-    return () => window.removeEventListener('resize', settle)
+    // A drag-resize fires this many times a second, and each pass measures every
+    // node — eleven forced layout reads. Coalesce to one per frame.
+    let frame = 0
+    const onResize = () => {
+      if (frame) return
+      frame = window.requestAnimationFrame(() => {
+        frame = 0
+        settle()
+      })
+    }
+    window.addEventListener('resize', onResize)
+    // Webfonts land after first paint and change node heights, which changes how
+    // much clearance each row needs; settle once more when they are in.
+    document.fonts?.ready.then(settle).catch(() => {})
+    return () => {
+      window.removeEventListener('resize', onResize)
+      if (frame) window.cancelAnimationFrame(frame)
+    }
     // Bounds/size options are static per call site; run only on mount/resize.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -165,6 +255,8 @@ export function useNodeDrag(nodes: DragNode[], mapRef: React.RefObject<HTMLEleme
       baseX: positions[id].x,
       baseY: positions[id].y,
     }
+    sizesRef.current = measureNodes(mapRef.current)
+    pitchRef.current = gridPitch(mapRef.current)
     setDraggingId(id)
   }
 
@@ -172,17 +264,25 @@ export function useNodeDrag(nodes: DragNode[], mapRef: React.RefObject<HTMLEleme
     const drag = dragRef.current
     const rect = mapRef.current?.getBoundingClientRect()
     if (!drag || !rect || drag.pointerId !== event.pointerId) return
-    const raw = clampPosition(
-      {
-        x: drag.baseX + ((event.clientX - drag.startX) / rect.width) * 100,
-        y: drag.baseY + ((event.clientY - drag.startY) / rect.height) * 100,
-      },
-      bounds,
-    )
     // React nulls event.currentTarget after dispatch, so measure the node now —
     // reading it inside the state updater would crash on the first move.
     const draggedSize = { width: event.currentTarget.offsetWidth, height: event.currentTarget.offsetHeight }
-    setPositions((current) => resolveOverlaps({ ...current, [drag.id]: raw }, drag.id, rect.width, rect.height, gap, defaultSize, bounds, draggedSize))
+    const sizes = { ...sizesRef.current, [drag.id]: draggedSize }
+    sizesRef.current = sizes
+    // Snap, then clamp: at the walls the map wins over the grid, because a card
+    // half off the edge is worse than a card a few px off a dot.
+    const raw = clampPosition(
+      snapToGrid(
+        {
+          x: drag.baseX + ((event.clientX - drag.startX) / rect.width) * 100,
+          y: drag.baseY + ((event.clientY - drag.startY) / rect.height) * 100,
+        },
+        pitchRef.current,
+        rect,
+      ),
+      clampBoundsFor(drag.id, sizes, defaultSize, bounds, rect.width, rect.height),
+    )
+    setPositions((current) => resolveOverlaps({ ...current, [drag.id]: raw }, sizes, defaultSize, drag.id, rect.width, rect.height, gap, bounds))
   }
 
   const endDrag = (event: React.PointerEvent<HTMLElement>) => {
