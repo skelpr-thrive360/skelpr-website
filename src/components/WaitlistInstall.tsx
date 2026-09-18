@@ -1,4 +1,5 @@
 import { Check } from 'lucide-react'
+import { BrandMark } from './BrandMark'
 import { WaitlistForm } from './Shared'
 
 export function WaitlistSection() {
@@ -35,6 +36,6 @@ export function InstallSection() {
 
 export function Footer() {
   return (
-    <footer className="site-footer"><div className="footer-brand"><a className="brand" href="#top"><span className="brand-mark"><span /><span /><span /></span><span>LoCoDex</span></a><p>Surgical code retrieval for AI agents, PR reviews, and fixes.</p></div>{/* GitHub links temporarily disabled: <div className="footer-links"><a href="https://github.com/locodex-thrive360/LoCoDex/blob/dev/docs/ARCHITECTURE.md" target="_blank" rel="noreferrer">Architecture</a><a href="https://github.com/locodex-thrive360/LoCoDex/blob/dev/MCP_SETUP.md" target="_blank" rel="noreferrer">MCP setup</a><a href="https://github.com/locodex-thrive360/LoCoDex/blob/dev/LICENSE" target="_blank" rel="noreferrer">Apache-2.0</a></div> */}<div className="footer-end">Built from the repository.<br /><span>Claims trace to source.</span></div></footer>
+    <footer className="site-footer"><div className="footer-brand"><a className="brand" href="#top"><BrandMark /><span>LoCoDex</span></a><p>Surgical code retrieval for AI agents, PR reviews, and fixes.</p></div>{/* GitHub links temporarily disabled: <div className="footer-links"><a href="https://github.com/locodex-thrive360/LoCoDex/blob/dev/docs/ARCHITECTURE.md" target="_blank" rel="noreferrer">Architecture</a><a href="https://github.com/locodex-thrive360/LoCoDex/blob/dev/MCP_SETUP.md" target="_blank" rel="noreferrer">MCP setup</a><a href="https://github.com/locodex-thrive360/LoCoDex/blob/dev/LICENSE" target="_blank" rel="noreferrer">Apache-2.0</a></div> */}<div className="footer-end">Built from the repository.<br /><span>Claims trace to source.</span></div></footer>
   )
 }

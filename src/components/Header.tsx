@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ArrowRight, Menu, X } from 'lucide-react'
+import { BrandMark } from './BrandMark'
 import { scrollToSection } from './Shared'
 import { useScrolled } from '../hooks/useScrolled'
 
@@ -13,7 +14,7 @@ export function Header() {
   return (
     <header className={scrolled ? 'site-header is-scrolled' : 'site-header'}>
       <a className="brand" href="#top" aria-label="LoCoDex home">
-        <span className="brand-mark"><span /><span /><span /></span>
+        <BrandMark />
         <span>LoCoDex</span>
       </a>
       <nav className={mobileNav ? 'main-nav open' : 'main-nav'} aria-label="Primary navigation">

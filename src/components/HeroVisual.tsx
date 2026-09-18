@@ -1,11 +1,24 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import { heroIcons, heroStages } from '../data/siteData'
 
-// Node centers in SVG viewBox units — the SVG stretches to the canvas, so these
-// map 1:1 onto the % positions and every connector really touches its node.
-// Two layouts: a diamond for desktop (1 left → 2 top → 3 right → 4 bottom),
-// a compact zigzag that fits phones.
-const HERO_LAYOUTS = {
+// Node centres in viewBox units (x/6 and y/4 give the % position of the card
+// centre), plus the connectors between them.
+//
+// A connector leaves the middle of the source card's edge that faces the target,
+// and arrives at the middle of the target's edge that faces the source, with both
+// tangents perpendicular to their own edge. That is what makes the curve read as
+// attached to a card instead of passing behind it.
+//
+// Two layouts: a clockwise diamond on desktop (1 left → 2 top → 3 right →
+// 4 bottom) and a zigzag for phones (right edge → left edge hops).
+type Edge = 'top' | 'right' | 'bottom' | 'left'
+type Link = { from: number; fromEdge: Edge; to: number; toEdge: Edge }
+type Layout = {
+  nodes: readonly { x: number; y: number }[]
+  links: readonly Link[]
+}
+
+const HERO_LAYOUTS: { desktop: Layout; mobile: Layout } = {
   desktop: {
     nodes: [
       { x: 99, y: 200 },
@@ -13,10 +26,10 @@ const HERO_LAYOUTS = {
       { x: 501, y: 200 },
       { x: 300, y: 321 },
     ],
-    paths: [
-      'M99 200 C190 200 195 79 300 79',
-      'M300 79 C405 79 405 200 501 200',
-      'M501 200 C395 200 395 321 300 321',
+    links: [
+      { from: 0, fromEdge: 'top', to: 1, toEdge: 'left' },
+      { from: 1, fromEdge: 'right', to: 2, toEdge: 'top' },
+      { from: 2, fromEdge: 'bottom', to: 3, toEdge: 'right' },
     ],
   },
   mobile: {
@@ -26,13 +39,13 @@ const HERO_LAYOUTS = {
       { x: 180, y: 260 },
       { x: 450, y: 324 },
     ],
-    paths: [
-      'M105 76 C220 76 230 150 330 150',
-      'M330 150 C280 200 240 260 180 260',
-      'M180 260 C300 260 360 324 450 324',
+    links: [
+      { from: 0, fromEdge: 'right', to: 1, toEdge: 'left' },
+      { from: 1, fromEdge: 'left', to: 2, toEdge: 'right' },
+      { from: 2, fromEdge: 'right', to: 3, toEdge: 'left' },
     ],
   },
-} as const
+}
 
 function useCompactLayout() {
   const query = '(max-width: 700px)'
@@ -46,13 +59,88 @@ function useCompactLayout() {
   return compact
 }
 
+// The canvas is measured rather than assumed: the cards are a fixed size but the
+// canvas is fluid, and a connector has to meet a card exactly at every width.
+// One ResizeObserver covers both the canvas box and the card box.
+type Metrics = { w: number; h: number; cw: number; ch: number }
+
+function useCanvasMetrics(ref: RefObject<HTMLDivElement | null>) {
+  const [metrics, setMetrics] = useState<Metrics | null>(null)
+  useLayoutEffect(() => {
+    const canvas = ref.current
+    if (!canvas) return
+    const measure = () => {
+      const card = canvas.querySelector('.hero-node')
+      if (!card) return
+      const canvasBox = canvas.getBoundingClientRect()
+      const cardBox = card.getBoundingClientRect()
+      setMetrics({
+        w: canvasBox.width,
+        h: canvasBox.height,
+        cw: cardBox.width,
+        ch: cardBox.height,
+      })
+    }
+    measure()
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(measure)
+    observer.observe(canvas)
+    return () => observer.disconnect()
+  }, [ref])
+  return metrics
+}
+
+// The middle of one card edge, plus the outward normal: the direction a
+// connector leaves along, and (reversed) the direction it arrives along.
+function edgeAnchor(centre: { x: number; y: number }, edge: Edge, half: { w: number; h: number }) {
+  if (edge === 'top') return { x: centre.x, y: centre.y - half.h, nx: 0, ny: -1 }
+  if (edge === 'bottom') return { x: centre.x, y: centre.y + half.h, nx: 0, ny: 1 }
+  if (edge === 'left') return { x: centre.x - half.w, y: centre.y, nx: -1, ny: 0 }
+  return { x: centre.x + half.w, y: centre.y, nx: 1, ny: 0 }
+}
+
+type EdgeAnchor = ReturnType<typeof edgeAnchor>
+
+// One cubic per connector: out along the source normal, in along the target
+// normal. Perpendicular normals give a quarter turn; opposite normals (the phone
+// zigzag) give an S-curve. The pull is capped by the shorter axis, so a connector
+// can never overshoot its own endpoints.
+function linkPath(from: EdgeAnchor, to: EdgeAnchor) {
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  const pull = Math.min(Math.abs(dx), Math.abs(dy)) * 0.55
+  const c1 = { x: from.x + from.nx * pull, y: from.y + from.ny * pull }
+  const c2 = { x: to.x - to.nx * pull, y: to.y - to.ny * pull }
+  const round = (value: number) => Math.round(value * 10) / 10
+  return `M${round(from.x)} ${round(from.y)} C${round(c1.x)} ${round(c1.y)} ${round(c2.x)} ${round(c2.y)} ${round(to.x)} ${round(to.y)}`
+}
+
 export function HeroVisual() {
   const [stage, setStage] = useState(0)
   const [engaged, setEngaged] = useState(false)
   const [drawn, setDrawn] = useState(false)
   const compact = useCompactLayout()
+  const canvasRef = useRef<HTMLDivElement>(null)
+  const metrics = useCanvasMetrics(canvasRef)
   const layout = compact ? HERO_LAYOUTS.mobile : HERO_LAYOUTS.desktop
   const currentHero = heroStages[stage]
+
+  // Rebuilt whenever the canvas or the cards change size, so the curves stay
+  // glued to the edge midpoints at any viewport.
+  const paths = useMemo(() => {
+    if (!metrics) return []
+    const half = { w: metrics.cw / 2, h: metrics.ch / 2 }
+    const centreOf = (index: number) => ({
+      x: (layout.nodes[index].x / 600) * metrics.w,
+      y: (layout.nodes[index].y / 400) * metrics.h,
+    })
+    return layout.links.map((link) =>
+      linkPath(
+        edgeAnchor(centreOf(link.from), link.fromEdge, half),
+        edgeAnchor(centreOf(link.to), link.toEdge, half),
+      ),
+    )
+  }, [layout, metrics])
 
   // The walkthrough is visitor-driven: the connectors draw once, then the stage
   // follows hover, focus and click. There is no autoplay carousel.
@@ -69,15 +157,15 @@ export function HeroVisual() {
           <i /> {engaged ? 'EXPLORING' : 'HOVER OR CLICK A STEP'}
         </span>
       </div>
-      <div className="hero-canvas">
+      <div className="hero-canvas" ref={canvasRef}>
         <svg
           className={drawn ? 'hero-lines is-drawn' : 'hero-lines'}
-          viewBox="0 0 600 400"
+          viewBox={`0 0 ${metrics?.w ?? 600} ${metrics?.h ?? 400}`}
           preserveAspectRatio="none"
           role="img"
           aria-label="Agent to retrieval to cited context path"
         >
-          {layout.paths.map((d, index) => (
+          {paths.map((d, index) => (
             <path
               key={d}
               d={d}
