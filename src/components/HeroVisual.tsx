@@ -3,16 +3,21 @@ import { heroIcons, heroStages } from '../data/siteData'
 
 // Node centers in SVG viewBox units — the SVG stretches to the canvas, so these
 // map 1:1 onto the % positions and every connector really touches its node.
-// Two layouts: a smooth curve for desktop, a compact zigzag that fits phones.
+// Two layouts: a diamond for desktop (1 left → 2 top → 3 right → 4 bottom),
+// a compact zigzag that fits phones.
 const HERO_LAYOUTS = {
   desktop: {
     nodes: [
-      { x: 80, y: 210 },
-      { x: 235, y: 95 },
-      { x: 365, y: 210 },
-      { x: 520, y: 315 },
+      { x: 85, y: 200 },
+      { x: 300, y: 70 },
+      { x: 505, y: 215 },
+      { x: 300, y: 322 },
     ],
-    paths: ['M80 210 C155 210 145 95 235 95 S320 210 365 210', 'M365 210 S445 315 520 315'],
+    paths: [
+      'M85 200 C190 200 195 70 300 70',
+      'M300 70 C405 70 405 215 505 215',
+      'M505 215 C400 215 395 322 300 322',
+    ],
   },
   mobile: {
     nodes: [

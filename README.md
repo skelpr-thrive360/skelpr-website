@@ -101,7 +101,13 @@ Notes:
     either copy its URL into `.env` or archive it (Manage deployments → … → Archive)
     and re-edit the original.
   - **Verify what's live:** open the `/exec` URL in a browser. It must show
-    `"schema":"progress-v2"`. No `schema` field = old code is still live.
+    `"schema":"progress-v4"`. Anything else (or missing) = old code is still live.
+- **The Sheet styles itself.** After the first submission the script applies: a bold
+  frozen teal header row, banded data rows, `yyyy-mm-dd hh:mm` timestamps, and
+  color-coded Progress chips (amber Pending, blue Reached out, green Success,
+  red Declined). The Progress dropdown exists ONLY on rows that have a recorded
+  email — never on empty rows. Re-styling runs on every join/withdraw, so deleted
+  rows shrink the bands and validation back to the remaining data.
 - Columns are `Timestamp | Email | Progress`. A legacy `Source` header is renamed
   automatically; new rows start with Progress = `Pending` and the column carries a
   dropdown (`Pending / Reached out / Success / Declined`) for tracking outreach.

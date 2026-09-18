@@ -320,7 +320,7 @@ code {
 }
 .hero-node {
   position: absolute;
-  min-width: 105px;
+  width: 150px;
   padding: 12px;
   color: #dfe8ee;
   text-align: left;
@@ -384,29 +384,46 @@ code {
 .node-icon.amber {
   color: var(--amber);
 }
+/* Diamond layout (desktop): 1 left → 2 top → 3 right → 4 bottom.
+   Percentages = SVG coords (x/6, y/4) so nodes stay glued to the connectors;
+   the TSX sets the same values inline, these are the readable source of truth. */
 .node-agent {
-  top: 52.5%;
-  left: 13.3%;
+  top: 50%;
+  left: 14.17%;
 }
 .node-mcp {
-  top: 23.75%;
-  left: 39.2%;
+  top: 17.5%;
+  left: 50%;
 }
 .node-retrieval {
-  top: 52.5%;
-  left: 60.8%;
+  top: 53.75%;
+  left: 84.17%;
 }
 .node-result {
-  top: 78.75%;
-  left: 86.7%;
+  top: 80.5%;
+  left: 50%;
 }
 .hero-console {
+  /* Centered in the diamond. The +20px offsets the label bar above the canvas
+     so the box sits at the true centroid of the four step cards. */
   position: absolute;
-  right: 4%;
-  top: 52px;
-  width: 195px;
+  left: 50%;
+  top: calc(50% + 20px);
+  transform: translate(-50%, -50%);
+  width: clamp(150px, 30%, 185px);
   border: 1px solid #2a3944;
   background: #0a1016f0;
+}
+/* Narrow two-column hero (down to the 1000px single-column switch):
+   slimmer cards + console so nothing clips or overlaps. */
+@media (min-width: 701px) and (max-width: 1300px) {
+  .hero-node {
+    width: 116px;
+    padding: 10px;
+  }
+  .hero-console {
+    width: 150px;
+  }
 }
 .console-top {
   display: flex;
@@ -2287,7 +2304,7 @@ code {
     min-height: 345px;
   }
   .hero-node {
-    min-width: 84px;
+    width: 140px;
     padding: 9px;
   }
   .hero-console {
