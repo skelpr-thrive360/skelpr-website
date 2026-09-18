@@ -56,6 +56,12 @@
   --space-7: 56px;
   --space-8: 88px;
   --gutter: clamp(22px, 5vw, 56px);
+  /* The sheet the page's content lives on (see `main`). The header and the footer
+     are full-bleed — their rules are the top and bottom edges of the document —
+     and inset themselves by this same amount so their content still starts on the
+     sheet's grid rather than somewhere of its own. */
+  --sheet: 1360px;
+  --sheet-inset: max(var(--gutter), calc((100% - var(--sheet)) / 2 + var(--gutter)));
   /* Each section carries its own top and bottom padding, so adjacent sections
      double this: ~130px of air at 1000px wide, ~190px at 1440px. The old
      clamp(72px, 9vw, 132px) put 260px between them, a quarter of the viewport. */
@@ -258,19 +264,28 @@ input:focus-visible,
 
 .site-shell {
   overflow: clip;
-  /* The sheet. 1360 rather than 1240 because the widest things on this page are
-     not prose — a five-column benchmark table, side-by-side verbatim answer
-     panes holding code and paths, and two node maps — and those all sit in fr
-     grids or percentage layouts that turn extra width into fewer wrapped lines.
-     Prose is unaffected either way: it is capped by the measure tokens (34-92ch),
-     so widening the sheet cannot lengthen a paragraph. 1360 also stays inset at
-     every common viewport, which is what keeps the page reading as a document
-     rather than a full-bleed app: at 1440 the shell is 1328 (gutter-bound, so
-     unchanged by this number), at 1536 it is 1360 with 88px margins, and at 1920
-     it leaves 280px each side rather than 340. */
-  max-width: 1360px;
-  margin-inline: auto;
   background: var(--surface);
+}
+
+/* The sheet. 1360 rather than 1240 because the widest things on this page are
+   not prose — a five-column benchmark table, side-by-side verbatim answer
+   panes holding code and paths, and two node maps — and those all sit in fr
+   grids or percentage layouts that turn extra width into fewer wrapped lines.
+   Prose is unaffected either way: it is capped by the measure tokens (34-92ch),
+   so widening the sheet cannot lengthen a paragraph. 1360 also stays inset at
+   every common viewport, which is what keeps the page reading as a document
+   rather than a full-bleed app: at 1440 the sheet is 1328 (gutter-bound, so
+   unchanged by this number), at 1536 it is 1360 with 88px margins, and at 1920
+   it leaves 280px each side rather than 340.
+
+   The cap sits here rather than on `.site-shell` so that the header and the
+   footer can span the window: both draw a rule on the page's top and bottom edge,
+   and a rule that stops 280px short of the window reads as a mistake. They inset
+   their own content with `--sheet-inset`, so brand, nav and footer columns stay
+   on this grid. */
+main {
+  max-width: var(--sheet);
+  margin-inline: auto;
 }
 
 /* =========================================================================
@@ -398,7 +413,7 @@ pre code {
   z-index: 40;
   height: var(--header-h);
   align-items: center;
-  padding: 0 var(--gutter);
+  padding: 0 var(--sheet-inset);
   border-bottom: 1px solid var(--rule);
   background: var(--header-bg);
   transition: border-color var(--dur-2) var(--ease-standard);
@@ -3057,7 +3072,7 @@ pre code {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 24rem);
   gap: var(--space-6);
-  padding: var(--space-7) var(--gutter) var(--space-6);
+  padding: var(--space-7) var(--sheet-inset) var(--space-6);
   border-top: 1px solid var(--rule);
 }
 
@@ -3443,7 +3458,7 @@ html.has-reveal [data-reveal].is-visible {
     padding-bottom: var(--space-7);
   }
   .site-footer {
-    padding: var(--space-6) var(--gutter);
+    padding: var(--space-6) var(--sheet-inset);
   }
   .footer-baseline {
     margin-top: var(--space-2);
