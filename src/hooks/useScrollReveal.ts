@@ -18,7 +18,6 @@ const REVEAL_TARGETS = [
   '.section-kicker',
   '.two-column-heading',
   '.workflow-heading',
-  '.why-heading',
   '.identity-layout > div:first-child',
   '.comparison-visual',
   '.mode-switcher',
@@ -29,7 +28,6 @@ const REVEAL_TARGETS = [
   '.architecture-layout',
   '.real-world-grid',
   '.install-layout',
-  '.principles-grid',
   '.waitlist-panel',
 ]
 
@@ -65,7 +63,9 @@ export function useScrollReveal() {
           observer.unobserve(entry.target)
         }
       },
-      { threshold: 0.15, rootMargin: '0px 0px -8% 0px' },
+      // threshold 0 with a shrunken root: a block taller than the viewport can
+      // never reach 15% visible, so it would stay hidden forever.
+      { threshold: 0, rootMargin: '0px 0px -10% 0px' },
     )
 
     for (const target of targets) {

@@ -56,16 +56,19 @@
   --space-7: 56px;
   --space-8: 88px;
   --gutter: clamp(22px, 5vw, 56px);
-  --section-y: clamp(72px, 9vw, 132px);
+  /* Each section carries its own top and bottom padding, so adjacent sections
+     double this: ~130px of air at 1000px wide, ~190px at 1440px. The old
+     clamp(72px, 9vw, 132px) put 260px between them, a quarter of the viewport. */
+  --section-y: clamp(64px, 6.4vw, 96px);
   --header-h: 72px;
   /* Label bar height of a hero figure: the console centres itself on the canvas
      by adding half of this, so the constant is defined once. */
   --figure-label-h: 44px;
-  /* Optical correction for the hero console: its lower third is a caption
-     footer, so the border box reads high even when it is geometrically centred
-     on the four step cards. 0 = pure geometry, ~22px = centre of the primary
-     content only. */
-  --figure-console-nudge: 12px;
+  /* Optical correction for the hero console, measured from the geometric centre
+     of the four step cards: positive values push the box down, negative values
+     lift it toward the top of the panel. 0 = pure geometry, ~22px = centre of
+     the primary content only (the box's lower third is a caption footer). */
+  --figure-console-nudge: 0px;
 
   /* -- shape ----------------------------------------------------------- */
   --radius: 2px;
@@ -76,6 +79,9 @@
   --dur-2: 220ms;
   --dur-3: 380ms;
   --dur-4: 620ms;
+  /* One dash period per cycle — see `hero-flow`. Raising this slows the
+     connectors; the loop stays seamless at any value. */
+  --dur-flow: 900ms;
   --ease-standard: cubic-bezier(0.22, 0.61, 0.36, 1);
   --ease-emphasis: cubic-bezier(0.65, 0, 0.35, 1);
   --reveal-shift: 12px;
@@ -107,7 +113,7 @@
   --warn-wash: rgb(138 90 18 / 8%);
   --ink-wash: rgb(23 24 26 / 6%);
   --grid-dot: rgb(23 24 26 / 10%);
-  --header-bg: rgb(249 248 244 / 86%);
+  --header-bg: rgb(249 248 244 / 97%);
   --lift: 0 1px 2px rgb(23 24 26 / 5%), 0 10px 30px rgb(23 24 26 / 6%);
 
   /* -- figure (ink) palette, shared by the dark instrument panels -------- */
@@ -156,7 +162,7 @@
     --warn-wash: rgb(217 165 86 / 12%);
     --ink-wash: rgb(233 234 236 / 8%);
     --grid-dot: rgb(233 234 236 / 9%);
-    --header-bg: rgb(18 19 22 / 86%);
+    --header-bg: rgb(18 19 22 / 97%);
     --lift: 0 1px 2px rgb(0 0 0 / 30%), 0 12px 34px rgb(0 0 0 / 34%);
     /* Figures sit slightly above the page so they read as raised surfaces. */
     --fig-bg: #191c20;
@@ -194,7 +200,7 @@ html[data-theme="dark"] {
   --warn-wash: rgb(217 165 86 / 12%);
   --ink-wash: rgb(233 234 236 / 8%);
   --grid-dot: rgb(233 234 236 / 9%);
-  --header-bg: rgb(18 19 22 / 86%);
+  --header-bg: rgb(18 19 22 / 97%);
   --lift: 0 1px 2px rgb(0 0 0 / 30%), 0 12px 34px rgb(0 0 0 / 34%);
   --fig-bg: #191c20;
   --fig-surface: #21252a;
@@ -239,6 +245,15 @@ body {
 /* Any anchored section lands clear of the sticky header. */
 [id] {
   scroll-margin-top: calc(var(--header-h) + var(--space-4));
+}
+
+/* A section padding-top is there so it breathes while you scroll past it. On a
+   jump it would put the kicker a further --section-y down the page, so the
+   landing subtracts it. The max() keeps the result non-negative at the widths
+   where the padding is taller than the header — the kicker lands 16-24px below
+   the header either way. */
+.content-section[id] {
+  scroll-margin-top: max(0px, calc(var(--header-h) + var(--space-4) - var(--section-y)));
 }
 
 button,
@@ -406,6 +421,10 @@ pre code {
    Header
    ========================================================================= */
 
+/* No backdrop-filter: a sticky bar with a blur re-samples and re-blurs the
+   region behind it on every scroll frame, across a page that is 20-odd
+   screens tall. At 97% alpha the bar is visually solid anyway, so the blur
+   was paying a per-frame cost for an effect nothing could see. */
 .site-header {
   display: flex;
   position: sticky;
@@ -416,7 +435,6 @@ pre code {
   padding: 0 var(--gutter);
   border-bottom: 1px solid var(--rule);
   background: var(--header-bg);
-  backdrop-filter: blur(10px);
   transition: border-color var(--dur-2) var(--ease-standard);
 }
 
@@ -478,6 +496,11 @@ pre code {
 .main-nav a:hover {
   color: var(--ink-1);
   border-bottom-color: var(--rule-strong);
+}
+
+.main-nav a[aria-current] {
+  color: var(--ink-1);
+  border-bottom-color: var(--accent);
 }
 
 .header-actions {
@@ -625,9 +648,15 @@ pre code {
   letter-spacing: -0.02em;
 }
 
-.hero-proof sup {
-  color: var(--warn);
-  font-size: var(--text-micro);
+/* The scope boundary, stated in the open instead of inside a details
+   toggle: LoCoDex retrieves, the agent reasons. It is also where MCP is
+   first spelled out, so the acronym is not a wall further down the page. */
+.hero-boundary {
+  max-width: 56ch;
+  margin-top: var(--space-5);
+  color: var(--ink-3);
+  font-size: var(--text-xs);
+  line-height: 1.7;
 }
 
 /* --- hero figure: the one dark "instrument" panel above the fold ------- */
@@ -687,7 +716,19 @@ pre code {
   height: 100%;
 }
 
-/* Connectors draw once on mount, then follow the focused step. */
+/* Connectors draw on mount, then keep flowing: the dash pattern travels
+   exactly one period (10px) per cycle, so the wrap is seamless and the line
+   reads as carrying something rather than sitting still. The active (4 6) and
+   muted (2 8) patterns are both 10px periods, so one keyframe drives both. */
+@keyframes hero-flow {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
 .hero-lines path {
   fill: none;
   stroke: var(--fig-ink-2);
@@ -701,9 +742,13 @@ pre code {
     stroke var(--dur-2) var(--ease-standard);
 }
 
+/* The draw settles first — the animation waits exactly as long as the
+   dash-offset transition takes — then the flow picks the same property up
+   from where it landed, at 0, so the handover is invisible. */
 .hero-lines.is-drawn path {
   opacity: 1;
   stroke-dashoffset: 0;
+  animation: hero-flow var(--dur-flow) linear var(--dur-4) infinite;
 }
 
 .muted-path {
@@ -887,6 +932,18 @@ pre code {
 .content-section {
   padding: var(--section-y) var(--gutter);
   border-bottom: 1px solid var(--rule);
+}
+
+/* A touch screen hides half of a horizontal scroller. The benchmark table and
+   the workflow step strip are both wider than a phone, so they say so — but
+   only where it applies: a desktop pointer has no swipe. */
+.scroll-cue {
+  display: none;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
 /* A single quiet band for the evidence section; the rest sit on paper. */
@@ -2100,6 +2157,10 @@ pre code {
 }
 
 .qa-answer {
+  /* Reserved, not intrinsic: the answers chunk mounts on approach, and a pane
+     that grew from empty on mount would push every section below it down by two
+     pane heights and send anchor jumps to the wrong place. */
+  min-height: 380px;
   max-height: 380px;
   overflow: auto;
   overscroll-behavior: contain;
@@ -2293,6 +2354,14 @@ pre code {
   margin-top: var(--space-8);
   padding-top: var(--space-6);
   border-top: 1px solid var(--rule);
+}
+
+/* Inside the methodology panel it answers the same question as the rest of
+   that panel ("how were these numbers produced"), so it stops competing with
+   the MCP A/B as a second headline result. */
+.methodology + .mode-one-benchmark {
+  margin-top: var(--space-6);
+  border-top: 0;
 }
 
 .mode-one-benchmark h3 {
@@ -2683,84 +2752,6 @@ pre code {
   color: var(--fg-warn);
 }
 
-/* --- why --------------------------------------------------------------- */
-
-.why-heading {
-  display: flex;
-  gap: var(--space-6);
-  align-items: end;
-  justify-content: space-between;
-}
-
-.why-heading p {
-  max-width: 34ch;
-  color: var(--ink-2);
-  font-size: var(--text-sm);
-}
-
-.principles-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-4);
-  margin-top: var(--space-7);
-}
-
-.principle {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 236px;
-  padding: var(--space-5);
-  border: 1px solid var(--rule);
-  border-top: 2px solid var(--rule-strong);
-  border-radius: var(--radius-panel);
-  background: var(--surface-raised);
-  transition: border-color var(--dur-2) var(--ease-standard),
-    transform var(--dur-2) var(--ease-standard);
-}
-
-.principle:hover {
-  border-top-color: var(--accent);
-  transform: translateY(-2px);
-}
-
-.principle-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.principle-index {
-  color: var(--ink-3);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-}
-
-.principle-tag {
-  padding: 3px 7px;
-  border: 1px solid var(--rule-strong);
-  border-radius: var(--radius);
-  color: var(--ink-3);
-  font-size: var(--text-micro);
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
-}
-
-.principle-icon {
-  display: flex;
-  margin: var(--space-6) 0 var(--space-5);
-  color: var(--ink-2);
-}
-
-.principle h3 {
-  margin-bottom: var(--space-3);
-  font-size: var(--text-base);
-}
-
-.principle p {
-  color: var(--ink-2);
-  font-size: var(--text-sm);
-}
 
 /* --- install ----------------------------------------------------------- */
 
@@ -3054,9 +3045,9 @@ pre code {
 
 .site-footer {
   display: grid;
-  grid-template-columns: 1.4fr minmax(0, 1fr) minmax(0, 0.7fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 24rem);
   gap: var(--space-6);
-  padding: var(--space-7) var(--gutter) var(--space-8);
+  padding: var(--space-7) var(--gutter) var(--space-6);
   border-top: 1px solid var(--rule);
 }
 
@@ -3067,30 +3058,38 @@ pre code {
   font-size: var(--text-sm);
 }
 
-.footer-links {
+/* In-page navigation, mirroring the header so the footer is never a
+   dead end. External links (GitHub, docs) slot in here when re-enabled. */
+.footer-nav {
   display: flex;
-  gap: var(--space-5);
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  align-content: flex-start;
+  justify-content: flex-end;
   color: var(--ink-2);
   font-size: var(--text-sm);
 }
 
-.footer-links a {
+.footer-nav a {
+  color: inherit;
   transition: color var(--dur-1) var(--ease-standard);
 }
 
-.footer-links a:hover {
+.footer-nav a:hover {
   color: var(--accent);
 }
 
-.footer-end {
+/* Baseline: licence and provenance sit under everything else. */
+.footer-baseline {
+  display: flex;
+  grid-column: 1 / -1;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-5);
+  margin-top: var(--space-4);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--rule);
   color: var(--ink-3);
   font-size: var(--text-xs);
-  line-height: 1.7;
-  text-align: right;
-}
-
-.footer-end span {
-  color: var(--positive);
 }
 
 /* =========================================================================
@@ -3119,6 +3118,7 @@ pre code {
   }
 }
 
+
 /* Reveal-on-scroll. The hook only adds `has-reveal` when the visitor allows
    motion and IntersectionObserver exists, so no-JS and reduced-motion guests
    always see a fully rendered page. */
@@ -3145,6 +3145,17 @@ html.has-reveal [data-reveal].is-visible {
     min-height: 0;
     padding-top: clamp(64px, 10vw, 96px);
   }
+  .site-footer {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+  }
+  .footer-nav {
+    justify-content: flex-start;
+  }
+  .footer-baseline {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
   .architecture-layout,
   .real-world-grid,
   .waitlist-panel,
@@ -3153,7 +3164,6 @@ html.has-reveal [data-reveal].is-visible {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-6);
   }
-  .principles-grid,
   .metric-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -3172,6 +3182,11 @@ html.has-reveal [data-reveal].is-visible {
 @media (max-width: 700px) {
   :root {
     --header-h: 64px;
+    /* One value for both the section padding and the jump that lands on it.
+       112px between sections was fine on a phone, so this is a gentler trim
+       than the desktop token got — a phone viewport is short enough that the
+       old spacing read as roughly right. */
+    --section-y: clamp(48px, 9vw, 64px);
   }
   .brand {
     font-size: 17px;
@@ -3243,8 +3258,23 @@ html.has-reveal [data-reveal].is-visible {
   .signal-line {
     width: 16px;
   }
-  .content-section {
-    padding: clamp(56px, 12vw, 78px) var(--gutter);
+  .scroll-cue {
+    display: inline;
+  }
+  /* These are text-only controls with `padding: 0`, so they were 20-22px tall:
+     fine under a mouse, fiddly under a thumb. Padding, not height, so the text
+     keeps its position and only the target grows. */
+  .detail-button,
+  .workflow-nav button,
+  .footer-nav a {
+    padding: var(--space-2) 0;
+  }
+  /* Keep the pane — the answers are thousands of pixels of real output and the
+     "Read full answers" toggle is what removes the cap. What trapped the finger
+     on a phone was `overscroll-behavior: contain`, so let the scroll chain back
+     into the page once the pane ends. */
+  .qa-answer {
+    overscroll-behavior: auto;
   }
   .two-column-heading,
   .workflow-heading {
@@ -3356,8 +3386,11 @@ html.has-reveal [data-reveal].is-visible {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-3);
   }
+  /* Six rows at a 14.5% pitch need ~110px each: a card whose meta line wraps
+     to two lines is 84px tall and the drag solver keeps 26px clear. At 470px
+     the pitch was 68px, which is why eight pairs of cards overlapped. */
   .architecture-map {
-    min-height: 470px;
+    min-height: 780px;
   }
   .architecture-node {
     width: 104px;
@@ -3369,21 +3402,7 @@ html.has-reveal [data-reveal].is-visible {
   .architecture-inspector {
     padding: var(--space-5) var(--space-4);
   }
-  .why-heading {
-    display: block;
-  }
-  .why-heading p {
-    margin-top: var(--space-4);
-  }
-  .principles-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-3);
-    margin-top: var(--space-6);
-  }
-  .principle {
-    min-height: 0;
-    padding: var(--space-5) var(--space-4);
-  }
+
   .install-links {
     flex-direction: column;
     align-items: stretch;
@@ -3413,12 +3432,10 @@ html.has-reveal [data-reveal].is-visible {
     padding-bottom: var(--space-7);
   }
   .site-footer {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-5);
     padding: var(--space-6) var(--gutter);
   }
-  .footer-end {
-    text-align: left;
+  .footer-baseline {
+    margin-top: var(--space-2);
   }
 }
 
@@ -3448,5 +3465,10 @@ html.has-reveal [data-reveal].is-visible {
   }
   .hero-lines path {
     stroke-dashoffset: 0;
+  }
+  /* Same specificity as the flowing rule, and later in the file: no dashes
+     marching on a page someone asked to hold still. */
+  .hero-lines.is-drawn path {
+    animation: none;
   }
 }

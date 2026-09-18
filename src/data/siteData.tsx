@@ -1,4 +1,4 @@
-import { Check, GitBranch, Layers3, Network, Search, ShieldCheck, Sparkles, Zap } from 'lucide-react'
+import { Check, Network, Search, Sparkles } from 'lucide-react'
 
 export type Mode = 'standalone' | 'agent'
 
@@ -276,12 +276,6 @@ export const architectureEdges = [
   ['symbol', 'hybrid'], ['graph', 'hybrid'], ['hybrid', 'mcp'],
 ]
 
-export const principles = [
-  { index: '01', tone: 'cyan', tag: 'RETRIEVAL', icon: <GitBranch />, title: 'Hybrid by design', text: 'Lexical, symbol, graph, filename, and vector signals work together, with deterministic source priority.' },
-  { index: '02', tone: 'blue', tag: 'CONTEXT', icon: <Layers3 />, title: 'Context with boundaries', text: 'AST-aware chunks, line ranges, token budgets, and overlap merging keep context compact and inspectable.' },
-  { index: '03', tone: 'green', tag: 'VERIFICATION', icon: <ShieldCheck />, title: 'Grounded to the end', text: 'Citations, AST-aware patching, git apply checks, and sandboxed validation connect evidence to action.' },
-  { index: '04', tone: 'amber', tag: 'INTEGRATION', icon: <Zap />, title: 'Agent-agnostic', text: 'A vendor-neutral MCP server gives Claude Code, Cursor, Windsurf, and other agents the same core retrieval path.' },
-]
 
 export const modeOptions = [
   { value: 'agent' as Mode, chip: 'MCP AGENT', title: 'Agent Integration', sub: 'MCP Server', heading: 'Agent Integration (MCP Server)', panelChip: 'NO LLM KEY REQUIRED', bestFor: 'Enhancing an existing agent', llm: 'Agent brings its own', reasoning: 'External agent', body: 'LoCoDex runs as a code intelligence backend for Claude Code, Cursor, Windsurf, or any MCP-compatible agent. The agent’s LLM handles reasoning; LoCoDex provides retrieval and validation.' },

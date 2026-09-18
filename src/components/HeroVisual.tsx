@@ -142,8 +142,9 @@ export function HeroVisual() {
     )
   }, [layout, metrics])
 
-  // The walkthrough is visitor-driven: the connectors draw once, then the stage
-  // follows hover, focus and click. There is no autoplay carousel.
+  // The walkthrough is visitor-driven: the connectors draw once and then flow
+  // (see `hero-flow`), and the stage follows hover, focus and click. There is no
+  // autoplay carousel.
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setDrawn(true))
     return () => window.cancelAnimationFrame(frame)
@@ -167,7 +168,11 @@ export function HeroVisual() {
         >
           {paths.map((d, index) => (
             <path
-              key={d}
+              // Position, not geometry: two connectors can share a `d` (an
+              // unmeasured canvas collapses them all to the same point), and a
+              // key that changes with every resize would remount the paths and
+              // restart the draw-and-flow animation.
+              key={index}
               d={d}
               className={stage >= index + 1 ? '' : 'muted-path'}
               vectorEffect="non-scaling-stroke"

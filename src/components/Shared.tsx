@@ -8,14 +8,27 @@ import { ArrowRight, Check, ChevronDown, UserX } from 'lucide-react'
 export function scrollToElement(target: HTMLElement, offset = 16) {
   const header = document.querySelector<HTMLElement>('.site-header')
   const headerHeight = header?.offsetHeight ?? 72
-  const top = target.getBoundingClientRect().top + window.scrollY - headerHeight - offset
+  const top = Math.max(target.getBoundingClientRect().top + window.scrollY - headerHeight - offset, 0)
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  window.scrollTo({ top: Math.max(top, 0), behavior: reduced ? 'auto' : 'smooth' })
+  // Easing is a nice touch between neighbouring blocks and a long ride across a
+  // page this tall — the footer nav sits ~15,000px below what it links to. Past
+  // two viewports the jump is instant, which also reads as deliberate rather
+  // than as a scroll that has stalled.
+  const far = Math.abs(top - window.scrollY) > window.innerHeight * 2
+  window.scrollTo({ top, behavior: reduced || far ? 'auto' : 'smooth' })
 }
 
+/**
+ * Jump to a section by id. Targets the section first block rather than its
+ * box: a section carries a large padding-top so it breathes while you scroll
+ * past it, and honouring that on a jump drops the kicker a whole
+ * section-padding below the header, which reads as landing somewhere else.
+ */
 export function scrollToSection(id: string) {
   const target = document.getElementById(id)
-  if (target) scrollToElement(target)
+  if (!target) return
+  const first = target.firstElementChild
+  scrollToElement(first instanceof HTMLElement ? first : target)
 }
 
 export function DetailButton({ open, onClick }: { open: boolean; onClick: () => void }) {

@@ -39,6 +39,7 @@ export function ArchitectureSection({ open, onToggle }: { open: boolean; onToggl
             <button
               key={node.id}
               data-drag-node
+              data-drag-node-id={node.id}
               className={`architecture-node ${node.group.toLowerCase().replace(/ /g, '-')} ${node.id === activeNode ? 'active' : ''} ${drag.draggingId === node.id ? 'dragging' : ''}`}
               style={{ left: `${drag.positions[node.id].x}%`, top: `${drag.positions[node.id].y}%` }}
               onPointerDown={(event) => drag.onPointerDown(event, node.id)}

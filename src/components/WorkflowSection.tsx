@@ -5,7 +5,10 @@ import { DetailButton } from './Shared'
 
 export function WorkflowSection({ open, onToggle }: { open: boolean; onToggle: () => void }) {
   const [activeWorkflow, setActiveWorkflow] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  // Visitor-driven, like the hero walkthrough: the steps only move when the
+  // visitor plays them. Autoplaying under someone who is reading the
+  // explanation is the one thing this page should not do.
+  const [isPlaying, setIsPlaying] = useState(false)
   const [inView, setInView] = useState(false)
   const sectionRef = useRef<HTMLElement>(null)
 
@@ -43,10 +46,11 @@ export function WorkflowSection({ open, onToggle }: { open: boolean; onToggle: (
       <div className="workflow-shell">
         <div className="workflow-progress" style={{ '--progress': workflowProgress } as React.CSSProperties} />
         <div className="workflow-controls">
-          <span className="control-status">{isPlaying && inView ? 'AUTO-PLAYING' : 'MANUAL MODE'}</span>
+          <span className="control-status">{isPlaying && inView ? 'PLAYING' : 'SELECT A STEP'}</span>
           <button onClick={() => setIsPlaying(!isPlaying)} aria-label={isPlaying ? 'Pause workflow autoplay' : 'Play workflow autoplay'}>{isPlaying ? <Pause size={13} /> : <Play size={13} />}{isPlaying ? 'Pause' : 'Play'}</button>
           <button onClick={() => setActiveWorkflow((activeWorkflow + 1) % workflowSteps.length)} aria-label="Go to next workflow step"><ArrowRight size={13} /> Step</button>
           <button onClick={() => { setActiveWorkflow(0); setIsPlaying(true) }} aria-label="Replay workflow"><RotateCcw size={13} /> Replay</button>
+          <span className="scroll-cue">swipe for all six steps →</span>
         </div>
         <div className="workflow-steps" role="tablist" aria-label="MCP Agent workflow steps">
           {workflowSteps.map((step, index) => (
