@@ -29,6 +29,37 @@ function clampPosition(position: MapPosition, bounds: Bounds): MapPosition {
 }
 
 /**
+ * The pitch the map's dot grid is painted at, read off the element rather than
+ * passed in. The same token drives the background pattern (see `.architecture-map`),
+ * and a second copy of the number is exactly how a snap and a texture drift apart.
+ */
+function gridPitch(map: HTMLElement | null): number {
+  if (!map) return 0
+  const value = Number.parseFloat(getComputedStyle(map).getPropertyValue('--grid-pitch'))
+  return Number.isFinite(value) && value > 0 ? value : 0
+}
+
+/**
+ * Nearest dot centre. The pattern is centred in each tile, so a dot sits at
+ * pitch/2 + n·pitch; snapping a card's centre there is what makes the grid read as
+ * a plane the nodes sit on instead of wallpaper behind them. Without this the two
+ * were unrelated — the texture said "grid" and the drag said "freeform".
+ */
+function snapToGrid(
+  position: MapPosition,
+  pitch: number,
+  rect: { width: number; height: number },
+): MapPosition {
+  if (pitch <= 0 || rect.width <= 0 || rect.height <= 0) return position
+  const axis = (value: number, span: number) => {
+    const px = (value / 100) * span
+    const nearest = Math.round((px - pitch / 2) / pitch) * pitch + pitch / 2
+    return (nearest / span) * 100
+  }
+  return { x: axis(position.x, rect.width), y: axis(position.y, rect.height) }
+}
+
+/**
  * The configured range is a percentage of the map box, but a node half-size is
  * pixels: without subtracting it, a card pinned at the wall hangs off the edge
  * and the map clips it. Bounds are therefore per node, from its measured size.
@@ -136,6 +167,10 @@ function resolveOverlaps(
  * Draggable node positions with keep-away collision resolution. Nodes are placed by
  * percentage; the dragged node follows the pointer while neighbors are pushed aside
  * so a minimum pixel gap always holds. Also settles overlaps on mount and resize.
+ *
+ * The drag lands on the panel's dot grid: the card's centre snaps to the nearest
+ * dot, so the map reads as a surface the nodes belong to rather than a picture with
+ * a texture behind it.
  */
 export function useNodeDrag(nodes: DragNode[], mapRef: React.RefObject<HTMLElement | null>, options: UseNodeDragOptions = {}) {
   const initialRef = useRef<DragNode[]>(nodes)
@@ -165,6 +200,9 @@ export function useNodeDrag(nodes: DragNode[], mapRef: React.RefObject<HTMLEleme
   }, [layoutKey])
   const dragRef = useRef<{ id: string; pointerId: number; startX: number; startY: number; baseX: number; baseY: number } | null>(null)
   const sizesRef = useRef<Record<string, NodeSize>>({})
+  // Read once per drag rather than per move: it costs a computed style, and the
+  // pitch cannot change between pointerdown and pointerup.
+  const pitchRef = useRef(0)
 
   // Nudge any overlapping nodes apart on mount/resize so the minimum gap always
   // holds at rest too; already-separated nodes (e.g. after a custom drag) stay put.
@@ -218,6 +256,7 @@ export function useNodeDrag(nodes: DragNode[], mapRef: React.RefObject<HTMLEleme
       baseY: positions[id].y,
     }
     sizesRef.current = measureNodes(mapRef.current)
+    pitchRef.current = gridPitch(mapRef.current)
     setDraggingId(id)
   }
 
@@ -230,11 +269,17 @@ export function useNodeDrag(nodes: DragNode[], mapRef: React.RefObject<HTMLEleme
     const draggedSize = { width: event.currentTarget.offsetWidth, height: event.currentTarget.offsetHeight }
     const sizes = { ...sizesRef.current, [drag.id]: draggedSize }
     sizesRef.current = sizes
+    // Snap, then clamp: at the walls the map wins over the grid, because a card
+    // half off the edge is worse than a card a few px off a dot.
     const raw = clampPosition(
-      {
-        x: drag.baseX + ((event.clientX - drag.startX) / rect.width) * 100,
-        y: drag.baseY + ((event.clientY - drag.startY) / rect.height) * 100,
-      },
+      snapToGrid(
+        {
+          x: drag.baseX + ((event.clientX - drag.startX) / rect.width) * 100,
+          y: drag.baseY + ((event.clientY - drag.startY) / rect.height) * 100,
+        },
+        pitchRef.current,
+        rect,
+      ),
       clampBoundsFor(drag.id, sizes, defaultSize, bounds, rect.width, rect.height),
     )
     setPositions((current) => resolveOverlaps({ ...current, [drag.id]: raw }, sizes, defaultSize, drag.id, rect.width, rect.height, gap, bounds))

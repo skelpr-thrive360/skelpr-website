@@ -29,6 +29,12 @@ export function Header() {
         {navItems.map((item) => (
           <a key={item.id} href={`#${item.id}`} aria-current={active === item.id ? 'location' : undefined} onClick={closeNav}>{item.label}</a>
         ))}
+        {/* The header's waitlist CTA is hidden at phone widths, where the hamburger
+            took the free space — and the hero used to carry a second copy of the
+            form, so a phone had a route to it above the fold and a desktop had two.
+            One conversion point per width: the drawer carries the link here, the
+            header carries it there, and the hero carries none. */}
+        <a className="nav-join" href="#waitlist" onClick={closeNav}>Join waitlist</a>
         {/* GitHub link temporarily disabled: <a href="https://github.com/locodex-thrive360/LoCoDex" target="_blank" rel="noreferrer">GitHub <ExternalLink size={13} /></a> */}
       </nav>
       <div className="header-actions">

@@ -25,6 +25,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  compositeOver,
   contrastRatio,
   formatRatio,
   hexToOklch,
@@ -40,9 +41,11 @@ import {
   FOLLOWS,
   PAGE_SURFACES,
   ROLES,
+  RULE_NEIGHBOURS,
   RULES,
   SEPARATION,
   SHADOW_BASE,
+  SURFACE_SETS,
   SURFACES,
 } from "./palette.config.mjs";
 
@@ -73,7 +76,7 @@ const GROUPS = [
   ["verdicts", ["positive", "positive-wash", "negative", "warn", "warn-wash"]],
   [
     "washes, veils, shadows",
-    ["ink-wash", "fig-wash", "grid-dot", "header-bg", "lift-1-color", "lift-2-color"],
+    ["ink-wash", "fig-wash", "grid-dot", "lift-1-color", "lift-2-color"],
   ],
   [
     "figure (ink) palette",
@@ -95,8 +98,7 @@ const GROUPS = [
 
 /** The surfaces a role is painted on, in the order the config declares them. */
 function surfacesFor(role, theme) {
-  const names = role.surfaces === "page" ? PAGE_SURFACES : FIGURE_SURFACES;
-  return names.map((name) => ({ name, hex: SURFACES[theme][name] }));
+  return SURFACE_SETS[role.surfaces].map((name) => ({ name, hex: SURFACES[theme][name] }));
 }
 
 /** Every contrast budget a token has to meet, including the labels painted on it
@@ -160,6 +162,17 @@ function solveLightness({ C, h, direction, checks, token, theme }) {
   return L;
 }
 
+/**
+ * A `tint`: the fill written as what it actually paints — the source colour laid
+ * over the surface it belongs to. Flat, exact, and identical everywhere it is
+ * used, instead of depending on whatever happens to be underneath.
+ */
+function tintOf(follow, theme, table) {
+  const base = resolveSource(follow.tint.base, theme, table);
+  const source = resolveSource(follow.from, theme, table);
+  return compositeOver(base, source, follow.tint.amount[theme]);
+}
+
 /** A token that follows another one instead of being solved. */
 function resolveSource(name, theme, table) {
   const base = name === "shadow" ? SHADOW_BASE[theme] : name;
@@ -189,8 +202,16 @@ function buildTheme(theme) {
     solved.push({ token, hex, checks, target: Math.min(...checks.map((c) => c.target)) });
   }
 
+  // Fills are resolved before the rules, because a rule is measured against what
+  // it actually borders: the surfaces *and* the washes laid on them. A wash only
+  // depends on a solved text token, so this order is exact rather than circular.
+  for (const [token, follow] of Object.entries(FOLLOWS)) {
+    if (!follow.tint) continue;
+    table[token] = tintOf(follow, theme, table);
+  }
+
   // A rule is solved the same way a text token is — same solver, same budget
-  // bookkeeping — and only its surface set and target differ. It keeps the hue
+  // bookkeeping — and only its neighbour set and target differ. It keeps the hue
   // and chroma of the surface it sits on and moves lightness alone, so a rule
   // stays structure rather than becoming a colour.
   for (const [token, rule] of Object.entries(RULES)) {
@@ -200,6 +221,9 @@ function buildTheme(theme) {
       where: name,
       target: rule.target,
     }));
+    for (const name of RULE_NEIGHBOURS[rule.surfaces] ?? []) {
+      checks.push({ against: table[name], where: name, target: rule.target });
+    }
     const direction = luminance(SURFACES[theme][rule.from]) > 0.4 ? "darker" : "lighter";
     const L = solveLightness({ C: anchor.C, h: anchor.h, direction, checks, token, theme });
     table[token] = oklchToHex(L, anchor.C, anchor.h);
@@ -207,6 +231,7 @@ function buildTheme(theme) {
   }
 
   for (const [token, follow] of Object.entries(FOLLOWS)) {
+    if (follow.tint) continue;
     const source = resolveSource(follow.from, theme, table);
     if (follow.delta) {
       const base = hexToOklch(source);

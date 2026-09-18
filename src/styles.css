@@ -32,16 +32,21 @@
   --font-sans: "IBM Plex Sans Variable", "Plex Sans Fallback", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", "Plex Mono Fallback", ui-monospace, monospace;
 
-  /* -- type scale (tracking tightens as size grows) --------------------- */
-  --text-xs: 12px;
-  --text-sm: 13.5px;
-  --text-base: 15.5px;
+  /* -- type scale (tracking tightens as size grows) ---------------------
+     The small end is a step up from where it started (micro 11 → 12, xs 12 → 13,
+     sm 13.5 → 14.5, base 15.5 → 16). Contrast was never the whole story: at a 369px
+     viewport the size histogram was 62 elements at 11px and 144 at 12px, so most of
+     the page's labels and table rows sat below the size a reader picks up without
+     effort. A label that needs 7.5:1 to be legible at 11px is legible at 12px. */
+  --text-xs: 13px;
+  --text-sm: 14.5px;
+  --text-base: 16px;
   --text-md: clamp(17px, 1.1vw, 18px);
   --text-lg: clamp(20px, 1.5vw, 23px);
   --text-xl: clamp(26px, 2.2vw, 32px);
   --text-2xl: clamp(32px, 3.4vw, 42px);
   --text-3xl: clamp(40px, 4.8vw, 60px);
-  --text-micro: 11px;
+  --text-micro: 12px;
   --track-label: 0.08em;
   --measure: 66ch;
   --measure-tight: 34ch;
@@ -75,6 +80,18 @@
      lift it toward the top of the panel. 0 = pure geometry, ~22px = centre of
      the primary content only (the box's lower third is a caption footer). */
   --figure-console-nudge: 0px;
+  /* Pitch of the architecture map's dot grid. The pattern is a plane the nodes
+     are dragged across (see useNodeDrag), so its step is a design token rather
+     than a literal in one background-image: 24px in a 500px panel reads as
+     texture, 32px in a 330px one reads as noise. */
+  --grid-pitch: 24px;
+
+  /* -- hit targets -----------------------------------------------------
+     The smallest size a control may be on a touch screen. Height, not font size:
+     a padded row keeps the glyphs exactly where they were and only grows the area
+     that answers a thumb. Applied at ≤700px, where a 20px text control is a miss
+     rather than a click. */
+  --touch: 44px;
 
   /* -- shape ----------------------------------------------------------- */
   --radius: 2px;
@@ -109,58 +126,57 @@
      theme, the second in the dark one, per `color-scheme`. Text tokens are
      solved to sit at their target against the worst surface they are painted
      on, so nothing is heavier than its role needs:
-     page: ink-1 12:1 · ink-2 7:1 · ink-3 5.2:1 · accent 5.5:1 · positive
-     5:1 · negative 5:1 · warn 5:1
-     figure: fig-ink 12:1 · fig-ink-2 7:1 · fig-ink-3 5.2:1 · fig-accent
-     5.5:1 · fig-positive 5:1 · fig-negative 5:1 · fig-warn 5:1
+     page: ink-1 15:1 · ink-2 10.5:1 · ink-3 7.5:1 · accent 7:1 · positive
+     6:1 · negative 6:1 · warn 6:1
+     figure: fig-ink 15:1 · fig-ink-2 10.5:1 · fig-ink-3 7.5:1 · fig-accent
+     7:1 · fig-positive 6:1 · fig-negative 6:1 · fig-warn 6:1
   */
 
   /* surfaces */
-  --surface: light-dark(#f9f8f4, #121316);
-  --surface-raised: light-dark(#fdfcf9, #191c20);
-  --surface-sunken: light-dark(#f1efea, #0e1013);
+  --surface: light-dark(#f9f8f4, #0d0e11);
+  --surface-raised: light-dark(#ffffff, #191a1d);
+  --surface-sunken: light-dark(#edece8, #090a0d);
 
   /* ink */
-  --ink-1: light-dark(#2b2d2f, #d8d9da);
-  --ink-2: light-dark(#4e5054, #a3a7ac);
-  --ink-3: light-dark(#626367, #8a8f94);
+  --ink-1: light-dark(#17181a, #edeff1);
+  --ink-2: light-dark(#333437, #c5cad0);
+  --ink-3: light-dark(#49494d, #a6abb1);
 
   /* structure */
-  --rule: light-dark(#bebeba, #3e3f42);
-  --rule-strong: light-dark(#8a8986, #66676b);
+  --rule: light-dark(#bbbab6, #414346);
+  --rule-strong: light-dark(#878683, #696b6f);
 
   /* accent */
-  --accent: light-dark(#316291, #6d96c1);
-  --accent-hover: light-dark(#225381, #80aad6);
-  --accent-wash: light-dark(rgb(49 98 145 / 7%), rgb(109 150 193 / 12%));
+  --accent: light-dark(#1f507e, #7fa9d4);
+  --accent-hover: light-dark(#0e426e, #93bde9);
+  --accent-wash: light-dark(#eaecec, #1b2128);
 
   /* verdicts */
-  --positive: light-dark(#3a7050, #59996e);
-  --positive-wash: light-dark(rgb(58 112 80 / 8%), rgb(89 153 110 / 12%));
-  --negative: light-dark(#ad4339, #c87569);
-  --warn: light-dark(#8c5b14, #b48230);
-  --warn-wash: light-dark(rgb(140 91 20 / 8%), rgb(180 130 48 / 12%));
+  --positive: light-dark(#2c6242, #66a67a);
+  --positive-wash: light-dark(#e9ece6, #18201e);
+  --negative: light-dark(#9d332a, #d78176);
+  --warn: light-dark(#7c4e00, #c18f3e);
+  --warn-wash: light-dark(#efeae0, #231d16);
 
   /* washes, veils, shadows */
-  --ink-wash: light-dark(rgb(43 45 47 / 6%), rgb(216 217 218 / 8%));
-  --fig-wash: light-dark(rgb(220 221 223 / 8%), rgb(227 227 229 / 10%));
-  --grid-dot: light-dark(rgb(43 45 47 / 10%), rgb(216 217 218 / 9%));
-  --header-bg: light-dark(rgb(249 248 244 / 97%), rgb(18 19 22 / 97%));
-  --lift-1-color: light-dark(rgb(43 45 47 / 5%), rgb(0 0 0 / 30%));
-  --lift-2-color: light-dark(rgb(43 45 47 / 6%), rgb(0 0 0 / 34%));
+  --ink-wash: light-dark(#ebebe7, #1f2023);
+  --fig-wash: light-dark(#16181c, #1a1c20);
+  --grid-dot: light-dark(#d9d8d5, #343539);
+  --lift-1-color: light-dark(rgb(23 24 26 / 5%), rgb(0 0 0 / 30%));
+  --lift-2-color: light-dark(rgb(23 24 26 / 6%), rgb(0 0 0 / 34%));
 
   /* figure (ink) palette */
-  --fig-bg: light-dark(#15171a, #191c20);
-  --fig-surface: light-dark(#1d2024, #21252a);
-  --fig-ink: light-dark(#dcdddf, #e3e3e5);
-  --fig-ink-2: light-dark(#a7abaf, #acb0b3);
-  --fig-ink-3: light-dark(#8d9399, #92979c);
-  --fig-rule: light-dark(#404245, #42464b);
-  --fig-rule-strong: light-dark(#686b6e, #6b6f73);
-  --fig-accent: light-dark(#709ac4, #759fca);
-  --fig-positive: light-dark(#609c72, #65a076);
-  --fig-negative: light-dark(#c97971, #ce7e76);
-  --fig-warn: light-dark(#b38741, #b78c45);
+  --fig-bg: light-dark(#121417, #15171b);
+  --fig-surface: light-dark(#1d1f23, #212327);
+  --fig-ink: light-dark(#f2f5f7, #f8fafc);
+  --fig-ink-2: light-dark(#cacfd4, #cfd4d8);
+  --fig-ink-3: light-dark(#aab0b6, #afb4b9);
+  --fig-rule: light-dark(#3f4245, #424549);
+  --fig-rule-strong: light-dark(#676a6d, #6a6d72);
+  --fig-accent: light-dark(#83add8, #88b1dd);
+  --fig-positive: light-dark(#6eaa7f, #72ae83);
+  --fig-negative: light-dark(#d8877f, #dd8a83);
+  --fig-warn: light-dark(#c1954f, #c59953);
   /* generated:end */
 
   /* -- shadow recipe: the palette's ink at its own alphas ---------------- */
@@ -422,7 +438,7 @@ pre code {
   align-items: center;
   padding: 0 var(--sheet-inset);
   border-bottom: 1px solid var(--rule);
-  background: var(--header-bg);
+  background: var(--surface);
   transition: border-color var(--dur-2) var(--ease-standard);
 }
 
@@ -502,6 +518,7 @@ pre code {
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  white-space: nowrap;
   padding: 9px 13px;
   border: 1px solid var(--rule-strong);
   border-radius: var(--radius);
@@ -617,6 +634,10 @@ pre code {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  /* A control label is one line, always: "Explore LoCoDex" was breaking into three
+     at phone widths, which turns a button into a paragraph. Narrow viewports stack
+     the row instead (see the ≤700px block) rather than wrapping the words. */
+  white-space: nowrap;
   padding: 13px 18px;
   border: 1px solid transparent;
   border-radius: var(--radius);
@@ -835,6 +856,12 @@ pre code {
 }
 
 .hero-node strong {
+  /* Two lines of room for every label, whether or not it needs them: "Hybrid
+     retrieval" wraps where the other three do not, and a card that grows for it
+     breaks the row it belongs to — each card is centred on its own row line, so the
+     taller one pushes its whole row up by half the difference. `lh`, not a pixel
+     value, so this keeps holding when the type scale moves. */
+  min-height: 2lh;
   font-size: var(--text-sm);
   font-weight: 500;
 }
@@ -1004,6 +1031,7 @@ pre code {
   align-items: center;
   gap: var(--space-2);
   margin-top: var(--space-5);
+  white-space: nowrap;
   padding: 0;
   color: var(--accent);
   border: 0;
@@ -1571,6 +1599,7 @@ pre code {
 }
 
 .workflow-nav button {
+  white-space: nowrap;
   padding: 0;
   border: 0;
   background: transparent;
@@ -2453,8 +2482,28 @@ pre code {
   border: 1px solid var(--rule);
   border-radius: var(--radius-panel);
   background-color: var(--surface-raised);
+}
+
+/* The dot grid, as its own layer rather than a background-image on the panel.
+
+   As a background it could be neither honest nor soft. It carried no contrast
+   target, so the dark theme sat at 1.07:1 — literally invisible, which is why the
+   texture read as a rendering artifact rather than a design — and it ran to the
+   panel's corners like wallpaper. Here it can hold a solved target (--grid-dot in
+   scripts/palette.config.mjs), take its pitch from a token, and fade at the edges,
+   which is what lets the grid read as a plane the nodes are dragged across. */
+.architecture-map::before {
+  content: "";
+  position: absolute;
+  inset: 0;
   background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
-  background-size: 24px 24px;
+  /* Centred in each tile — and the drag snaps to those centres (see useNodeDrag),
+     so a released card sits on a dot instead of beside one. */
+  background-position: calc(var(--grid-pitch) / 2) calc(var(--grid-pitch) / 2);
+  background-size: var(--grid-pitch) var(--grid-pitch);
+  -webkit-mask-image: radial-gradient(115% 100% at 50% 42%, #000 52%, transparent 100%);
+  mask-image: radial-gradient(115% 100% at 50% 42%, #000 52%, transparent 100%);
+  pointer-events: none;
 }
 
 .map-label {
@@ -2470,6 +2519,7 @@ pre code {
 
 .map-reset {
   margin-left: var(--space-3);
+  white-space: nowrap;
   padding: 4px 8px;
   border: 1px solid var(--rule-strong);
   border-radius: var(--radius);
@@ -2489,6 +2539,14 @@ pre code {
 
 .map-hint {
   margin-left: auto;
+}
+
+/* The drawer's waitlist link. `Join waitlist` lives in the header's action cluster
+   at desktop widths, and that cluster is hidden on a phone — which left the hero's
+   inline form as the only route above the fold. With the hero form gone, the drawer
+   carries the link instead: same destination, one place per width. */
+.main-nav .nav-join {
+  display: none;
 }
 
 .architecture-map svg {
@@ -2750,7 +2808,7 @@ pre code {
   padding: var(--space-3);
   border-left: 2px solid var(--fg-positive);
   border-radius: var(--radius);
-  background: rgb(142 203 159 / 8%);
+  background: var(--fg-wash);
   overflow-wrap: anywhere;
 }
 
@@ -2766,7 +2824,7 @@ pre code {
 
 .evidence-item.muted {
   border-color: var(--fg-rule);
-  background: rgb(255 255 255 / 3%);
+  background: var(--fg-wash);
 }
 
 .evidence-item.success {
@@ -2930,11 +2988,6 @@ pre code {
   margin-top: var(--space-6);
 }
 
-.waitlist-form.compact {
-  max-width: 520px;
-  margin-top: var(--space-5);
-}
-
 .waitlist-input-wrap {
   display: flex;
   position: relative;
@@ -3021,10 +3074,6 @@ pre code {
   align-items: center;
   margin-top: var(--space-6);
   color: var(--positive);
-}
-
-.waitlist-success.compact {
-  margin-top: var(--space-5);
 }
 
 .waitlist-success > span {
@@ -3223,8 +3272,11 @@ html.has-reveal [data-reveal].is-visible {
        than the desktop token got — a phone viewport is short enough that the
        old spacing read as roughly right. */
     --section-y: clamp(48px, 9vw, 64px);
+    /* A wider pitch: 24px in a 330px panel is noise, 32px is a plane. */
+    --grid-pitch: 32px;
   }
   .brand {
+    min-height: var(--touch);
     font-size: 17px;
   }
   .main-nav {
@@ -3252,17 +3304,45 @@ html.has-reveal [data-reveal].is-visible {
   .nav-waitlist {
     display: none;
   }
+  /* The drawer carries the waitlist link instead — see `.main-nav .nav-join`. */
+  .main-nav .nav-join {
+    display: flex;
+  }
   /* With the nav collapsed there is nothing else to absorb the free space, so
      the controls — theme switch, then the menu button — take the right edge. */
   .header-actions {
     margin-left: auto;
   }
+  /* Touch sizing for the header cluster. The switch and the burger share the right
+     edge, so they take the same box (see the theme-switch comment above), and both
+     are the size a thumb can hit. The options are 36px wide rather than 44 because
+     three of them, the brand and the burger have to share a 320px phone; the tall
+     dimension — the one the thumb actually travels — is the full 44.
+     15px of padding is what makes the burger match: 20px icon + 30. */
+  .theme-option {
+    width: 36px;
+    min-height: var(--touch);
+  }
   .menu-button {
     display: inline-flex;
+    padding: 15px;
   }
 
   .hero-lede {
     font-size: var(--text-base);
+  }
+  /* Two nowrap labels cannot share a 330px row — "Explore LoCoDex" and "See the
+     benchmark" together are wider than the phone, and wrapping them was worse than
+     stacking them. */
+  .hero-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+  /* The secondary action is text-only (`padding: 0`), so its height comes from the
+     box rather than from padding. */
+  .text-button {
+    min-height: var(--touch);
   }
   .hero-proof {
     flex-wrap: wrap;
@@ -3291,7 +3371,7 @@ html.has-reveal [data-reveal].is-visible {
     flex-wrap: wrap;
     gap: var(--space-2) var(--space-3);
     padding: var(--space-3) var(--gutter);
-    font-size: 11px;
+    font-size: var(--text-micro);
   }
   .signal-line {
     width: 16px;
@@ -3300,12 +3380,56 @@ html.has-reveal [data-reveal].is-visible {
     display: inline;
   }
   /* These are text-only controls with `padding: 0`, so they were 20-22px tall:
-     fine under a mouse, fiddly under a thumb. Padding, not height, so the text
+     fine under a mouse, fiddly under a thumb. Padding, not font size, so the text
      keeps its position and only the target grows. */
   .detail-button,
   .workflow-nav button,
   .footer-nav a {
+    align-items: center;
+    min-height: var(--touch);
     padding: var(--space-2) 0;
+  }
+  .workflow-nav button,
+  .workflow-controls button {
+    display: inline-flex;
+  }
+  /* These carry their own padding, so they only needed the floor raised. */
+  .workflow-controls button {
+    min-height: var(--touch);
+  }
+  /* The figure's label bar: a long name on the left, a long state on the right, and
+     277px of panel to fit them in — so they wrapped inside their own lines instead
+     of onto their own lines ("MCP AGENT /" then "INTEGRATION", and the live label
+     beside it in two more). Wrapping the *row* puts each on one line, which is what
+     the bar is for. */
+  .visual-label {
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-3);
+  }
+  .live-label {
+    white-space: nowrap;
+  }
+  /* The map's label row. "DRAG NODES · THEY KEEP THEIR DISTANCE" is a good line on
+     a wide panel and a collision on a narrow one: the label wrapped to three lines
+     with the Reset button sitting inside it. The hint goes, the button holds the
+     right edge, and the button itself becomes a target. */
+  .map-label {
+    right: var(--space-4);
+    left: var(--space-4);
+    gap: var(--space-3);
+    align-items: center;
+    font-size: var(--text-micro);
+    letter-spacing: 0.06em;
+  }
+  .map-hint {
+    display: none;
+  }
+  .map-reset {
+    display: inline-flex;
+    align-items: center;
+    margin-left: auto;
+    min-height: var(--touch);
+    padding: 0 var(--space-3);
   }
   /* Keep the pane — the answers are thousands of pixels of real output and the
      "Read full answers" toggle is what removes the cap. What trapped the finger
@@ -3453,8 +3577,7 @@ html.has-reveal [data-reveal].is-visible {
     padding: var(--space-4);
     font-size: var(--text-xs);
   }
-  .waitlist-form,
-  .waitlist-form.compact {
+  .waitlist-form {
     flex-direction: column;
     align-items: stretch;
     max-width: none;

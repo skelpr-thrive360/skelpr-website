@@ -25,15 +25,16 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { contrastRatio, formatRatio, readColorValue, separation } from "./lib/color.mjs";
+import { contrastRatio, formatRatio, hexToOklch, readColorValue, separation } from "./lib/color.mjs";
 import { readTokens } from "./lib/palette-css.mjs";
 import {
-  FIGURE_SURFACES,
   FILL_PAIRS,
-  PAGE_SURFACES,
   ROLES,
+  RULE_NEIGHBOURS,
   RULES,
   SEPARATION,
+  SURFACE_SETS,
+  SURFACE_STEPS,
 } from "./palette.config.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -55,13 +56,15 @@ function color(tokens, theme, token) {
 const CHECKS = [
   ...Object.entries(ROLES).map(([token, role]) => ({
     fg: token,
-    bg: role.surfaces === "page" ? PAGE_SURFACES : FIGURE_SURFACES,
+    bg: SURFACE_SETS[role.surfaces],
     target: role.target,
     note: role.note,
   })),
   ...Object.entries(RULES).map(([token, rule]) => ({
     fg: token,
-    bg: rule.surfaces === "page" ? PAGE_SURFACES : FIGURE_SURFACES,
+    // The surfaces a rule sits between or on (a texture is painted on one), plus
+    // the fills that can be one of the two things it separates — see RULE_NEIGHBOURS.
+    bg: [...SURFACE_SETS[rule.surfaces], ...(RULE_NEIGHBOURS[rule.surfaces] ?? [])],
     target: rule.target,
     note: rule.note,
   })),
@@ -121,10 +124,40 @@ for (const theme of THEMES) {
   }
 }
 
+// Surfaces are declared rather than solved, so the one thing worth asserting about
+// them is the thing that went wrong: steps so small that a panel stopped reading as
+// a panel. Contrast ratios near either end of the range lie about this, which is why
+// it is measured in OKLab lightness.
+console.log("");
+console.log(`SURFACE STEPS       minimum ${SURFACE_STEPS.minimum} OKLab lightness`);
+const STEP_PAIRS = [
+  { a: "surface", b: "surface-raised" },
+  { a: "surface", b: "surface-sunken" },
+  { a: "fig-bg", b: "fig-surface" },
+];
+let stepFailures = 0;
+for (const theme of THEMES) {
+  for (const { a, b } of STEP_PAIRS) {
+    const [from, to] = [color(tokens, theme, a), color(tokens, theme, b)];
+    if (!from || !to) {
+      console.log(`  ?    ${theme.name.padEnd(5)} ${a} → ${b}: token missing`);
+      stepFailures += 1;
+      continue;
+    }
+    const delta = Math.abs(hexToOklch(from).L - hexToOklch(to).L);
+    const ok = delta >= SURFACE_STEPS.minimum;
+    if (!ok) stepFailures += 1;
+    console.log(
+      `  ${ok ? "ok " : "FAIL"} ${theme.name.padEnd(5)} ${`${a} → ${b}`.padEnd(26)} ` +
+        `dL ${delta.toFixed(3)} ≥ ${SURFACE_STEPS.minimum}`,
+    );
+  }
+}
+
 console.log(`\n${checks - failures}/${checks} pairs meet their targets`);
-if (failures > 0 || separationFailures > 0) {
+if (failures > 0 || separationFailures > 0 || stepFailures > 0) {
   console.error(
-    `${failures} contrast problem(s) and ${separationFailures} accent-separation problem(s) found`,
+    `${failures} contrast, ${separationFailures} accent-separation and ${stepFailures} surface-step problem(s) found`,
   );
   console.error("Run `npm run derive:palette` to solve the palette again, or set the target in scripts/palette.config.mjs.");
   process.exit(1);

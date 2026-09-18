@@ -84,7 +84,11 @@ npm run check:palette    # fail if the committed table has drifted from the conf
 `scripts/palette.config.mjs` is the design intent: the surfaces and the hue anchors,
 plus the ratio every token has to reach on the worst surface it is painted on — text and
 rules alike. A divider targets 1.6:1, and an edge you have to see without looking at it
-(control outlines, quote rules, diagram lines) targets 3:1, the WCAG non-text floor.
+(control outlines, quote rules, diagram lines) targets 3:1, the WCAG non-text floor. The
+architecture map's dot grid is the third kind of non-text mark — a texture, one step
+below the dividers at 1.4:1, measured against the panel it is painted on. It was a tint
+before, which is a description rather than a budget, and it landed at 1.07:1 in the dark
+theme: invisible.
 `scripts/derive-palette.mjs` keeps each token's hue and chroma and moves only its OKLab
 lightness until it sits exactly at its target, then derives the washes, veils and shadow
 tints from the solved tokens. Because the targets are ratios rather than steps, light and
@@ -109,8 +113,8 @@ and `tests/benchmarking/generate_comparison_doc.py`.
 
 ## Waitlist
 
-Both waitlist forms (hero and section) post to the endpoint from the
-`VITE_WAITLIST_ENDPOINT` env variable (`.env`, see [`.env.example`](./.env.example)).
+The waitlist form (in the waitlist section — the hero used to carry a second copy) posts
+to the endpoint from the `VITE_WAITLIST_ENDPOINT` env variable (`.env`, see [`.env.example`](./.env.example)).
 While it is unset, submissions stay in a local stub (sessionStorage) so the UI can be
 tested without a backend. Joining twice shows a "You're already on the list" state with a
 withdraw option; withdrawing deletes the row from the Sheet.

@@ -10,7 +10,6 @@ import { BenchmarkSection } from './components/BenchmarkSection'
 import { ArchitectureSection } from './components/ArchitectureSection'
 import { RealWorldSection } from './components/RealWorldSection'
 import { Footer, InstallSection, WaitlistSection } from './components/WaitlistInstall'
-import { WaitlistForm } from './components/Shared'
 import { useScrollReveal } from './hooks/useScrollReveal'
 import { useHashScroll } from './hooks/useHashScroll'
 import { useSectionSpy } from './hooks/useSectionSpy'
@@ -53,7 +52,6 @@ function App() {
               <span><strong>114 → 34</strong> files opened</span>
             </div>
             <p className="hero-boundary">LoCoDex retrieves and cites — your agent still does the reasoning.<br />It speaks MCP (Model Context Protocol), so Claude Code, Cursor and Windsurf can call it as they are.</p>
-            <WaitlistForm compact />
           </div>
           <HeroVisual />
         </section>

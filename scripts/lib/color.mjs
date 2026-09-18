@@ -127,6 +127,20 @@ export function formatRatio(value) {
 }
 
 /**
+ * A translucent colour laid over an opaque one, flat.
+ *
+ * Alpha layers are how a wash is *described*, not how it should ship: what the
+ * page paints is the composite, so the palette composites it at derive time and
+ * writes the result as a plain colour. Same colour everywhere it is used, no
+ * dependency on what happens to be underneath, and nothing to fade out when the
+ * surface beneath it changes.
+ */
+export function compositeOver(base, over, amount) {
+  const [b, o] = [hexToRgb(base), hexToRgb(over)];
+  return rgbToHex(o.map((channel, i) => channel * amount + b[i] * (1 - amount)));
+}
+
+/**
  * Perceptual distance between two colours (OKLab, x100).
  *
  * Used for the palette rule that brand colour must stay far from every verdict

@@ -10,7 +10,15 @@ import { heroIcons, heroStages } from '../data/siteData'
 // attached to a card instead of passing behind it.
 //
 // Two layouts: a clockwise diamond on desktop (1 left → 2 top → 3 right →
-// 4 bottom) and a zigzag for phones (right edge → left edge hops).
+// 4 bottom) and a reading-order 2×2 on phones —
+//
+//     1  2
+//     3  4
+//
+// chained 1→2, 2→3, 3→4. The phone layout used to be a diagonal cascade, which
+// read as a scatter rather than a sequence: four cards stepping down and to the
+// right left no row to scan and made the order a guess. Two rows of two are the
+// order, stated.
 type Edge = 'top' | 'right' | 'bottom' | 'left'
 type Link = { from: number; fromEdge: Edge; to: number; toEdge: Edge }
 type Layout = {
@@ -33,15 +41,18 @@ const HERO_LAYOUTS: { desktop: Layout; mobile: Layout } = {
     ],
   },
   mobile: {
+    // 25% / 75% of the canvas in both axes: two columns and two rows, each card a
+    // quarter of the box from the edges, so the figure reads left-to-right then
+    // down — the same order the step numbering claims.
     nodes: [
-      { x: 105, y: 76 },
-      { x: 330, y: 150 },
-      { x: 180, y: 260 },
-      { x: 450, y: 324 },
+      { x: 150, y: 100 },
+      { x: 450, y: 100 },
+      { x: 150, y: 300 },
+      { x: 450, y: 300 },
     ],
     links: [
       { from: 0, fromEdge: 'right', to: 1, toEdge: 'left' },
-      { from: 1, fromEdge: 'left', to: 2, toEdge: 'right' },
+      { from: 1, fromEdge: 'bottom', to: 2, toEdge: 'top' },
       { from: 2, fromEdge: 'right', to: 3, toEdge: 'left' },
     ],
   },
@@ -101,16 +112,20 @@ function edgeAnchor(centre: { x: number; y: number }, edge: Edge, half: { w: num
 
 type EdgeAnchor = ReturnType<typeof edgeAnchor>
 
-// One cubic per connector: out along the source normal, in along the target
-// normal. Perpendicular normals give a quarter turn; opposite normals (the phone
-// zigzag) give an S-curve. The pull is capped by the shorter axis, so a connector
-// can never overshoot its own endpoints.
+// One cubic per connector: out along the source's outward normal, and in *against*
+// the target's — both control points sit outside the card they belong to, so the
+// curve meets an edge instead of travelling through the card to reach it. (The
+// target's was on the wrong side of that edge, which is invisible on a shallow
+// hop and obvious on a straight one: the line dived under the card it was
+// supposed to arrive at.) Perpendicular normals give a quarter turn; opposing ones
+// give an S-curve. The pull is capped by the shorter axis, so a connector can
+// never overshoot its own endpoints.
 function linkPath(from: EdgeAnchor, to: EdgeAnchor) {
   const dx = to.x - from.x
   const dy = to.y - from.y
   const pull = Math.min(Math.abs(dx), Math.abs(dy)) * 0.55
   const c1 = { x: from.x + from.nx * pull, y: from.y + from.ny * pull }
-  const c2 = { x: to.x - to.nx * pull, y: to.y - to.ny * pull }
+  const c2 = { x: to.x + to.nx * pull, y: to.y + to.ny * pull }
   const round = (value: number) => Math.round(value * 10) / 10
   return `M${round(from.x)} ${round(from.y)} C${round(c1.x)} ${round(c1.y)} ${round(c2.x)} ${round(c2.y)} ${round(to.x)} ${round(to.y)}`
 }

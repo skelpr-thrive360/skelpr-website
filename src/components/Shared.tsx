@@ -50,8 +50,13 @@ type WaitlistPhase =
 /**
  * Self-contained waitlist form: join → "you're on the list", re-join →
  * duplicate state with a withdraw option, withdraw → removed + re-join link.
+ *
+ * One form on the page, in the waitlist section. The hero used to render a second,
+ * compact copy of it — same fields, same submit, `hero-email` instead of
+ * `waitlist-email` — which is why every id here was conditional. Three routes to one
+ * action (header CTA, hero form, section form) made the page look busier than it was.
  */
-export function WaitlistForm({ compact = false }: { compact?: boolean }) {
+export function WaitlistForm() {
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
@@ -80,7 +85,7 @@ export function WaitlistForm({ compact = false }: { compact?: boolean }) {
 
   if (phase.kind === 'joined') {
     return (
-      <div className={`waitlist-success ${compact ? 'compact' : ''}`} role="status">
+      <div className="waitlist-success" role="status">
         <span><Check size={15} /></span>
         <div>
           <strong>{phase.duplicate ? 'You’re already on the list.' : 'You’re on the list.'}</strong>
@@ -107,11 +112,11 @@ export function WaitlistForm({ compact = false }: { compact?: boolean }) {
   }
 
   return (
-    <form className={`waitlist-form ${compact ? 'compact' : ''}`} onSubmit={handleSubmit} noValidate>
+    <form className="waitlist-form" onSubmit={handleSubmit} noValidate>
       <div className="waitlist-input-wrap">
-        <label htmlFor={compact ? 'hero-email' : 'waitlist-email'}>Email address</label>
-        <input id={compact ? 'hero-email' : 'waitlist-email'} type="email" value={email} onChange={(event) => { setEmail(event.target.value); setError('') }} placeholder="you@company.com" aria-invalid={Boolean(error)} aria-describedby={error ? `${compact ? 'hero' : 'waitlist'}-email-error` : undefined} />
-        {error && <span className="waitlist-error" id={`${compact ? 'hero' : 'waitlist'}-email-error`}>{error}</span>}
+        <label htmlFor="waitlist-email">Email address</label>
+        <input id="waitlist-email" type="email" value={email} onChange={(event) => { setEmail(event.target.value); setError('') }} placeholder="you@company.com" aria-invalid={Boolean(error)} aria-describedby={error ? 'waitlist-email-error' : undefined} />
+        {error && <span className="waitlist-error" id="waitlist-email-error">{error}</span>}
       </div>
       <button className="button waitlist-button" type="submit" disabled={pending}>{pending ? 'Joining…' : 'Join the waitlist'} <ArrowRight size={14} /></button>
       <input className="waitlist-hp" type="text" name="company_website" value={trap} onChange={(event) => setTrap(event.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" />
