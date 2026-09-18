@@ -24,11 +24,18 @@ website/
 │   │   ├── BenchmarkSection.tsx    # 05 — benchmark table + task detail
 │   │   ├── VerbatimAnswers.tsx     # side-by-side verbatim answer panes
 │   │   ├── Shared.tsx              # WaitlistForm, Metric, small shared bits
+│   │   ├── ThemeToggle.tsx         # light / dark / system control
 │   │   └── WaitlistInstall.tsx     # waitlist panel + install section + footer
 │   ├── data/
 │   │   ├── siteData.tsx            # page copy, benchmark metrics, per-task Q&A
 │   │   └── benchmarkAnswers.ts     # AUTO-GENERATED verbatim answers (see below)
+│   ├── lib/theme.ts                # theme choice + persistence
 │   └── lib/waitlist.ts             # waitlist submit/withdraw client + local stub
+├── scripts/palette.config.mjs      # surfaces, hue anchors, contrast targets
+├── scripts/derive-palette.mjs      # solves the palette into src/styles.css
+├── scripts/contrast-audit.mjs      # measures the committed palette
+├── scripts/check-links.mjs         # in-page hash + section registry audit
+├── scripts/lib/                    # colour maths, palette region reader/writer
 ├── scripts/extract-benchmark-answers.mjs
 ├── waitlist-apps-script.gs         # backend for the waitlist (Google Sheet)
 └── .env.example                    # VITE_WAITLIST_ENDPOINT documentation
@@ -43,6 +50,44 @@ npm run dev        # dev server
 npm run build      # typecheck + production build into dist/
 npm run preview    # serve the production build locally
 ```
+
+## Checks
+
+Every check is a plain Node script — no linter, no test runner to install — and all
+four run in CI (`.github/workflows/ci.yml`) on every push and pull request:
+
+```bash
+npm run check:palette    # the palette in styles.css still matches palette.config.mjs
+npm run build            # tsc --build (typecheck) + vite build
+npm run check:links      # every in-page #hash resolves, sections and registry agree
+npm run audit:contrast   # every token meets its contrast target, accent stays distinct
+```
+
+## Theming
+
+The site ships `light`, `dark` and `system`, chosen from the three-way control in the
+header and remembered in `localStorage` (`locodex-theme`). `system` — the default —
+follows `prefers-color-scheme`; a stored choice pins the theme, and a short inline
+script in `index.html` applies it before the first paint so the page never flashes the
+wrong theme.
+
+One palette table drives both themes. Every token in `src/styles.css` is a
+`light-dark(light, dark)` pair between the `generated:start` / `generated:end` markers,
+and the switch only moves `color-scheme`, which is also what tells the browser to darken
+scrollbars and form controls.
+
+```bash
+npm run derive:palette   # solve the palette from scripts/palette.config.mjs
+npm run check:palette    # fail if the committed table has drifted from the config
+```
+
+`scripts/palette.config.mjs` is the design intent: the surfaces and the hue anchors,
+plus the ratio each text token has to reach on the worst surface it is painted on.
+`scripts/derive-palette.mjs` keeps each token's hue and chroma and moves only its OKLab
+lightness until it sits exactly at its target, then derives the rules, washes, veils and
+shadow tints from the solved tokens. Nothing is hand-tuned: edit the config, re-derive,
+and the CSS, its comments and the audit move together. The derived table is committed,
+so the site builds without running the generator — `check:palette` keeps the two honest.
 
 ## Benchmark answers are generated
 

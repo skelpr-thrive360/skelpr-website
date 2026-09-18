@@ -2,7 +2,7 @@
    LoCoDex — design system
    -------------------------------------------------------------------------
    Layers:  tokens → base → type → layout → sections → figures → motion
-   Themes:  paper (default) + dark (prefers-color-scheme or html[data-theme])
+   Themes:  paper (default) + dark — visitor-chosen, the system by default
    Type:    Source Serif 4 (display) · IBM Plex Sans (UI/body/table)
             IBM Plex Mono (code, identifiers, figures)
    ========================================================================= */
@@ -94,40 +94,70 @@
      least 12, so brand colour can never be mistaken for a result.
   */
 
-  /* -- paper theme (default) ------------------------------------------- */
-  --surface: #f9f8f4;
-  --surface-raised: #fdfcf9;
-  --surface-sunken: #f1efea;
-  --ink-1: #17181a;
-  --ink-2: #45464a;
-  --ink-3: #6a6b6f;
-  --rule: #e4e2dc;
-  --rule-strong: #ceccc6;
-  --accent: #1d4f7c;
-  --accent-hover: #15406a;
-  --accent-wash: rgb(29 79 124 / 7%);
-  --positive: #2b6242;
-  --positive-wash: rgb(43 98 66 / 8%);
-  --negative: #9c332a;
-  --warn: #8a5a12;
-  --warn-wash: rgb(138 90 18 / 8%);
-  --ink-wash: rgb(23 24 26 / 6%);
-  --grid-dot: rgb(23 24 26 / 10%);
-  --header-bg: rgb(249 248 244 / 97%);
-  --lift: 0 1px 2px rgb(23 24 26 / 5%), 0 10px 30px rgb(23 24 26 / 6%);
+  /* generated:start */
+  /* -- palette ----------------------------------------------------------
+     Generated from scripts/palette.config.mjs. Run `npm run derive:palette`
+     after changing it — never edit these by hand, and CI fails if they drift.
+  
+     Each token is a light-dark() pair: the first value resolves in the light
+     theme, the second in the dark one, per `color-scheme`. Text tokens are
+     solved to sit at their target against the worst surface they are painted
+     on, so nothing is heavier than its role needs:
+     page: ink-1 12:1 · ink-2 7:1 · ink-3 4.7:1 · accent 5.5:1 · positive
+     5:1 · negative 5:1 · warn 5:1
+     figure: fig-ink 12:1 · fig-ink-2 7:1 · fig-ink-3 4.7:1 · fig-accent
+     5.5:1 · fig-positive 5:1 · fig-negative 5:1 · fig-warn 5:1
+  */
 
-  /* -- figure (ink) palette, shared by the dark instrument panels -------- */
-  --fig-bg: #15171a;
-  --fig-surface: #1d2024;
-  --fig-ink: #e8eaec;
-  --fig-ink-2: #b4b8bd;
-  --fig-ink-3: #8d9298;
-  --fig-rule: #2b2f34;
-  --fig-rule-strong: #3b4046;
-  --fig-accent: #8ab4e0;
-  --fig-positive: #8ecb9f;
-  --fig-negative: #e5928a;
-  --fig-warn: #ddb06a;
+  /* surfaces */
+  --surface: light-dark(#f9f8f4, #121316);
+  --surface-raised: light-dark(#fdfcf9, #191c20);
+  --surface-sunken: light-dark(#f1efea, #0e1013);
+
+  /* ink */
+  --ink-1: light-dark(#2b2d2f, #d8d9da);
+  --ink-2: light-dark(#4e5054, #a3a7ac);
+  --ink-3: light-dark(#69696d, #82878d);
+
+  /* structure */
+  --rule: light-dark(#e3e2de, #292a2d);
+  --rule-strong: light-dark(#cdccc8, #393b3e);
+
+  /* accent */
+  --accent: light-dark(#316291, #6d96c1);
+  --accent-hover: light-dark(#225381, #80aad6);
+  --accent-wash: light-dark(rgb(49 98 145 / 7%), rgb(109 150 193 / 12%));
+
+  /* verdicts */
+  --positive: light-dark(#3a7050, #59996e);
+  --positive-wash: light-dark(rgb(58 112 80 / 8%), rgb(89 153 110 / 12%));
+  --negative: light-dark(#ad4339, #c87569);
+  --warn: light-dark(#8c5b14, #b48230);
+  --warn-wash: light-dark(rgb(140 91 20 / 8%), rgb(180 130 48 / 12%));
+
+  /* washes, veils, shadows */
+  --ink-wash: light-dark(rgb(43 45 47 / 6%), rgb(216 217 218 / 8%));
+  --grid-dot: light-dark(rgb(43 45 47 / 10%), rgb(216 217 218 / 9%));
+  --header-bg: light-dark(rgb(249 248 244 / 97%), rgb(18 19 22 / 97%));
+  --lift-1-color: light-dark(rgb(43 45 47 / 5%), rgb(0 0 0 / 30%));
+  --lift-2-color: light-dark(rgb(43 45 47 / 6%), rgb(0 0 0 / 34%));
+
+  /* figure (ink) palette */
+  --fig-bg: light-dark(#15171a, #191c20);
+  --fig-surface: light-dark(#1d2024, #21252a);
+  --fig-ink: light-dark(#dcdddf, #e3e3e5);
+  --fig-ink-2: light-dark(#a7abaf, #acb0b3);
+  --fig-ink-3: light-dark(#868b90, #8a8f94);
+  --fig-rule: light-dark(#2d2f32, #313439);
+  --fig-rule-strong: light-dark(#3d4043, #42464a);
+  --fig-accent: light-dark(#709ac4, #759fca);
+  --fig-positive: light-dark(#609c72, #65a076);
+  --fig-negative: light-dark(#c97971, #ce7e76);
+  --fig-warn: light-dark(#b38741, #b78c45);
+  /* generated:end */
+
+  /* -- shadow recipe: the palette's ink at its own alphas ---------------- */
+  --lift: 0 1px 2px var(--lift-1-color), 0 10px 30px var(--lift-2-color);
 
   /* -- semantic foregrounds: ink on paper, figure ink inside figures ----- */
   --fg-1: var(--ink-1);
@@ -139,82 +169,18 @@
   --fg-negative: var(--negative);
   --fg-warn: var(--warn);
 
-  color-scheme: light;
+  /* Follows the operating system by default; `data-theme` pins it, and the
+     light-dark() pairs above resolve from whichever of the two is in force —
+     which is also what darkens scrollbars, form controls and the like. */
+  color-scheme: light dark;
 }
 
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) {
-    --surface: #121316;
-    --surface-raised: #191c20;
-    --surface-sunken: #0e1013;
-    --ink-1: #e9eaec;
-    --ink-2: #b0b4ba;
-    --ink-3: #8b9096;
-    --rule: #272a2f;
-    --rule-strong: #373b41;
-    --accent: #8ab4e0;
-    --accent-hover: #a5c8ec;
-    --accent-wash: rgb(138 180 224 / 12%);
-    --positive: #86c79a;
-    --positive-wash: rgb(134 199 154 / 12%);
-    --negative: #e08a7e;
-    --warn: #d9a556;
-    --warn-wash: rgb(217 165 86 / 12%);
-    --ink-wash: rgb(233 234 236 / 8%);
-    --grid-dot: rgb(233 234 236 / 9%);
-    --header-bg: rgb(18 19 22 / 97%);
-    --lift: 0 1px 2px rgb(0 0 0 / 30%), 0 12px 34px rgb(0 0 0 / 34%);
-    /* Figures sit slightly above the page so they read as raised surfaces. */
-    --fig-bg: #191c20;
-    --fig-surface: #21252a;
-    --fig-ink: #edeef0;
-    --fig-ink-2: #b6babe;
-    --fig-ink-3: #90959a;
-    --fig-rule: #31353a;
-    --fig-rule-strong: #41464c;
-    --fig-accent: #8ab4e0;
-    --fig-positive: #8ecb9f;
-    --fig-negative: #e5928a;
-    --fig-warn: #ddb06a;
-
-    color-scheme: dark;
-  }
+html[data-theme="light"] {
+  color-scheme: only light;
 }
 
 html[data-theme="dark"] {
-  --surface: #121316;
-  --surface-raised: #191c20;
-  --surface-sunken: #0e1013;
-  --ink-1: #e9eaec;
-  --ink-2: #b0b4ba;
-  --ink-3: #8b9096;
-  --rule: #272a2f;
-  --rule-strong: #373b41;
-  --accent: #8ab4e0;
-  --accent-hover: #a5c8ec;
-  --accent-wash: rgb(138 180 224 / 12%);
-  --positive: #86c79a;
-  --positive-wash: rgb(134 199 154 / 12%);
-  --negative: #e08a7e;
-  --warn: #d9a556;
-  --warn-wash: rgb(217 165 86 / 12%);
-  --ink-wash: rgb(233 234 236 / 8%);
-  --grid-dot: rgb(233 234 236 / 9%);
-  --header-bg: rgb(18 19 22 / 97%);
-  --lift: 0 1px 2px rgb(0 0 0 / 30%), 0 12px 34px rgb(0 0 0 / 34%);
-  --fig-bg: #191c20;
-  --fig-surface: #21252a;
-  --fig-ink: #edeef0;
-  --fig-ink-2: #b6babe;
-  --fig-ink-3: #90959a;
-  --fig-rule: #31353a;
-  --fig-rule-strong: #41464c;
-  --fig-accent: #8ab4e0;
-  --fig-positive: #8ecb9f;
-  --fig-negative: #e5928a;
-  --fig-warn: #ddb06a;
-
-  color-scheme: dark;
+  color-scheme: only dark;
 }
 
 /* =========================================================================
@@ -539,6 +505,45 @@ pre code {
   background: transparent;
 }
 
+/* Theme control: three toggle buttons in a frame.
+
+   The frame takes the height of the row instead of a height of its own. The
+   header's text controls are padding-driven, so a fixed 24px box beside them
+   read as a small thing next to two large ones; here the height comes from the
+   neighbours and the option buttons stretch to fill what the frame's padding
+   leaves, which keeps the cluster one row of equal controls at any font size. */
+.theme-switch {
+  display: flex;
+  align-self: stretch;
+  gap: 1px;
+  padding: 2px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+}
+
+.theme-option {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  padding: 0;
+  color: var(--ink-3);
+  border: 0;
+  border-radius: 1px;
+  background: transparent;
+  transition: color var(--dur-1) var(--ease-standard),
+    background var(--dur-1) var(--ease-standard);
+}
+
+.theme-option:hover {
+  color: var(--ink-1);
+  background: var(--ink-wash);
+}
+
+.theme-option[aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--accent-wash);
+}
+
 /* =========================================================================
    Hero
    ========================================================================= */
@@ -549,7 +554,12 @@ pre code {
   gap: min(5vw, 56px);
   align-items: center;
   min-height: 680px;
-  padding: clamp(72px, 9vw, 128px) var(--gutter) clamp(64px, 7vw, 104px);
+  /* The gap above the hero is the page's own section rhythm, not a special case:
+     at 9vw/128px it was the largest space on the site and put the first line
+     nearly a header-and-a-third down the viewport. Below is slightly tighter than
+     above — only the signal strip follows — and both scale with --section-y as
+     the page narrows. */
+  padding: var(--section-y) var(--gutter) clamp(48px, 5.5vw, 88px);
   border-bottom: 1px solid var(--rule);
 }
 
@@ -3143,7 +3153,6 @@ html.has-reveal [data-reveal].is-visible {
   .hero {
     grid-template-columns: 1fr;
     min-height: 0;
-    padding-top: clamp(64px, 10vw, 96px);
   }
   .site-footer {
     grid-template-columns: minmax(0, 1fr);
@@ -3216,13 +3225,15 @@ html.has-reveal [data-reveal].is-visible {
   .nav-waitlist {
     display: none;
   }
-  .menu-button {
-    display: inline-flex;
+  /* With the nav collapsed there is nothing else to absorb the free space, so
+     the controls — theme switch, then the menu button — take the right edge. */
+  .header-actions {
     margin-left: auto;
   }
-  .hero {
-    padding: var(--space-8) var(--gutter) var(--space-7);
+  .menu-button {
+    display: inline-flex;
   }
+
   .hero-lede {
     font-size: var(--text-base);
   }

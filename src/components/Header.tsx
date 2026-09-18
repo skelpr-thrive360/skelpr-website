@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ArrowRight, Menu, X } from 'lucide-react'
 import { BrandMark } from './BrandMark'
+import { ThemeToggle } from './ThemeToggle'
 import { useActiveSection } from '../hooks/useSectionSpy'
 import { useScrolled } from '../hooks/useScrolled'
 
@@ -31,6 +32,7 @@ export function Header() {
         {/* GitHub link temporarily disabled: <a href="https://github.com/locodex-thrive360/LoCoDex" target="_blank" rel="noreferrer">GitHub <ExternalLink size={13} /></a> */}
       </nav>
       <div className="header-actions">
+        <ThemeToggle />
         <button className="menu-button" onClick={() => setMobileNav(!mobileNav)} aria-label={mobileNav ? 'Close menu' : 'Open menu'}>
           {mobileNav ? <X size={20} /> : <Menu size={20} />}
         </button>

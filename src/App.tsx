@@ -14,11 +14,13 @@ import { WaitlistForm } from './components/Shared'
 import { useScrollReveal } from './hooks/useScrollReveal'
 import { useHashScroll } from './hooks/useHashScroll'
 import { useSectionSpy } from './hooks/useSectionSpy'
+import { useThemeEffect } from './lib/theme'
 
 function App() {
   useScrollReveal()
   useSectionSpy()
   useHashScroll()
+  useThemeEffect()
   const [openDetails, setOpenDetails] = useState<Set<string>>(new Set())
 
   const toggleDetails = (section: string) => {

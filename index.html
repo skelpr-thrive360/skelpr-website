@@ -3,8 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f9f8f4" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#121316" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
+    <!-- One tag, not a media pair: the runtime re-points it at whichever surface
+         the derived palette resolves to, including when the visitor overrides
+         their system preference. This value is the No-JS light fallback. -->
+    <meta name="theme-color" content="#f9f8f4" />
+    <script>
+      // Runs before the first paint, so a remembered theme never flashes the other
+      // one while the bundle loads. The key is shared with src/lib/theme.ts;
+      // change both together.
+      try {
+        var choice = localStorage.getItem('locodex-theme')
+        if (choice === 'light' || choice === 'dark' || choice === 'system') {
+          document.documentElement.dataset.theme = choice
+        }
+      } catch (error) {
+        // Storage blocked: the page simply follows the system preference.
+      }
+    </script>
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/brand/favicon-16.png" />

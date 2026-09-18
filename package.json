@@ -9,6 +9,8 @@
     "preview": "vite preview",
     "extract:answers": "node scripts/extract-benchmark-answers.mjs",
     "audit:contrast": "node scripts/contrast-audit.mjs",
+    "derive:palette": "node scripts/derive-palette.mjs",
+    "check:palette": "node scripts/derive-palette.mjs --check",
     "check:links": "node scripts/check-links.mjs"
   },
   "dependencies": {

@@ -1,156 +1,115 @@
 #!/usr/bin/env node
 /**
- * Contrast audit for the design tokens in src/styles.css.
+ * Contrast audit for the generated palette in src/styles.css.
  *
- * Every token that carries text is checked against the surfaces it is actually
- * painted on, in both themes, including the dark "figure" palette used by the
- * code and terminal panels. Threshold is WCAG AA for small text (4.5:1): the
- * site renders no informational text above 24px, so the large-text exemption
- * does not apply.
+ * Measures the committed stylesheet — not the config — so this is the check that
+ * can catch a hand-edited colour, a stale derived table, or a surface that moved
+ * underneath a token it no longer clears.
  *
- * Beyond contrast it asserts the palette rule documented in styles.css: the
+ * Every token that carries text is checked against each surface it is actually
+ * painted on: both sides of every `light-dark()` pair, the figure panels included.
+ * The target for each pair comes from scripts/palette.config.mjs, the same file
+ * scripts/derive-palette.mjs solves against, so a value cannot be derived for one
+ * budget and audited against another. That is also why the numbers here look
+ * quiet: the tokens are solved to sit at their target, not above it.
+ *
+ * Beyond contrast it re-asserts the palette rule documented in styles.css: the
  * accent must stay perceptually far from every verdict colour, so brand colour
- * can never be mistaken for a result (OKLab distance, minimum 12).
+ * can never be mistaken for a result (OKLab distance, minimum from the config).
  *
  * Usage: npm run audit:contrast
  */
-import { readFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { contrastRatio, formatRatio, readColorValue, separation } from "./lib/color.mjs";
+import { readTokens } from "./lib/palette-css.mjs";
+import { FIGURE_SURFACES, FILL_PAIRS, PAGE_SURFACES, ROLES, SEPARATION } from "./palette.config.mjs";
 
-const THRESHOLD = 4.5
-const here = dirname(fileURLToPath(import.meta.url))
-const css = readFileSync(join(here, '..', 'src', 'styles.css'), 'utf8')
+const here = dirname(fileURLToPath(import.meta.url));
+const css = readFileSync(join(here, "..", "src", "styles.css"), "utf8");
 
-function tokenBlock(startPattern) {
-  const start = css.search(startPattern)
-  if (start === -1) throw new Error(`Token block not found: ${startPattern}`)
-  const open = css.indexOf('{', start)
-  const end = css.indexOf('\n}', open)
-  if (open === -1 || end === -1) throw new Error(`Unterminated token block: ${startPattern}`)
-  const tokens = {}
-  for (const [, name, value] of css.slice(open, end).matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{3,8})/g)) {
-    tokens[name] = value
-  }
-  return tokens
+const THEMES = [
+  { name: "light", label: "PAPER (light)", side: 0 },
+  { name: "dark", label: "DARK", side: 1 },
+];
+
+/** Read out of the stylesheet, then measured. Null means "not in the palette". */
+function color(tokens, theme, token) {
+  const raw = tokens?.[theme.name]?.[token];
+  if (raw === undefined) return null;
+  return readColorValue(raw, theme.side);
 }
 
-function channel(value) {
-  const c = value / 255
-  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
-}
+/** Every pair the palette has to satisfy, targets included. */
+const CHECKS = [
+  ...Object.entries(ROLES).map(([token, role]) => ({
+    fg: token,
+    bg: role.surfaces === "page" ? PAGE_SURFACES : FIGURE_SURFACES,
+    target: role.target,
+    note: role.note,
+  })),
+  ...FILL_PAIRS.map((pair) => ({ fg: pair.fg, bg: pair.bg, target: pair.target, note: pair.note })),
+];
 
-function luminance(hex) {
-  const h = hex.replace('#', '').slice(0, 6)
-  const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16))
-  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
-}
+const tokens = readTokens(css);
+let failures = 0;
+let checks = 0;
 
-function ratio(a, b) {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x)
-  return (hi + 0.05) / (lo + 0.05)
-}
-
-function oklab(hex) {
-  const h = hex.replace("#", "")
-  const [r, g, b] = [0, 2, 4].map((i) => channel(parseInt(h.slice(i, i + 2), 16)))
-  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b)
-  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b)
-  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b)
-  return [
-    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
-    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
-    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
-  ]
-}
-
-function separation(a, b) {
-  const [x, y] = [oklab(a), oklab(b)]
-  return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]) * 100
-}
-
-const PAGE = ['surface', 'surface-raised', 'surface-sunken']
-const FIGURE = ['fig-bg', 'fig-surface']
-
-const PAIRS = [
-  { fg: 'ink-1', bg: PAGE, note: 'body ink' },
-  { fg: 'ink-2', bg: PAGE, note: 'secondary ink' },
-  { fg: 'ink-3', bg: PAGE, note: 'labels' },
-  { fg: 'accent', bg: PAGE, note: 'accent text' },
-  { fg: 'positive', bg: PAGE, note: 'benchmark WITH' },
-  { fg: 'negative', bg: PAGE, note: 'benchmark WITHOUT' },
-  { fg: 'warn', bg: PAGE, note: 'caveat / footnote' },
-  { fg: 'surface-raised', bg: ['accent'], note: 'primary button label' },
-  { fg: 'surface-raised', bg: ['positive', 'negative'], note: 'badge label on fill' },
-  { fg: 'fig-ink', bg: FIGURE, note: 'figure body' },
-  { fg: 'fig-ink-2', bg: FIGURE, note: 'figure secondary' },
-  { fg: 'fig-ink-3', bg: FIGURE, note: 'figure labels' },
-  { fg: 'fig-accent', bg: FIGURE, note: 'figure accent' },
-  { fg: 'fig-positive', bg: FIGURE, note: 'figure positive' },
-  { fg: 'fig-negative', bg: FIGURE, note: 'figure negative' },
-  { fg: 'fig-warn', bg: FIGURE, note: 'figure warn' },
-]
-
-const themes = {
-  paper: tokenBlock(/:root\s*\{/),
-  dark: tokenBlock(/html\[data-theme="dark"\]\s*\{/),
-}
-
-let failures = 0
-let checks = 0
-
-for (const [theme, tokens] of Object.entries(themes)) {
-  console.log(`\n${theme.toUpperCase()}`)
-  for (const pair of PAIRS) {
-    const fg = tokens[pair.fg]
-    if (!fg) {
-      console.log(`  ?  ${pair.note}: token --${pair.fg} missing`)
-      failures += 1
-      continue
+for (const theme of THEMES) {
+  console.log(`\n${theme.label}`);
+  for (const { fg, bg, target, note } of CHECKS) {
+    const fgColor = color(tokens, theme, fg);
+    const bgColors = bg.map((name) => ({ name, value: color(tokens, theme, name) }));
+    const missing = [
+      ...(fgColor ? [] : [fg]),
+      ...bgColors.filter((entry) => !entry.value).map((entry) => entry.name),
+    ];
+    if (missing.length > 0) {
+      console.log(`  ?   ${note.padEnd(24)} token missing: ${[...new Set(missing)].join(", ")}`);
+      failures += 1;
+      continue;
     }
-    for (const bgName of pair.bg) {
-      const bg = tokens[bgName]
-      if (!bg) {
-        console.log(`  ?  ${pair.note}: token --${bgName} missing`)
-        failures += 1
-        continue
-      }
-      checks += 1
-      const value = ratio(fg, bg)
-      const ok = value >= THRESHOLD
-      if (!ok) failures += 1
+    for (const against of bgColors) {
+      checks += 1;
+      const value = contrastRatio(fgColor, against.value);
+      const ok = value >= target;
+      if (!ok) failures += 1;
       console.log(
-        `  ${ok ? 'ok' : 'FAIL'}  ${pair.note.padEnd(24)} ${fg} on ${bgName.padEnd(14)} ${value.toFixed(2)}:1`,
-      )
+        `  ${ok ? "ok " : "FAIL"} ${note.padEnd(24)} ${fgColor} on ${against.name.padEnd(14)} ` +
+          `${formatRatio(value).padStart(8)} ≥ ${target}`,
+      );
     }
   }
 }
 
-const MIN_SEPARATION = 12
-const SEPARATION_CHECKS = [
-  { theme: "paper", fg: "accent", bg: ["positive", "negative", "warn"] },
-  { theme: "dark", fg: "accent", bg: ["positive", "negative", "warn"] },
-  { theme: "paper", fg: "fig-accent", bg: ["fig-positive", "fig-negative", "fig-warn"] },
-]
-
-console.log("")
-console.log(`ACCENT SEPARATION   minimum ${MIN_SEPARATION} (OKLab, higher is safer)`)
-let separationFailures = 0
-for (const { theme, fg, bg } of SEPARATION_CHECKS) {
-  for (const name of bg) {
-    const value = separation(themes[theme][fg], themes[theme][name])
-    const ok = value >= MIN_SEPARATION
-    if (!ok) separationFailures += 1
-    console.log(
-      `  ${ok ? "ok" : "FAIL"}  ${theme.padEnd(6)} ${fg.padEnd(11)} vs ${name.padEnd(13)} ${value.toFixed(1)}`,
-    )
+console.log("");
+console.log(`ACCENT SEPARATION   minimum ${SEPARATION.minimum} (OKLab, higher is safer)`);
+let separationFailures = 0;
+for (const theme of THEMES) {
+  for (const { fg, bg } of SEPARATION.pairs) {
+    for (const other of bg) {
+      const [a, b] = [color(tokens, theme, fg), color(tokens, theme, other)];
+      if (!a || !b) {
+        console.log(`  ?    ${theme.name.padEnd(5)} ${fg} vs ${other}: token missing`);
+        separationFailures += 1;
+        continue;
+      }
+      const value = separation(a, b);
+      const ok = value >= SEPARATION.minimum;
+      if (!ok) separationFailures += 1;
+      console.log(
+        `  ${ok ? "ok " : "FAIL"} ${theme.name.padEnd(5)} ${fg.padEnd(11)} vs ${other.padEnd(14)} ${value.toFixed(1)}`,
+      );
+    }
   }
 }
 
-console.log(`\n${checks - failures}/${checks} pairs meet ${THRESHOLD}:1`)
+console.log(`\n${checks - failures}/${checks} pairs meet their targets`);
 if (failures > 0 || separationFailures > 0) {
   console.error(
     `${failures} contrast problem(s) and ${separationFailures} accent-separation problem(s) found`,
-  )
-  process.exit(1)
+  );
+  console.error("Run `npm run derive:palette` to solve the palette again, or set the target in scripts/palette.config.mjs.");
+  process.exit(1);
 }
