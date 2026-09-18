@@ -82,10 +82,14 @@ npm run check:palette    # fail if the committed table has drifted from the conf
 ```
 
 `scripts/palette.config.mjs` is the design intent: the surfaces and the hue anchors,
-plus the ratio each text token has to reach on the worst surface it is painted on.
+plus the ratio every token has to reach on the worst surface it is painted on — text and
+rules alike. A divider targets 1.6:1, and an edge you have to see without looking at it
+(control outlines, quote rules, diagram lines) targets 3:1, the WCAG non-text floor.
 `scripts/derive-palette.mjs` keeps each token's hue and chroma and moves only its OKLab
-lightness until it sits exactly at its target, then derives the rules, washes, veils and
-shadow tints from the solved tokens. Nothing is hand-tuned: edit the config, re-derive,
+lightness until it sits exactly at its target, then derives the washes, veils and shadow
+tints from the solved tokens. Because the targets are ratios rather than steps, light and
+dark reach the same *measured* strength: they used to differ by a third, which is what
+made paper read as washed out next to the dark theme. Nothing is hand-tuned: edit the config, re-derive,
 and the CSS, its comments and the audit move together. The derived table is committed,
 so the site builds without running the generator — `check:palette` keeps the two honest.
 

@@ -71,7 +71,10 @@ const GROUPS = [
   ["structure", ["rule", "rule-strong"]],
   ["accent", ["accent", "accent-hover", "accent-wash"]],
   ["verdicts", ["positive", "positive-wash", "negative", "warn", "warn-wash"]],
-  ["washes, veils, shadows", ["ink-wash", "grid-dot", "header-bg", "lift-1-color", "lift-2-color"]],
+  [
+    "washes, veils, shadows",
+    ["ink-wash", "fig-wash", "grid-dot", "header-bg", "lift-1-color", "lift-2-color"],
+  ],
   [
     "figure (ink) palette",
     [
@@ -186,9 +189,21 @@ function buildTheme(theme) {
     solved.push({ token, hex, checks, target: Math.min(...checks.map((c) => c.target)) });
   }
 
-  for (const [token, rule] of Object.entries(RULES[theme])) {
-    const base = hexToOklch(resolveSource(rule.from, theme, table));
-    table[token] = oklchToHex(base.L + rule.delta, base.C, base.h);
+  // A rule is solved the same way a text token is — same solver, same budget
+  // bookkeeping — and only its surface set and target differ. It keeps the hue
+  // and chroma of the surface it sits on and moves lightness alone, so a rule
+  // stays structure rather than becoming a colour.
+  for (const [token, rule] of Object.entries(RULES)) {
+    const anchor = hexToOklch(SURFACES[theme][rule.from]);
+    const checks = surfacesFor(rule, theme).map(({ name, hex }) => ({
+      against: hex,
+      where: name,
+      target: rule.target,
+    }));
+    const direction = luminance(SURFACES[theme][rule.from]) > 0.4 ? "darker" : "lighter";
+    const L = solveLightness({ C: anchor.C, h: anchor.h, direction, checks, token, theme });
+    table[token] = oklchToHex(L, anchor.C, anchor.h);
+    solved.push({ token, hex: table[token], checks, target: rule.target });
   }
 
   for (const [token, follow] of Object.entries(FOLLOWS)) {
@@ -293,7 +308,7 @@ function report(previous, tables, solved) {
   const groups = { declared: [], solved: [], derived: [] };
   for (const name of Object.keys(tables.light)) {
     if ([...PAGE_SURFACES, ...FIGURE_SURFACES].includes(name)) groups.declared.push(name);
-    else if (ROLES[name]) groups.solved.push(name);
+    else if (ROLES[name] || RULES[name]) groups.solved.push(name);
     else groups.derived.push(name);
   }
 

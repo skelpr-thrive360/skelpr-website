@@ -8,6 +8,9 @@
  *
  * Every token that carries text is checked against each surface it is actually
  * painted on: both sides of every `light-dark()` pair, the figure panels included.
+ * The rules are measured the same way and against the same kind of surface — a
+ * line you cannot see is a line that is not doing its job, and the page themes
+ * used to disagree about that by a third.
  * The target for each pair comes from scripts/palette.config.mjs, the same file
  * scripts/derive-palette.mjs solves against, so a value cannot be derived for one
  * budget and audited against another. That is also why the numbers here look
@@ -24,7 +27,14 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { contrastRatio, formatRatio, readColorValue, separation } from "./lib/color.mjs";
 import { readTokens } from "./lib/palette-css.mjs";
-import { FIGURE_SURFACES, FILL_PAIRS, PAGE_SURFACES, ROLES, SEPARATION } from "./palette.config.mjs";
+import {
+  FIGURE_SURFACES,
+  FILL_PAIRS,
+  PAGE_SURFACES,
+  ROLES,
+  RULES,
+  SEPARATION,
+} from "./palette.config.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const css = readFileSync(join(here, "..", "src", "styles.css"), "utf8");
@@ -48,6 +58,12 @@ const CHECKS = [
     bg: role.surfaces === "page" ? PAGE_SURFACES : FIGURE_SURFACES,
     target: role.target,
     note: role.note,
+  })),
+  ...Object.entries(RULES).map(([token, rule]) => ({
+    fg: token,
+    bg: rule.surfaces === "page" ? PAGE_SURFACES : FIGURE_SURFACES,
+    target: rule.target,
+    note: rule.note,
   })),
   ...FILL_PAIRS.map((pair) => ({ fg: pair.fg, bg: pair.bg, target: pair.target, note: pair.note })),
 ];

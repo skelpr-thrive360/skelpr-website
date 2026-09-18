@@ -109,9 +109,9 @@
      theme, the second in the dark one, per `color-scheme`. Text tokens are
      solved to sit at their target against the worst surface they are painted
      on, so nothing is heavier than its role needs:
-     page: ink-1 12:1 · ink-2 7:1 · ink-3 4.7:1 · accent 5.5:1 · positive
+     page: ink-1 12:1 · ink-2 7:1 · ink-3 5.2:1 · accent 5.5:1 · positive
      5:1 · negative 5:1 · warn 5:1
-     figure: fig-ink 12:1 · fig-ink-2 7:1 · fig-ink-3 4.7:1 · fig-accent
+     figure: fig-ink 12:1 · fig-ink-2 7:1 · fig-ink-3 5.2:1 · fig-accent
      5.5:1 · fig-positive 5:1 · fig-negative 5:1 · fig-warn 5:1
   */
 
@@ -123,11 +123,11 @@
   /* ink */
   --ink-1: light-dark(#2b2d2f, #d8d9da);
   --ink-2: light-dark(#4e5054, #a3a7ac);
-  --ink-3: light-dark(#69696d, #82878d);
+  --ink-3: light-dark(#626367, #8a8f94);
 
   /* structure */
-  --rule: light-dark(#e3e2de, #292a2d);
-  --rule-strong: light-dark(#cdccc8, #393b3e);
+  --rule: light-dark(#bebeba, #3e3f42);
+  --rule-strong: light-dark(#8a8986, #66676b);
 
   /* accent */
   --accent: light-dark(#316291, #6d96c1);
@@ -143,6 +143,7 @@
 
   /* washes, veils, shadows */
   --ink-wash: light-dark(rgb(43 45 47 / 6%), rgb(216 217 218 / 8%));
+  --fig-wash: light-dark(rgb(220 221 223 / 8%), rgb(227 227 229 / 10%));
   --grid-dot: light-dark(rgb(43 45 47 / 10%), rgb(216 217 218 / 9%));
   --header-bg: light-dark(rgb(249 248 244 / 97%), rgb(18 19 22 / 97%));
   --lift-1-color: light-dark(rgb(43 45 47 / 5%), rgb(0 0 0 / 30%));
@@ -153,9 +154,9 @@
   --fig-surface: light-dark(#1d2024, #21252a);
   --fig-ink: light-dark(#dcdddf, #e3e3e5);
   --fig-ink-2: light-dark(#a7abaf, #acb0b3);
-  --fig-ink-3: light-dark(#868b90, #8a8f94);
-  --fig-rule: light-dark(#2d2f32, #313439);
-  --fig-rule-strong: light-dark(#3d4043, #42464a);
+  --fig-ink-3: light-dark(#8d9399, #92979c);
+  --fig-rule: light-dark(#404245, #42464b);
+  --fig-rule-strong: light-dark(#686b6e, #6b6f73);
   --fig-accent: light-dark(#709ac4, #759fca);
   --fig-positive: light-dark(#609c72, #65a076);
   --fig-negative: light-dark(#c97971, #ce7e76);
@@ -174,6 +175,7 @@
   --fg-positive: var(--positive);
   --fg-negative: var(--negative);
   --fg-warn: var(--warn);
+  --fg-wash: var(--ink-wash);
 
   /* Follows the operating system by default; `data-theme` pins it, and the
      light-dark() pairs above resolve from whichever of the two is in force —
@@ -342,10 +344,15 @@ kbd {
   font-feature-settings: "zero" 1;
 }
 
+/* Code chips take their ink from the semantic foregrounds, not from the page
+   ink: a `code` is just as likely to sit inside a figure panel as on paper, and
+   `--fg-1` is the token that already knows which of the two it is. Using
+   `--ink-1` here painted light-theme ink onto the dark install panel at 1.3:1 —
+   invisible in the light theme and invisible in no other. */
 code {
   padding: 1px 5px;
-  color: var(--ink-1);
-  background: var(--ink-wash);
+  color: var(--fg-1);
+  background: var(--fg-wash);
   border-radius: var(--radius);
 }
 
@@ -688,6 +695,7 @@ pre code {
 
 .hero-visual {
   --fg-1: var(--fig-ink);
+  --fg-wash: var(--fig-wash);
   --fg-2: var(--fig-ink-2);
   --fg-3: var(--fig-ink-3);
   --fg-rule: var(--fig-rule);
@@ -1466,6 +1474,7 @@ pre code {
 /* Dark figure: the workflow trace panel. */
 .workflow-terminal {
   --fg-1: var(--fig-ink);
+  --fg-wash: var(--fig-wash);
   --fg-2: var(--fig-ink-2);
   --fg-3: var(--fig-ink-3);
   --fg-rule: var(--fig-rule);
@@ -2265,6 +2274,7 @@ pre code {
 /* Fenced code inside the panes belongs to the dark figure palette. */
 .qa-answer pre {
   --fg-1: var(--fig-ink);
+  --fg-wash: var(--fig-wash);
 
   margin: var(--space-3) 0;
   padding: var(--space-4);
@@ -2677,6 +2687,7 @@ pre code {
 /* Dark figure: the repository evidence panel. */
 .evidence-window {
   --fg-1: var(--fig-ink);
+  --fg-wash: var(--fig-wash);
   --fg-2: var(--fig-ink-2);
   --fg-3: var(--fig-ink-3);
   --fg-rule: var(--fig-rule);
@@ -2827,6 +2838,7 @@ pre code {
 /* Dark figure: the install snippet. */
 .install-code {
   --fg-1: var(--fig-ink);
+  --fg-wash: var(--fig-wash);
   --fg-3: var(--fig-ink-3);
   --fg-rule: var(--fig-rule);
   --fg-warn: var(--fig-warn);

@@ -51,14 +51,14 @@ export const FIGURE_SURFACES = ['fig-bg', 'fig-surface']
 export const ROLES = {
   'ink-1': { target: 12, surfaces: 'page', note: 'body ink' },
   'ink-2': { target: 7, surfaces: 'page', note: 'secondary ink' },
-  'ink-3': { target: 4.7, surfaces: 'page', note: 'labels' },
+  'ink-3': { target: 5.2, surfaces: 'page', note: 'labels' },
   accent: { target: 5.5, surfaces: 'page', note: 'accent text' },
   positive: { target: 5, surfaces: 'page', note: 'benchmark WITH' },
   negative: { target: 5, surfaces: 'page', note: 'benchmark WITHOUT' },
   warn: { target: 5, surfaces: 'page', note: 'caveat / footnote' },
   'fig-ink': { target: 12, surfaces: 'figure', note: 'figure body' },
   'fig-ink-2': { target: 7, surfaces: 'figure', note: 'figure secondary' },
-  'fig-ink-3': { target: 4.7, surfaces: 'figure', note: 'figure labels' },
+  'fig-ink-3': { target: 5.2, surfaces: 'figure', note: 'figure labels' },
   'fig-accent': { target: 5.5, surfaces: 'figure', note: 'figure accent' },
   'fig-positive': { target: 5, surfaces: 'figure', note: 'figure positive' },
   'fig-negative': { target: 5, surfaces: 'figure', note: 'figure negative' },
@@ -114,26 +114,35 @@ export const ANCHORS = {
 }
 
 /**
- * Rules and figure rules carry no contrast target — they are structure, not
- * text — so they sit a fixed distance from their own surface in OKLab lightness.
- * The sign is the direction (negative = darker); the magnitudes are the ones the
- * hand-picked palette used, which is why the two page themes differ: a hairline
- * has to read against its own background, and those backgrounds are nothing alike.
- * The figure panels are close enough in both themes to share one recipe.
+ * Rules: hairlines and edges.
+ *
+ * These used to be placed by a fixed OKLab step from their own surface, and a
+ * step that reads well on a dark panel reads as almost nothing on paper: the
+ * light theme's step was a third weaker than the dark theme's (−0.066 against
+ * +0.097), which is exactly how the two looked. They carry a contrast target
+ * now, like every other token, so both themes reach the same measured
+ * visibility instead of the same nominal step:
+ *
+ *   rule         structure you find when you look for it — row and section
+ *                dividers, table rules. Quiet on purpose.
+ *   rule-strong  edges you have to see without looking: control boundaries
+ *                (WCAG 1.4.11 non-text contrast), quote and verdict rules,
+ *                diagram lines.
+ *
+ * `from` is the surface whose hue and chroma the rule borrows: a rule is
+ * structure, not a colour, so it stays in the family of the surface it sits on.
+ * The target is theme-independent, so there is one table rather than two.
  */
 export const RULES = {
-  light: {
-    rule: { from: 'surface', delta: -0.066 },
-    'rule-strong': { from: 'surface', delta: -0.134 },
-    'fig-rule': { from: 'fig-bg', delta: 0.1 },
-    'fig-rule-strong': { from: 'fig-bg', delta: 0.166 },
+  rule: { from: 'surface', surfaces: 'page', target: 1.6, note: 'row and section dividers' },
+  'rule-strong': {
+    from: 'surface',
+    surfaces: 'page',
+    target: 3,
+    note: 'control edges, quotes, diagram lines',
   },
-  dark: {
-    rule: { from: 'surface', delta: 0.097 },
-    'rule-strong': { from: 'surface', delta: 0.164 },
-    'fig-rule': { from: 'fig-bg', delta: 0.1 },
-    'fig-rule-strong': { from: 'fig-bg', delta: 0.166 },
-  },
+  'fig-rule': { from: 'fig-bg', surfaces: 'figure', target: 1.6, note: 'figure panel rules' },
+  'fig-rule-strong': { from: 'fig-bg', surfaces: 'figure', target: 3, note: 'figure axes and edges' },
 }
 
 /**
@@ -150,6 +159,9 @@ export const FOLLOWS = {
   'positive-wash': { from: 'positive', alpha: { light: 0.08, dark: 0.12 } },
   'warn-wash': { from: 'warn', alpha: { light: 0.08, dark: 0.12 } },
   'ink-wash': { from: 'ink-1', alpha: { light: 0.06, dark: 0.08 } },
+  // The wash a chip of code sits on inside a figure panel, where the surface
+  // underneath is dark in both themes and an ink wash would go the wrong way.
+  'fig-wash': { from: 'fig-ink', alpha: { light: 0.08, dark: 0.1 } },
   'grid-dot': { from: 'ink-1', alpha: { light: 0.1, dark: 0.09 } },
   'header-bg': { from: 'surface', alpha: { light: 0.97, dark: 0.97 } },
   'lift-1-color': { from: 'shadow', alpha: { light: 0.05, dark: 0.3 } },
