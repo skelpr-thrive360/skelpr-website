@@ -8,7 +8,7 @@ export function ModesSection({ open, onToggle }: { open: boolean; onToggle: () =
   const current = modeOptions.find((option) => option.value === mode) ?? modeOptions[0]
   return (
     <section className="modes-section content-section" id="modes">
-      <div className="section-kicker">03 — Two integration modes</div>
+      <div className="section-kicker">Two integration modes</div>
       <div className="two-column-heading"><h2>One retrieval engine.<br /><em>Two ways to use it.</em></h2><p>Use the standalone workflow when LoCoDex should run end to end. Use Agent Integration when an existing coding agent should bring its own reasoning.</p></div>
       <div className="mode-switcher" role="tablist" aria-label="LoCoDex integration modes">
         {modeOptions.map((option) => (

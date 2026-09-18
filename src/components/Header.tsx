@@ -1,15 +1,17 @@
 import { useState } from 'react'
 import { ArrowRight, Menu, X } from 'lucide-react'
 import { scrollToSection } from './Shared'
+import { useScrolled } from '../hooks/useScrolled'
 
 export function Header() {
   const [mobileNav, setMobileNav] = useState(false)
+  const scrolled = useScrolled()
   const go = (id: string) => {
     scrollToSection(id)
     setMobileNav(false)
   }
   return (
-    <header className="site-header">
+    <header className={scrolled ? 'site-header is-scrolled' : 'site-header'}>
       <a className="brand" href="#top" aria-label="LoCoDex home">
         <span className="brand-mark"><span /><span /><span /></span>
         <span>LoCoDex</span>

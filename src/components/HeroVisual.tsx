@@ -8,28 +8,28 @@ import { heroIcons, heroStages } from '../data/siteData'
 const HERO_LAYOUTS = {
   desktop: {
     nodes: [
-      { x: 85, y: 200 },
-      { x: 300, y: 70 },
-      { x: 505, y: 215 },
-      { x: 300, y: 322 },
+      { x: 99, y: 200 },
+      { x: 300, y: 79 },
+      { x: 501, y: 200 },
+      { x: 300, y: 321 },
     ],
     paths: [
-      'M85 200 C190 200 195 70 300 70',
-      'M300 70 C405 70 405 215 505 215',
-      'M505 215 C400 215 395 322 300 322',
+      'M99 200 C190 200 195 79 300 79',
+      'M300 79 C405 79 405 200 501 200',
+      'M501 200 C395 200 395 321 300 321',
     ],
   },
   mobile: {
     nodes: [
-      { x: 105, y: 75 },
+      { x: 105, y: 76 },
       { x: 330, y: 150 },
       { x: 180, y: 260 },
-      { x: 450, y: 330 },
+      { x: 450, y: 324 },
     ],
     paths: [
-      'M105 75 C220 75 230 150 330 150',
+      'M105 76 C220 76 230 150 330 150',
       'M330 150 C280 200 240 260 180 260',
-      'M180 260 C300 260 360 330 450 330',
+      'M180 260 C300 260 360 324 450 324',
     ],
   },
 } as const
@@ -48,31 +48,30 @@ function useCompactLayout() {
 
 export function HeroVisual() {
   const [stage, setStage] = useState(0)
-  const [paused, setPaused] = useState(false)
+  const [engaged, setEngaged] = useState(false)
+  const [drawn, setDrawn] = useState(false)
   const compact = useCompactLayout()
   const layout = compact ? HERO_LAYOUTS.mobile : HERO_LAYOUTS.desktop
   const currentHero = heroStages[stage]
 
-  // Walkthrough auto-advances until the visitor hovers or focuses a stage.
+  // The walkthrough is visitor-driven: the connectors draw once, then the stage
+  // follows hover, focus and click. There is no autoplay carousel.
   useEffect(() => {
-    if (paused) return
-    const timer = window.setInterval(() => {
-      setStage((current) => (current + 1) % heroStages.length)
-    }, 2800)
-    return () => window.clearInterval(timer)
-  }, [paused])
+    const frame = window.requestAnimationFrame(() => setDrawn(true))
+    return () => window.cancelAnimationFrame(frame)
+  }, [])
 
   return (
     <div className="hero-visual" aria-label="Interactive MCP Agent workflow walkthrough">
       <div className="visual-label">
         <span>MCP AGENT / INTEGRATION</span>
         <span className="live-label">
-          <i /> {paused ? 'HOVER TO EXPLORE' : 'LIVE PATH'}
+          <i /> {engaged ? 'EXPLORING' : 'HOVER OR CLICK A STEP'}
         </span>
       </div>
       <div className="hero-canvas">
         <svg
-          className="hero-lines"
+          className={drawn ? 'hero-lines is-drawn' : 'hero-lines'}
           viewBox="0 0 600 400"
           preserveAspectRatio="none"
           role="img"
@@ -84,6 +83,7 @@ export function HeroVisual() {
               d={d}
               className={stage >= index + 1 ? '' : 'muted-path'}
               vectorEffect="non-scaling-stroke"
+              style={{ transitionDelay: `${index * 120}ms` }}
             />
           ))}
         </svg>
@@ -98,15 +98,18 @@ export function HeroVisual() {
               style={{ left: `${point.x / 6}%`, top: `${point.y / 4}%` }}
               onMouseEnter={() => {
                 setStage(index)
-                setPaused(true)
+                setEngaged(true)
               }}
-              onMouseLeave={() => setPaused(false)}
+              onMouseLeave={() => setEngaged(false)}
               onFocus={() => {
                 setStage(index)
-                setPaused(true)
+                setEngaged(true)
               }}
-              onBlur={() => setPaused(false)}
-              onClick={() => setStage(index)}
+              onBlur={() => setEngaged(false)}
+              onClick={() => {
+                setStage(index)
+                setEngaged(true)
+              }}
               aria-label={`Step ${index + 1}: ${stageItem.label}`}
               aria-pressed={stage === index}
             >
@@ -116,9 +119,7 @@ export function HeroVisual() {
                 >
                   <Icon size={16} />
                 </span>
-                <small>
-                  STEP 0{index + 1} · {stageItem.label.toUpperCase()}
-                </small>
+                <small>STEP 0{index + 1}</small>
                 <strong>{stageItem.label}</strong>
               </span>
             </button>

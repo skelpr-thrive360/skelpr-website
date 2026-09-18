@@ -1,8 +1,21 @@
 import { useState } from 'react'
 import { ArrowRight, Check, ChevronDown, UserX } from 'lucide-react'
 
+/**
+ * Offset-aware smooth scroll: clears the sticky header, and skips easing for
+ * visitors who asked for reduced motion.
+ */
+export function scrollToElement(target: HTMLElement, offset = 16) {
+  const header = document.querySelector<HTMLElement>('.site-header')
+  const headerHeight = header?.offsetHeight ?? 72
+  const top = target.getBoundingClientRect().top + window.scrollY - headerHeight - offset
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  window.scrollTo({ top: Math.max(top, 0), behavior: reduced ? 'auto' : 'smooth' })
+}
+
 export function scrollToSection(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+  const target = document.getElementById(id)
+  if (target) scrollToElement(target)
 }
 
 export function DetailButton({ open, onClick }: { open: boolean; onClick: () => void }) {

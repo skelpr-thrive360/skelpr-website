@@ -12,8 +12,10 @@ import { RealWorldSection } from './components/RealWorldSection'
 import { WhySection } from './components/WhySection'
 import { Footer, InstallSection, WaitlistSection } from './components/WaitlistInstall'
 import { scrollToSection, WaitlistForm } from './components/Shared'
+import { useScrollReveal } from './hooks/useScrollReveal'
 
 function App() {
+  useScrollReveal()
   const [openDetails, setOpenDetails] = useState<Set<string>>(new Set())
 
   const toggleDetails = (section: string) => {
@@ -28,11 +30,10 @@ function App() {
 
   return (
     <div className="site-shell">
-      <div className="noise" aria-hidden="true" />
       <Header />
 
       <main id="top">
-        <section className="hero section-grid">
+        <section className="hero">
           <div className="hero-copy">
             <div className="eyebrow"><span className="status-dot" /> Code intelligence for agents</div>
             <h1>Don’t give an agent the whole repo.<br /><em>Give it the right code.</em></h1>

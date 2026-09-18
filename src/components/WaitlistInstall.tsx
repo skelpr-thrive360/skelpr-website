@@ -11,7 +11,7 @@ export function WaitlistSection() {
 export function InstallSection() {
   return (
     <section className="install-section content-section" id="install">
-      <div className="section-kicker">09 — Get started</div>
+      <div className="section-kicker">Get started</div>
       <div className="install-layout">
         <div className="install-copy">
           <span className="eyebrow">START WITH YOUR REPOSITORY</span>

@@ -3,7 +3,7 @@ import { principles } from '../data/siteData'
 export function WhySection() {
   return (
     <section className="why-section content-section">
-      <div className="section-kicker">08 — Why LoCoDex</div>
+      <div className="section-kicker">Why LoCoDex</div>
       <div className="why-heading"><h2>Evidence over <em>volume.</em></h2><p>LoCoDex’s differentiators are implementation choices, not slogans.</p></div>
       <div className="principles-grid">
         {principles.map((principle) => (
