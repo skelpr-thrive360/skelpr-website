@@ -9,15 +9,19 @@
  * These are the same numbers `scripts/build-brand-assets.py` renders the icons
  * from, so the header and the favicon are one drawing at different sizes.
  *
+ * Size is not set here — `.brand-mark` in styles.css owns it, one source for
+ * both header and footer. At 20px the frame's ink is 15px against the
+ * wordmark's 13px cap height: an open, outlined mark carries less optical
+ * weight than semibold serif type, so it is drawn slightly larger to sit level
+ * with it.
+ *
  * Colour: the frame inherits the current ink and the fragment uses the accent,
  * and both tokens flip with the theme — so this is one mark, not one per theme.
  */
-export function BrandMark({ size = 18 }: { size?: number }) {
+export function BrandMark() {
   return (
     <svg
       className="brand-mark"
-      width={size}
-      height={size}
       viewBox="0 0 24 24"
       aria-hidden="true"
       focusable="false"

@@ -277,7 +277,17 @@ input:focus-visible,
 
 .site-shell {
   overflow: clip;
-  max-width: 1240px;
+  /* The sheet. 1360 rather than 1240 because the widest things on this page are
+     not prose — a five-column benchmark table, side-by-side verbatim answer
+     panes holding code and paths, and two node maps — and those all sit in fr
+     grids or percentage layouts that turn extra width into fewer wrapped lines.
+     Prose is unaffected either way: it is capped by the measure tokens (34-92ch),
+     so widening the sheet cannot lengthen a paragraph. 1360 also stays inset at
+     every common viewport, which is what keeps the page reading as a document
+     rather than a full-bleed app: at 1440 the shell is 1328 (gutter-bound, so
+     unchanged by this number), at 1536 it is 1360 with 88px margins, and at 1920
+     it leaves 280px each side rather than 340. */
+  max-width: 1360px;
   margin-inline: auto;
   background: var(--surface);
 }
@@ -431,8 +441,11 @@ pre code {
 .brand-mark {
   display: block;
   flex: none;
-  width: 18px;
-  height: 18px;
+  /* 20px, not the wordmark's 19px: the frame's ink (15px) is then slightly
+     taller than the cap height (13px), which is what makes an outlined mark sit
+     level with semibold serif type instead of shrinking beside it. */
+  width: 20px;
+  height: 20px;
   color: var(--ink-1);
 }
 
@@ -1854,7 +1867,8 @@ pre code {
 }
 
 .qa-question p {
-  max-width: 76ch;
+  /* The prompt is a document quote, not body copy: it runs the full width of
+     the panel so the whole task is readable at a glance. */
   margin-top: var(--space-3);
   color: var(--ink-1);
   font-family: var(--font-serif);
