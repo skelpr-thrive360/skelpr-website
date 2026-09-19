@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <!-- One tag, not a media pair: the runtime re-points it at whichever surface
+         the derived palette resolves to, including when the visitor overrides
+         their system preference. This value is the No-JS light fallback. -->
+    <meta name="theme-color" content="#f9f8f4" />
+    <script>
+      // Runs before the first paint, so a remembered theme never flashes the other
+      // one while the bundle loads. The key is shared with src/lib/theme.ts;
+      // change both together.
+      try {
+        var choice = localStorage.getItem('locodex-theme')
+        if (choice === 'light' || choice === 'dark' || choice === 'system') {
+          document.documentElement.dataset.theme = choice
+        }
+      } catch (error) {
+        // Storage blocked: the page simply follows the system preference.
+      }
+    </script>
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/brand/favicon-16.png" />
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon-180.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="description" content="LoCoDex — surgical code retrieval for AI agents, PR reviews, and fixes." />
+    <!-- Replace https://locodex.dev with the deployed canonical domain when it is known,
+         together with the matching loc entry in public/sitemap.xml and public/robots.txt. -->
+    <link rel="canonical" href="https://locodex.dev/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="LoCoDex" />
+    <meta property="og:url" content="https://locodex.dev/" />
+    <meta property="og:title" content="LoCoDex — Surgical code retrieval" />
+    <meta property="og:description" content="Surgical code retrieval for AI agents, PR reviews, and fixes. Grounded in syntax-aware context and precise file:line citations." />
+    <meta property="og:image" content="https://locodex.dev/brand/icon-512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <!-- Square mark only: generate a 1200×630 card before a large-image card is used. -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="LoCoDex — Surgical code retrieval" />
+    <meta name="twitter:description" content="Surgical code retrieval for AI agents, PR reviews, and fixes. Grounded in syntax-aware context and precise file:line citations." />
+    <meta name="twitter:image" content="https://locodex.dev/brand/icon-512.png" />
+    <title>LoCoDex — Surgical code retrieval</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
