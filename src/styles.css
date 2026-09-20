@@ -599,7 +599,6 @@ pre code {
      above — only the signal strip follows — and both scale with --section-y as
      the page narrows. */
   padding: var(--section-y) var(--gutter) clamp(48px, 5.5vw, 88px);
-  border-bottom: 1px solid var(--rule);
 }
 
 .hero-copy {
@@ -967,11 +966,11 @@ pre code {
    ========================================================================= */
 
 .signal-strip {
+  position: relative;
   display: flex;
   gap: var(--space-4);
   align-items: center;
   padding: var(--space-4) var(--gutter);
-  border-bottom: 1px solid var(--rule);
   color: var(--ink-3);
   font-size: var(--text-xs);
   letter-spacing: var(--track-label);
@@ -990,8 +989,48 @@ pre code {
    ========================================================================= */
 
 .content-section {
+  position: relative;
   padding: var(--section-y) var(--gutter);
-  border-bottom: 1px solid var(--rule);
+}
+
+/* --- section rules ------------------------------------------------------
+   Every boundary between two blocks draws one rule: hero → strip, strip →
+   problem, and each content section's bottom edge. The rules are full-bleed
+   — they span the window, not the sheet — for the same reason the header and
+   the footer draw their edges across the whole document: a rule that stops
+   280px short of the window reads as a mistake. Each rule is a pseudo-element
+   anchored to its block, pulled out to the window width with the 50vw trick;
+   .site-shell's overflow: clip absorbs the scrollbar overhang on Windows.
+
+   `--rule-x` exists for the draw-in: the animation hook takes each rule from
+   0 to 1 as its block arrives, and anyone without JS (or with reduced motion,
+   where the hook never runs) gets the default of 1 — a finished rule. */
+.hero,
+.signal-strip,
+.content-section {
+  position: relative;
+}
+
+.hero::after,
+.signal-strip::after,
+.content-section::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: calc(50% - 50vw);
+  width: 100vw;
+  height: 1px;
+  background: var(--rule);
+  pointer-events: none;
+  transform: scaleX(var(--rule-x, 1));
+  transform-origin: 0 50%;
+}
+
+/* The waitlist is main's last block and the footer already draws the full-bleed
+   rule across the document's bottom edge — two rules one pixel apart would read
+   as a heavier line. */
+.content-section:last-child::after {
+  content: none;
 }
 
 /* A touch screen hides half of a horizontal scroller. The benchmark table and
