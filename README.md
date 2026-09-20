@@ -63,6 +63,14 @@ npm run check:links      # every in-page #hash resolves, sections and registry a
 npm run audit:contrast   # every token meets its contrast target, accent stays distinct
 ```
 
+## Motion
+
+Scroll choreography is documented in [MOTION.md](./MOTION.md): the page's six-act
+script, the four mechanisms (reversible reveals, scrubbed section rules, hero exit,
+figure drift), Lenis smooth scrolling, and the intensity dials. Evidence sections are
+deliberately excluded from drift; reduced-motion and no-JS visitors get a fully
+rendered, still page.
+
 ## Theming
 
 The site ships `light`, `dark` and `system`, chosen from the three-way control in the

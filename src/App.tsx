@@ -11,14 +11,14 @@ import { ArchitectureSection } from './components/ArchitectureSection'
 import { RealWorldSection } from './components/RealWorldSection'
 import { Footer, InstallSection, WaitlistSection } from './components/WaitlistInstall'
 import { useSmoothScroll } from './hooks/useSmoothScroll'
-import { useScrollReveal } from './hooks/useScrollReveal'
+import { useScrollChoreography } from './hooks/useScrollChoreography'
 import { useHashScroll } from './hooks/useHashScroll'
 import { useSectionSpy } from './hooks/useSectionSpy'
 import { useThemeEffect } from './lib/theme'
 
 function App() {
   useSmoothScroll()
-  useScrollReveal()
+  useScrollChoreography()
   useSectionSpy()
   useHashScroll()
   useThemeEffect()
