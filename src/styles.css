@@ -126,10 +126,10 @@
      theme, the second in the dark one, per `color-scheme`. Text tokens are
      solved to sit at their target against the worst surface they are painted
      on, so nothing is heavier than its role needs:
-     page: ink-1 15:1 · ink-2 10.5:1 · ink-3 7.5:1 · accent 7:1 · positive
-     6:1 · negative 6:1 · warn 6:1
-     figure: fig-ink 15:1 · fig-ink-2 10.5:1 · fig-ink-3 7.5:1 · fig-accent
-     7:1 · fig-positive 6:1 · fig-negative 6:1 · fig-warn 6:1
+     page: ink-1 15:1 · ink-2 12:1 · ink-3 9.5:1 · accent 8:1 · positive
+     7:1 · negative 7:1 · warn 7:1
+     figure: fig-ink 15:1 · fig-ink-2 12:1 · fig-ink-3 9.5:1 · fig-accent
+     8:1 · fig-positive 7:1 · fig-negative 7:1 · fig-warn 7:1
   */
 
   /* surfaces */
@@ -139,24 +139,24 @@
 
   /* ink */
   --ink-1: light-dark(#17181a, #edeff1);
-  --ink-2: light-dark(#333437, #c5cad0);
-  --ink-3: light-dark(#49494d, #a6abb1);
+  --ink-2: light-dark(#2a2a2e, #d3d7dd);
+  --ink-3: light-dark(#3a3a3e, #bbc1c7);
 
   /* structure */
-  --rule: light-dark(#bbbab6, #414346);
-  --rule-strong: light-dark(#878683, #696b6f);
+  --rule: light-dark(#9f9e9b, #56585b);
+  --rule-strong: light-dark(#767572, #7a7c80);
 
   /* accent */
-  --accent: light-dark(#1f507e, #7fa9d4);
-  --accent-hover: light-dark(#0e426e, #93bde9);
-  --accent-wash: light-dark(#eaecec, #1b2128);
+  --accent: light-dark(#154874, #8ab4e0);
+  --accent-hover: light-dark(#023a65, #9ec9f5);
+  --accent-wash: light-dark(#e9eceb, #1c222a);
 
   /* verdicts */
-  --positive: light-dark(#2c6242, #66a67a);
-  --positive-wash: light-dark(#e9ece6, #18201e);
-  --negative: light-dark(#9d332a, #d78176);
-  --warn: light-dark(#7c4e00, #c18f3e);
-  --warn-wash: light-dark(#efeae0, #231d16);
+  --positive: light-dark(#215839, #72b386);
+  --positive-wash: light-dark(#e8ebe5, #19221f);
+  --negative: light-dark(#912821, #e48e81);
+  --warn: light-dark(#6f4500, #cf9c4c);
+  --warn-wash: light-dark(#eeeae0, #241f18);
 
   /* washes, veils, shadows */
   --ink-wash: light-dark(#ebebe7, #1f2023);
@@ -169,14 +169,14 @@
   --fig-bg: light-dark(#121417, #15171b);
   --fig-surface: light-dark(#1d1f23, #212327);
   --fig-ink: light-dark(#f2f5f7, #f8fafc);
-  --fig-ink-2: light-dark(#cacfd4, #cfd4d8);
-  --fig-ink-3: light-dark(#aab0b6, #afb4b9);
-  --fig-rule: light-dark(#3f4245, #424549);
-  --fig-rule-strong: light-dark(#676a6d, #6a6d72);
-  --fig-accent: light-dark(#83add8, #88b1dd);
-  --fig-positive: light-dark(#6eaa7f, #72ae83);
-  --fig-negative: light-dark(#d8877f, #dd8a83);
-  --fig-warn: light-dark(#c1954f, #c59953);
+  --fig-ink-2: light-dark(#d8dde2, #dde2e6);
+  --fig-ink-3: light-dark(#c0c6cc, #c5cacf);
+  --fig-rule: light-dark(#535659, #56595d);
+  --fig-rule-strong: light-dark(#777a7d, #7b7d82);
+  --fig-accent: light-dark(#8eb9e5, #93bdea);
+  --fig-positive: light-dark(#7ab78b, #7ebb8f);
+  --fig-negative: light-dark(#e7938b, #eb988f);
+  --fig-warn: light-dark(#cea25c, #d3a660);
   /* generated:end */
 
   /* -- shadow recipe: the palette's ink at its own alphas ---------------- */
@@ -614,12 +614,14 @@ pre code {
   gap: min(5vw, 56px);
   align-items: center;
   min-height: 680px;
-  /* The gap above the hero is the page's own section rhythm, not a special case:
-     at 9vw/128px it was the largest space on the site and put the first line
-     nearly a header-and-a-third down the viewport. Below is slightly tighter than
-     above — only the signal strip follows — and both scale with --section-y as
-     the page narrows. */
-  padding: var(--section-y) var(--gutter) clamp(48px, 5.5vw, 88px);
+  /* The hero takes a tighter top than the page's section rhythm. That rhythm is
+     sized for breathing while you scroll *past* a section; the hero is met, not
+     scrolled past, and the sticky header above it is already 72px of clear air
+     in the flow (so there is nothing to clear). At the full --section-y the first
+     line sat a header-and-a-third down the viewport for no reason the reader
+     could see. Below is only slightly tighter than above — the signal strip is
+     what follows — and both keep scaling with width. */
+  padding: clamp(36px, 4vw, 64px) var(--gutter) clamp(48px, 5.5vw, 88px);
 }
 
 .hero-copy {

@@ -125,7 +125,9 @@ export function SectionDetail({ open, children }: { open: boolean; children: Rea
         { height: 0, opacity: 0 },
         { height: el.scrollHeight, opacity: 1, duration: 0.42, ease: 'power2.out', onComplete: settle },
       )
-      return () => tween.kill()
+      return () => {
+        tween.kill()
+      }
     }
 
     const tween = gsap.to(el, {
@@ -138,7 +140,9 @@ export function SectionDetail({ open, children }: { open: boolean; children: Rea
         ScrollTrigger.refresh()
       },
     })
-    return () => tween.kill()
+    return () => {
+      tween.kill()
+    }
   }, [open])
 
   return (

@@ -82,9 +82,16 @@ export const SURFACE_SETS = {
  * of AA — body ink 12:1, labels 4.7:1 — which audits as "passing" and reads as
  * washed out: grey body copy on warm paper, and a page you have to work at. Body
  * ink clears 15:1 now (near-black on paper, near-white on a dark page),
- * secondary 10.5:1, labels 7.5:1 and the verdict colours 6:1. The steps between
+ * secondary 12:1, labels 9.5:1 and the verdict colours 7:1. The steps between
  * them are still steps, so the hierarchy survives — it just starts from further
  * away, and nothing that carries meaning sits near the floor.
+ *
+ * The thin end moved again after light mode shipped: 10.5:1 secondary and 7.5:1
+ * labels are comfortable for a paragraph and thin for the places this page puts
+ * them — 12px uppercase labels, table captions, mono footnotes, the small print
+ * under a figure. Small light-weight type loses apparent weight long before it
+ * loses measurable contrast, so the tokens that are always small were lifted
+ * rather than the surfaces darkened.
  *
  * 15 rather than 16 is not timidity in the figure set: figure ink is light and
  * cards there have to stand off their panel (see SURFACES), so the ceiling is
@@ -94,19 +101,19 @@ export const SURFACE_SETS = {
  */
 export const ROLES = {
   'ink-1': { target: 15, surfaces: 'page', note: 'body ink' },
-  'ink-2': { target: 10.5, surfaces: 'page', note: 'secondary ink' },
-  'ink-3': { target: 7.5, surfaces: 'page', note: 'labels' },
-  accent: { target: 7, surfaces: 'page', note: 'accent text' },
-  positive: { target: 6, surfaces: 'page', note: 'benchmark WITH' },
-  negative: { target: 6, surfaces: 'page', note: 'benchmark WITHOUT' },
-  warn: { target: 6, surfaces: 'page', note: 'caveat / footnote' },
+  'ink-2': { target: 12, surfaces: 'page', note: 'secondary ink' },
+  'ink-3': { target: 9.5, surfaces: 'page', note: 'labels' },
+  accent: { target: 8, surfaces: 'page', note: 'accent text' },
+  positive: { target: 7, surfaces: 'page', note: 'benchmark WITH' },
+  negative: { target: 7, surfaces: 'page', note: 'benchmark WITHOUT' },
+  warn: { target: 7, surfaces: 'page', note: 'caveat / footnote' },
   'fig-ink': { target: 15, surfaces: 'figure', note: 'figure body' },
-  'fig-ink-2': { target: 10.5, surfaces: 'figure', note: 'figure secondary' },
-  'fig-ink-3': { target: 7.5, surfaces: 'figure', note: 'figure labels' },
-  'fig-accent': { target: 7, surfaces: 'figure', note: 'figure accent' },
-  'fig-positive': { target: 6, surfaces: 'figure', note: 'figure positive' },
-  'fig-negative': { target: 6, surfaces: 'figure', note: 'figure negative' },
-  'fig-warn': { target: 6, surfaces: 'figure', note: 'figure warn' },
+  'fig-ink-2': { target: 12, surfaces: 'figure', note: 'figure secondary' },
+  'fig-ink-3': { target: 9.5, surfaces: 'figure', note: 'figure labels' },
+  'fig-accent': { target: 8, surfaces: 'figure', note: 'figure accent' },
+  'fig-positive': { target: 7, surfaces: 'figure', note: 'figure positive' },
+  'fig-negative': { target: 7, surfaces: 'figure', note: 'figure negative' },
+  'fig-warn': { target: 7, surfaces: 'figure', note: 'figure warn' },
 }
 
 /**
@@ -168,7 +175,10 @@ export const ANCHORS = {
  * visibility instead of the same nominal step:
  *
  *   rule         structure you find when you look for it — row and section
- *                dividers, table rules. Quiet on purpose.
+ *                dividers, table rules. Quiet on purpose, and quiet is 2.2
+ *                against the paper rather than 1.6: at 1.6 a hairline on warm
+ *                paper is a suggestion, and this page uses rules to hold a table
+ *                together.
  *   rule-strong  edges you have to see without looking: control boundaries
  *                (WCAG 1.4.11 non-text contrast), quote and verdict rules,
  *                diagram lines.
@@ -185,15 +195,15 @@ export const ANCHORS = {
  * surface to work on without ever competing with the lines that carry meaning.
  */
 export const RULES = {
-  rule: { from: 'surface', surfaces: 'page', target: 1.6, note: 'row and section dividers' },
+  rule: { from: 'surface', surfaces: 'page', target: 2.2, note: 'row and section dividers' },
   'rule-strong': {
     from: 'surface',
     surfaces: 'page',
-    target: 3,
+    target: 3.8,
     note: 'control edges, quotes, diagram lines',
   },
-  'fig-rule': { from: 'fig-bg', surfaces: 'figure', target: 1.6, note: 'figure panel rules' },
-  'fig-rule-strong': { from: 'fig-bg', surfaces: 'figure', target: 3, note: 'figure axes and edges' },
+  'fig-rule': { from: 'fig-bg', surfaces: 'figure', target: 2.2, note: 'figure panel rules' },
+  'fig-rule-strong': { from: 'fig-bg', surfaces: 'figure', target: 3.8, note: 'figure axes and edges' },
   'grid-dot': {
     // Hue from the page, contrast against the panel it is painted on: the grid is
     // an impression of the paper underneath, and a neutral grey is a hue nobody
