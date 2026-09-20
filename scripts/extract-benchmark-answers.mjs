@@ -1,12 +1,32 @@
 // Extracts the verbatim WITHOUT/WITH answers per task from
 // docs/comparisons/COMP_ANTIGRAVITY.md into website/src/data/benchmarkAnswers.ts.
 // Run from website/: npm run extract:answers  (regenerate after re-running the benchmark)
-import { readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const docPath = join(here, '..', '..', 'docs', 'comparisons', 'COMP_ANTIGRAVITY.md')
+
+// The engine lives in its own repository, so this script has to cope with both
+// layouts: the site cloned inside the engine (`<engine>/website/…`) and the site as
+// a sibling checkout (`<workspace>/website/…` + `<workspace>/main/…`). An explicit
+// override wins for anything else.
+const candidates = [
+  process.env.LOCODEX_COMPARISON_DOC,
+  join(here, '..', '..', 'docs', 'comparisons', 'COMP_ANTIGRAVITY.md'),
+  join(here, '..', '..', 'main', 'docs', 'comparisons', 'COMP_ANTIGRAVITY.md'),
+  join(here, '..', '..', '..', 'main', 'docs', 'comparisons', 'COMP_ANTIGRAVITY.md'),
+].filter(Boolean)
+
+const docPath = candidates.find((candidate) => existsSync(candidate))
+if (!docPath) {
+  console.error(
+    'Could not find docs/comparisons/COMP_ANTIGRAVITY.md in the engine checkout.\n' +
+      'Set LOCODEX_COMPARISON_DOC to its path, e.g.\n' +
+      '  LOCODEX_COMPARISON_DOC=../main/docs/comparisons/COMP_ANTIGRAVITY.md npm run extract:answers',
+  )
+  process.exit(1)
+}
 const outPath = join(here, '..', 'src', 'data', 'benchmarkAnswers.ts')
 
 const lines = readFileSync(docPath, 'utf8').split(/\r?\n/)

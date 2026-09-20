@@ -4,7 +4,7 @@ import { benchmarkAnswers } from '../data/benchmarkAnswers'
 import type { BenchmarkQaMetric } from '../data/siteData'
 import QaColumns from './QaColumns'
 
-// Answer bodies contain file:/// links from the benchmark machine — render them
+// Answer bodies carry absolute file links from the benchmark machine — render them
 // as inert text instead of dead links.
 const markdownComponents = {
   a: ({ children }: { children?: React.ReactNode }) => <span className="qa-dead-link">{children}</span>,

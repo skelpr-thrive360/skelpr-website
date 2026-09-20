@@ -1,0 +1,33 @@
+name: Dependency review
+
+# The site ships a lockfile and a small dependency set, but it is still a build a
+# visitor downloads. This fails a pull request that introduces a dependency with a
+# known vulnerability or an incompatible licence.
+
+on:
+  pull_request:
+
+concurrency:
+  group: deps-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    name: Review dependency changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Dependency review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: moderate
+          comment-summary-in-pr: on-failure
+          deny-licenses: GPL-3.0, AGPL-3.0, SSPL-1.0

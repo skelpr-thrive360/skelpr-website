@@ -31,6 +31,11 @@ jobs:
       - name: Palette matches palette.config.mjs
         run: npm run check:palette
 
+      - name: No machine paths in published copy
+        # The verbatim benchmark answers are generated from the engine's docs; this
+        # fails if an absolute file link or a maintainer home path reaches the site.
+        run: npm run check:hygiene
+
       - name: Typecheck & build
         run: npm run build
 
@@ -39,3 +44,31 @@ jobs:
 
       - name: Contrast audit
         run: npm run audit:contrast
+
+  notify-engine:
+    name: Ask the engine to re-verify published claims
+    # The engine publishes the benchmark numbers, the site renders them, and the two
+    # live in different repositories — so a change here can invalidate a claim there.
+    # The engine's cross-repo claims job also runs on a schedule; this makes it
+    # immediate. It is a notification, never a gate: without the token it says so and
+    # passes, so a fork or a fresh clone stays green.
+    needs: checks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch website-updated to the engine
+        env:
+          TOKEN: ${{ secrets.ENGINE_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::notice::ENGINE_DISPATCH_TOKEN is not configured, so the engine was not notified."
+            echo "::notice::Its scheduled claims job still re-verifies every published number twice a week."
+            exit 0
+          fi
+          curl -fsS -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/locodex-thrive360/LoCoDex/dispatches \
+            -d '{"event_type":"website-updated"}'
+          echo "Engine notified; see its 'Website claims' workflow."
