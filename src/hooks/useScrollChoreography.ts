@@ -76,7 +76,9 @@ const DRIFT_TARGETS = ['.comparison-visual', '.workflow-shell', '.architecture-l
  * animates, so that centring has to be restated in GSAP's terms or the piece
  * lands half its own size away from its slot — the bug that put the hero's first
  * card in the wrong place. `wiring` is drawn after the last piece lands, never
- * underneath one that is still travelling.
+ * underneath one that is still travelling: 'stroke' traces the connection along
+ * its own length (a diagram asserting a pipeline should be seen drawing it),
+ * 'fade' simply brings it up.
  */
 type Assembly = {
   root: string
@@ -86,14 +88,23 @@ type Assembly = {
   rotation: number
   stagger: number
   centered?: boolean
-  wiring?: string
+  wiring?: { selector: string; how: 'stroke' | 'fade' }
 }
 
 // Pipeline order, which is also document order: ingestion → stores → retrieval
 // → agent, then the map's own edges. The workflow's six steps lay down in the
 // sequence they are numbered in.
 const ASSEMBLIES: Assembly[] = [
-  { root: '.architecture-map', piece: '.architecture-node', x: 30, y: 22, rotation: 1.4, stagger: 0.055, centered: true, wiring: 'svg' },
+  {
+    root: '.architecture-map',
+    piece: '.architecture-node',
+    x: 30,
+    y: 22,
+    rotation: 1.4,
+    stagger: 0.055,
+    centered: true,
+    wiring: { selector: 'svg', how: 'stroke' },
+  },
   { root: '.workflow-steps', piece: '.workflow-step', x: -26, y: 18, rotation: -1, stagger: 0.07 },
 ]
 
@@ -228,8 +239,33 @@ export function useScrollChoreography() {
               stagger: assembly.stagger,
             },
           )
-          const wiring = assembly.wiring ? root.querySelector<HTMLElement>(assembly.wiring) : null
-          if (wiring) timeline.from(wiring, { opacity: 0, duration: 0.5, ease: 'power2.out' }, '>')
+          const wiring = assembly.wiring ? root.querySelector<HTMLElement>(assembly.wiring.selector) : null
+          if (wiring && assembly.wiring) {
+            if (assembly.wiring.how === 'stroke') {
+              // The map's edges, traced out from their source nodes as the pieces
+              // land. The dash properties are cleared the moment the draw
+              // finishes: the lines are live geometry the reader can drag, and a
+              // stale dash pattern would re-clip a line that has grown longer
+              // than the length it was measured at.
+              const edges = Array.from(wiring.querySelectorAll<SVGGeometryElement>('line, path, polyline'))
+              if (edges.length) {
+                timeline.fromTo(
+                  edges,
+                  { drawSVG: '0%' },
+                  {
+                    drawSVG: '100%',
+                    duration: 0.5,
+                    ease: 'power2.inOut',
+                    stagger: 0.045,
+                    onComplete: () => gsap.set(edges, { clearProps: 'strokeDasharray,strokeDashoffset' }),
+                  },
+                  '>',
+                )
+              }
+            } else {
+              timeline.from(wiring, { opacity: 0, duration: 0.5, ease: 'power2.out' }, '>')
+            }
+          }
         })
       }
 

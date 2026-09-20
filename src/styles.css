@@ -1169,6 +1169,14 @@ pre code {
   background: var(--ink-wash);
 }
 
+/* Shell for a `.section-detail` block: it owns the height that the accordion
+   animates, and clips the block while it moves. `overflow: hidden` also stops
+   the block's top margin collapsing out of a shell that is 0px tall — without
+   it the gap is added back at the end of the open, as a visible pop. */
+.detail-reveal {
+  overflow: hidden;
+}
+
 .detail-label {
   display: block;
   margin-bottom: var(--space-2);

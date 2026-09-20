@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, Circle, Pause, Play, RotateCcw } from 'lucide-react'
 import { workflowSteps } from '../data/siteData'
-import { DetailButton } from './Shared'
+import { DetailButton, SectionDetail } from './Shared'
 
 export function WorkflowSection({ open, onToggle }: { open: boolean; onToggle: () => void }) {
   const [activeWorkflow, setActiveWorkflow] = useState(0)
@@ -72,7 +72,7 @@ export function WorkflowSection({ open, onToggle }: { open: boolean; onToggle: (
             <h3>{currentWorkflow.label}</h3>
             <p>{currentWorkflow.simple}</p>
             <DetailButton open={open} onClick={onToggle} />
-            {open && <div className="section-detail"><span className="detail-label">PIPELINE DETAIL</span><p>{currentWorkflow.technical}</p></div>}
+            <SectionDetail open={open}><div className="section-detail"><span className="detail-label">PIPELINE DETAIL</span><p>{currentWorkflow.technical}</p></div></SectionDetail>
             <div className="workflow-nav">
               <button disabled={activeWorkflow === 0} onClick={() => { setActiveWorkflow(Math.max(0, activeWorkflow - 1)); setIsPlaying(false) }}>← Previous</button>
               <button disabled={activeWorkflow === workflowSteps.length - 1} onClick={() => { setActiveWorkflow(Math.min(workflowSteps.length - 1, activeWorkflow + 1)); setIsPlaying(false) }}>Next step →</button>

@@ -3,8 +3,10 @@
  * singleton.
  *
  * Plugins: ScrollTrigger drives the reversible reveals, the scrubbed section
- * rules and the figure drift (see useScrollChoreography). Lenis provides the
- * smoothed wheel scrolling — it scrolls
+ * rules, the figure drift and the assemblies (see useScrollChoreography).
+ * DrawSVG draws the architecture map's wiring out from its source nodes — a
+ * diagram asserting a pipeline should be seen tracing it, not fading in as a
+ * finished picture. Lenis provides the smoothed wheel scrolling — it scrolls
  * the real window (eased, not transform-wrapped), so the sticky header, the
  * scroll spy and ScrollTrigger all keep reading native scroll position.
  *
@@ -18,8 +20,9 @@
 import Lenis from 'lenis'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin'
 
-gsap.registerPlugin(ScrollTrigger)
+gsap.registerPlugin(ScrollTrigger, DrawSVGPlugin)
 
 export { gsap, ScrollTrigger }
 

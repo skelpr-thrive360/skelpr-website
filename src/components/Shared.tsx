@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { ArrowRight, Check, ChevronDown, UserX } from 'lucide-react'
-import { getLenis, smoothEase } from '../lib/anim'
+import { gsap, getLenis, ScrollTrigger, smoothEase } from '../lib/anim'
 
 /**
  * Document-space top of `element`, read from layout rather than from the
@@ -77,6 +77,75 @@ export function scrollToSection(id: string) {
 
 export function DetailButton({ open, onClick }: { open: boolean; onClick: () => void }) {
   return <button className="detail-button" onClick={onClick} aria-expanded={open}><span>{open ? 'Hide technical details' : 'View technical details'}</span><ChevronDown size={14} className={open ? 'rotate' : ''} /></button>
+}
+
+/**
+ * The technical-detail block, opened and closed as motion rather than as a mount.
+ *
+ * Mounting and unmounting made the panel pop and the whole page below it jump —
+ * at the exact moment a reader has asked for more, which is the worst place on a
+ * page to look abrupt. Animating the shell's height keeps the document
+ * continuous, and the block stays mounted while it closes so the sentence does
+ * not disappear from under the cursor.
+ *
+ * Two details matter as much as the tween. `display: none` is restored once a
+ * close settles, so closed detail is out of the accessibility tree and out of
+ * find-in-page exactly as it was when unmounted. And ScrollTrigger is refreshed
+ * when a tween settles: every trigger below this block has just moved, and a
+ * stale start value is how a reveal ends up firing a screen late.
+ *
+ * Height is measured from the shell's own `scrollHeight` rather than the child's
+ * `offsetHeight`, because the child carries a top margin that the collapsed shell
+ * clips — measuring the child would leave that gap to be added at the end, as a
+ * visible pop when the height hands back to `auto`.
+ */
+export function SectionDetail({ open, children }: { open: boolean; children: ReactNode }) {
+  const shell = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    const el = shell.current
+    if (!el) return
+    const settle = () => {
+      gsap.set(el, { height: 'auto' })
+      ScrollTrigger.refresh()
+    }
+
+    // Reduced motion gets the block, not the motion — including the first render,
+    // where `open` is false and the block must simply not be there.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.style.height = open ? 'auto' : '0px'
+      el.style.display = open ? 'block' : 'none'
+      return
+    }
+
+    if (open) {
+      el.style.display = 'block'
+      const tween = gsap.fromTo(
+        el,
+        { height: 0, opacity: 0 },
+        { height: el.scrollHeight, opacity: 1, duration: 0.42, ease: 'power2.out', onComplete: settle },
+      )
+      return () => tween.kill()
+    }
+
+    const tween = gsap.to(el, {
+      height: 0,
+      opacity: 0,
+      duration: 0.3,
+      ease: 'power2.in',
+      onComplete: () => {
+        gsap.set(el, { height: 'auto', display: 'none' })
+        ScrollTrigger.refresh()
+      },
+    })
+    return () => tween.kill()
+  }, [open])
+
+  return (
+    <div className="detail-reveal" ref={shell}>
+      {children}
+    </div>
+  )
 }
 
 export function Metric({ label, simple, without, withValue, change }: { label: string; simple: string; without: string; withValue: string; change: string }) {
