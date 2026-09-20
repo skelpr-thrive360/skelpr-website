@@ -3,6 +3,25 @@ import { ArrowRight, Check, ChevronDown, UserX } from 'lucide-react'
 import { getLenis, smoothEase } from '../lib/anim'
 
 /**
+ * Document-space top of `element`, read from layout rather than from the
+ * painted box.
+ *
+ * `getBoundingClientRect()` answers "where is this drawn?", and the page draws
+ * blocks somewhere other than where they live: every block the choreography
+ * retracts carries a 20px transform, and a block still travelling is anywhere at
+ * all. Landing a jump on that number aims at the paint, not at the heading the
+ * reader named. `offsetTop` walks the layout instead — it is immune to every
+ * transform on the page — so a jump lands where the target actually sits.
+ */
+function documentTop(element: HTMLElement) {
+  let top = 0
+  for (let node: HTMLElement | null = element; node; node = node.offsetParent as HTMLElement | null) {
+    top += node.offsetTop
+  }
+  return top
+}
+
+/**
  * Offset-aware smooth scroll: clears the sticky header, and skips easing for
  * visitors who asked for reduced motion.
  *
@@ -15,7 +34,7 @@ import { getLenis, smoothEase } from '../lib/anim'
 export function scrollToElement(target: HTMLElement, offset = 16) {
   const header = document.querySelector<HTMLElement>('.site-header')
   const headerHeight = header?.offsetHeight ?? 72
-  const top = Math.max(target.getBoundingClientRect().top + window.scrollY - headerHeight - offset, 0)
+  const top = Math.max(documentTop(target) - headerHeight - offset, 0)
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   if (reduced) {
     window.scrollTo({ top, behavior: 'auto' })
@@ -23,6 +42,14 @@ export function scrollToElement(target: HTMLElement, offset = 16) {
   }
   const lenis = getLenis()
   if (lenis) {
+    // Lenis animates from its own record of the scroll position, and that record
+    // can be left behind by a scroll Lenis did not perform: the browser landing
+    // a fragment on load, a restored position, or a gesture handed to a nested
+    // scroller. A glide started from a stale record first drags the page back to
+    // where Lenis thought it was, which is what a click that settles in the
+    // wrong section looks like from the outside. `resize()` is Lenis's own way
+    // of re-reading where the page really is, so the walk starts from here.
+    if (Math.abs(lenis.animatedScroll - window.scrollY) > 1) lenis.resize()
     const distance = Math.abs(top - window.scrollY)
     // ~0.5s for a hop, ~1.4s for the full page — past that the ride stops
     // getting longer and just starts feeling stuck.

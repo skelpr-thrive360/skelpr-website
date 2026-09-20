@@ -55,6 +55,48 @@ const RULE_BLOCKS = '.hero, .signal-strip, .content-section:not(:last-child)'
 // narrative figures — benchmark evidence is intentionally absent.
 const DRIFT_TARGETS = ['.comparison-visual', '.workflow-shell', '.architecture-layout']
 
+/**
+ * "Placed by hand": the hero's gesture, reused where the page really is a
+ * structure being built rather than a paragraph being read.
+ *
+ * The hero lays its four step cards down one at a time. The architecture map
+ * and the workflow pipeline are the only other places on the page where the
+ * content *is* an assembly — a set of pieces that belong in specific slots — so
+ * they get the same vocabulary at a third of the scale: each piece arrives from
+ * a short offset of its own box, in the order the diagram claims, and the wiring
+ * follows once the pieces have landed.
+ *
+ * The offsets are small here on purpose. The hero is allowed a stage entrance
+ * because it is the first thing a visitor sees and the gesture is the page
+ * introducing itself; further down, a card that flew in from off-screen would be
+ * decoration, and this page does not decorate its evidence.
+ *
+ * `centered` marks pieces whose own CSS centres them on their slot with a
+ * percentage transform. GSAP owns the inline transform from the first frame it
+ * animates, so that centring has to be restated in GSAP's terms or the piece
+ * lands half its own size away from its slot — the bug that put the hero's first
+ * card in the wrong place. `wiring` is drawn after the last piece lands, never
+ * underneath one that is still travelling.
+ */
+type Assembly = {
+  root: string
+  piece: string
+  x: number
+  y: number
+  rotation: number
+  stagger: number
+  centered?: boolean
+  wiring?: string
+}
+
+// Pipeline order, which is also document order: ingestion → stores → retrieval
+// → agent, then the map's own edges. The workflow's six steps lay down in the
+// sequence they are numbered in.
+const ASSEMBLIES: Assembly[] = [
+  { root: '.architecture-map', piece: '.architecture-node', x: 30, y: 22, rotation: 1.4, stagger: 0.055, centered: true, wiring: 'svg' },
+  { root: '.workflow-steps', piece: '.workflow-step', x: -26, y: 18, rotation: -1, stagger: 0.07 },
+]
+
 // --- intensity dials -------------------------------------------------------
 const STAGGER_MS = 70 // per-block delay inside a section's entrance
 const MAX_STAGGER_STEPS = 4 // after the 5th block, the stagger stops growing
@@ -152,6 +194,44 @@ export function useScrollChoreography() {
           },
         )
       })
+
+      // Assemblies. A paused timeline per group, played when the group reaches
+      // the fold and reversed (quicker, so backtracking never waits out a stage
+      // entrance) when the reader climbs back out of it — the same contract as
+      // the reveals, so nothing is ever left half-built behind them.
+      for (const assembly of ASSEMBLIES) {
+        document.querySelectorAll<HTMLElement>(assembly.root).forEach((root) => {
+          const pieces = Array.from(root.querySelectorAll<HTMLElement>(assembly.piece))
+          if (!pieces.length) return
+          const centering = assembly.centered ? { xPercent: -50, yPercent: -50 } : {}
+          const timeline = gsap.timeline({
+            paused: true,
+            scrollTrigger: {
+              trigger: root,
+              start: 'top 80%',
+              onEnter: () => timeline.timeScale(1).play(),
+              onEnterBack: () => timeline.timeScale(1).play(),
+              onLeaveBack: () => timeline.timeScale(2.4).reverse(),
+            },
+          })
+          timeline.fromTo(
+            pieces,
+            { ...centering, x: assembly.x, y: assembly.y, rotation: assembly.rotation, opacity: 0 },
+            {
+              ...centering,
+              x: 0,
+              y: 0,
+              rotation: 0,
+              opacity: 1,
+              duration: 0.6,
+              ease: 'power3.out',
+              stagger: assembly.stagger,
+            },
+          )
+          const wiring = assembly.wiring ? root.querySelector<HTMLElement>(assembly.wiring) : null
+          if (wiring) timeline.from(wiring, { opacity: 0, duration: 0.5, ease: 'power2.out' }, '>')
+        })
+      }
 
       // Hero board: the frame only fades on — it is the table, not a piece. The
       // pieces are placed on it: each step card is dragged in from beyond its own
