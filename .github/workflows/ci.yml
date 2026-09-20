@@ -4,9 +4,15 @@ on:
   push:
     branches: [main, dev]
   pull_request:
+  schedule:
+    # Weekly CodeQL sweep, carried over from the standalone workflow this file absorbed.
+    - cron: "37 5 * * 2"
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  # Keyed on the branch, not the ref, so a push that is also a pull request's head
+  # produces one live run instead of one per workflow file — the later run cancels
+  # the earlier one.
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 permissions:
@@ -44,6 +50,56 @@ jobs:
 
       - name: Contrast audit
         run: npm run audit:contrast
+
+  codeql:
+    name: CodeQL analysis
+    # The site is static and does not handle credentials, but it renders
+    # `src/data/benchmarkAnswers.ts` — generated content extracted from the engine's
+    # docs — and posts to a waitlist endpoint; taint tracking over that path is why
+    # this exists. Pull requests count only when they target the protected branches;
+    # pushes and the weekly sweep always run.
+    if: github.event_name != 'pull_request' || github.base_ref == 'main' || github.base_ref == 'dev'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"
+
+  dependency-review:
+    name: Dependency review
+    # Dependency review reads GitHub's dependency graph, which a private repository
+    # only gets with Advanced Security. It cannot run here yet, so it skips instead
+    # of failing every pull request — and starts running by itself at the visibility
+    # flip, no edit needed.
+    if: github.event_name == 'pull_request' && github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Dependency review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: moderate
+          comment-summary-in-pr: on-failure
+          deny-licenses: GPL-3.0, AGPL-3.0, SSPL-1.0
 
   notify-engine:
     name: Ask the engine to re-verify published claims
