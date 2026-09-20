@@ -127,4 +127,4 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/locodex-thrive360/LoCoDex/dispatches \
             -d '{"event_type":"website-updated"}'
-          echo "Engine notified; see its 'Website claims' workflow."
+          echo "Engine notified; see its 'Published claims' workflow."
