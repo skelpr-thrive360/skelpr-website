@@ -1,21 +1,38 @@
 import { useState } from 'react'
 import { ArrowRight, Check, ChevronDown, UserX } from 'lucide-react'
+import { getLenis, smoothEase } from '../lib/anim'
 
 /**
  * Offset-aware smooth scroll: clears the sticky header, and skips easing for
  * visitors who asked for reduced motion.
+ *
+ * The glide rides Lenis when it is running, so an anchor click lands with the
+ * same easing vocabulary as the wheel scrolling around it. One duration rule
+ * scales with distance (capped, so a footer jump is a deliberate glide, not a
+ * commute), and a wheel input mid-flight hands control straight back — Lenis
+ * treats fresh user scroll as authoritative over a running programmatic one.
  */
 export function scrollToElement(target: HTMLElement, offset = 16) {
   const header = document.querySelector<HTMLElement>('.site-header')
   const headerHeight = header?.offsetHeight ?? 72
   const top = Math.max(target.getBoundingClientRect().top + window.scrollY - headerHeight - offset, 0)
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  // Easing is a nice touch between neighbouring blocks and a long ride across a
-  // page this tall — the footer nav sits ~15,000px below what it links to. Past
-  // two viewports the jump is instant, which also reads as deliberate rather
-  // than as a scroll that has stalled.
-  const far = Math.abs(top - window.scrollY) > window.innerHeight * 2
-  window.scrollTo({ top, behavior: reduced || far ? 'auto' : 'smooth' })
+  if (reduced) {
+    window.scrollTo({ top, behavior: 'auto' })
+    return
+  }
+  const lenis = getLenis()
+  if (lenis) {
+    const distance = Math.abs(top - window.scrollY)
+    // ~0.5s for a hop, ~1.4s for the full page — past that the ride stops
+    // getting longer and just starts feeling stuck.
+    const duration = Math.min(Math.max(distance / 2400, 0.5), 1.4)
+    lenis.scrollTo(top, { duration, easing: smoothEase })
+    return
+  }
+  // Lenis not running (no JS motion consent, or init hasn't landed yet):
+  // fall back to the browser's own smooth behaviour.
+  window.scrollTo({ top, behavior: 'smooth' })
 }
 
 /**

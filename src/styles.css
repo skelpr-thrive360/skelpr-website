@@ -3244,21 +3244,10 @@ pre code {
 }
 
 
-/* Reveal-on-scroll. The hook only adds `has-reveal` when the visitor allows
-   motion and IntersectionObserver exists, so no-JS and reduced-motion guests
-   always see a fully rendered page. */
-html.has-reveal [data-reveal] {
-  opacity: 0;
-  transform: translateY(var(--reveal-shift));
-  transition: opacity var(--dur-3) var(--ease-standard),
-    transform var(--dur-3) var(--ease-standard);
-  transition-delay: var(--reveal-delay, 0ms);
-}
-
-html.has-reveal [data-reveal].is-visible {
-  opacity: 1;
-  transform: none;
-}
+/* Reveal-on-scroll is owned by GSAP (see useScrollReveal): the hook hides
+   targets and animates them in only when the visitor allows motion, so no-JS
+   and reduced-motion guests always see a fully rendered page with no hidden
+   state to un-hide. */
 
 /* =========================================================================
    Responsive
@@ -3659,7 +3648,9 @@ html.has-reveal [data-reveal].is-visible {
     transition-duration: 0.01ms !important;
   }
   .hero-lines path,
-  html.has-reveal [data-reveal] {
+  .hero::after,
+  .signal-strip::after,
+  .content-section::after {
     opacity: 1;
     transform: none;
   }
