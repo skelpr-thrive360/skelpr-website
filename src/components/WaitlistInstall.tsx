@@ -4,7 +4,7 @@ import { WaitlistForm } from './Shared'
 
 export function WaitlistSection() {
   return (
-    <section className="waitlist-section act-wash content-section" id="waitlist"><div className="waitlist-panel"><div><span className="eyebrow">EARLY ACCESS</span><h2>Be first to try <em>MCP Agent</em><br />on your own repo.</h2><p>Join the list for updates as LoCoDex becomes available to more agent workflows.</p></div><WaitlistForm /></div>
+    <section className="waitlist-section act-wash content-section" id="waitlist"><div className="waitlist-panel"><div><span className="eyebrow">STAY IN THE LOOP</span><h2>Run it today.<br /><em>Help shape what ships.</em></h2><p>LoCoDex is public and installable from source right now. Join the list for release notes, new benchmark runs, and first access to the enterprise build.</p></div><WaitlistForm /></div>
     </section>
   )
 }
@@ -16,7 +16,7 @@ export function InstallSection() {
       <div className="install-layout">
         <div className="install-copy">
           <h2>Give your agent<br /><em>better context.</em></h2>
-          <p>Install the MCP integration, index a project, and let your existing agent call LoCoDex when it needs repository understanding.</p>
+          <p>Index a project, add the MCP integration, and let your existing agent call LoCoDex when it needs repository understanding.</p>
           {/* GitHub links temporarily disabled: <div className="install-links">…</div> */}
         </div>
         <div className="install-code">

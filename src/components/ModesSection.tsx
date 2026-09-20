@@ -17,7 +17,7 @@ export function ModesSection({ open, onToggle }: { open: boolean; onToggle: () =
           </button>
         ))}
       </div>
-      <div className="mode-panel"><div className="mode-panel-heading"><div><span className="mode-number">{current.chip}</span><h3>{current.heading}</h3></div><span className="mode-chip">{current.panelChip}</span></div><p>{current.body}</p><div className="mode-facts"><div><span>LLM needed</span><strong>{current.llm}</strong></div><div><span>Retrieval</span><strong>LoCoDex hybrid engine</strong></div><div><span>Reasoning</span><strong>{current.reasoning}</strong></div><div><span>Best for</span><strong>{current.bestFor}</strong></div></div><DetailButton open={open} onClick={onToggle} /><SectionDetail open={open}><div className="section-detail"><span className="detail-label">OPERATING TERMINOLOGY</span><p>{modesDetail}</p></div></SectionDetail></div>
+      <div className="mode-panel"><div className="mode-panel-heading"><div><span className="mode-number">{current.chip}</span><h3>{current.heading}</h3></div><span className="mode-chip">{current.panelChip}</span></div><p>{current.body}</p><div className="mode-facts"><div><span>LLM needed</span><strong>{current.llm}</strong></div><div><span>Retrieval</span><strong>LoCoDex hybrid engine</strong></div><div><span>Reasoning</span><strong>{current.reasoning}</strong></div><div><span>Best for</span><strong>{current.bestFor}</strong></div></div><DetailButton open={open} onClick={onToggle} /><SectionDetail open={open}><div className="section-detail"><span className="detail-label">WHEN THIS FITS — AND WHEN IT DOESN’T</span><p>{modesDetail}</p></div></SectionDetail></div>
     </section>
   )
 }
