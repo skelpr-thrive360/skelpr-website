@@ -175,6 +175,14 @@ export function useScrollChoreography() {
           gsap.fromTo(
             pieces,
             {
+              // Each card centres itself on its anchor with a CSS
+              // translate(-50%, -50%), and GSAP owns the inline transform from
+              // the moment it animates — so the centring is restated in GSAP's
+              // own terms, as percentages that survive a resize. Without it the
+              // cards land half their own size off their anchor, and the
+              // connectors no longer meet the cards they describe.
+              xPercent: -50,
+              yPercent: -50,
               x: (_index, element) => -Math.min(Math.max(element.getBoundingClientRect().width * 1.6, 140), 260),
               y: (_index, element) => -Math.min(Math.max(element.getBoundingClientRect().height * 2.6, 110), 240),
               rotation: -3,
@@ -183,6 +191,8 @@ export function useScrollChoreography() {
               transformOrigin: '50% 60%',
             },
             {
+              xPercent: -50,
+              yPercent: -50,
               x: 0,
               y: 0,
               rotation: 0,

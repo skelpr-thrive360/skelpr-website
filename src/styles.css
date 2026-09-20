@@ -842,8 +842,13 @@ pre code {
   color: var(--fg-2);
   text-align: left;
   user-select: none;
+  /* `translate`, not `transform`: the entrance tween writes the inline
+     transform, so anything this element animates through `transform` would
+     either be cancelled by that inline style or double-animated by this
+     transition (GSAP writes it every frame). The independent property
+     composes instead of competing. */
   transition: border-color var(--dur-2) var(--ease-standard),
-    transform var(--dur-2) var(--ease-standard);
+    translate var(--dur-2) var(--ease-standard);
 }
 
 .hero-node:hover {
@@ -854,7 +859,9 @@ pre code {
   z-index: 2;
   border-color: var(--fg-accent);
   color: var(--fg-1);
-  transform: translate(-50%, calc(-50% - 2px));
+  /* The 2px lift lives here, outside `transform`, so the entrance's inline
+     transform cannot cancel it once the cards have landed. */
+  translate: 0 -2px;
 }
 
 .hero-node.active small {
