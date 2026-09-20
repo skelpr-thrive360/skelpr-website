@@ -24,7 +24,7 @@ stillest at the call to action.
 
 | Act | Sections | What moves | Why |
 |---|---|---|---|
-| **1 · Arrival** | Hero, signal strip | Staggered load cascade, then scroll-out: copy lifts ~70px and eases to half opacity while the console drifts at a slower rate | The product introduces itself, then gets out of the way |
+| **1 · Arrival** | Hero, signal strip | Load cascade on the copy; the console frame only fades on (it is the table, not a piece) while the four step cards are dragged in from beyond their own boxes to their exact positions, staggered, the trace panel following — then the connectors draw once everything has landed. On scroll the copy lifts ~70px and eases to half opacity while the console drifts at a slower rate | The product introduces itself, lays the pipeline out piece by piece, then gets out of the way |
 | **2 · Tension** | Problem, In the repository | Headings rise in; the comparison figure drifts ±4% across its traversal | Orientation — the reader is shown the gap, not told about it |
 | **3 · Mechanism** | What is LoCoDex, Two modes, MCP deep dive | Per-section staggered reveals; the workflow shell drifts | The machine assembling: pieces arrive in order |
 | **4 · Evidence** | Benchmark | One calm reveal. No drift, no scrub | Evidence does not perform |
