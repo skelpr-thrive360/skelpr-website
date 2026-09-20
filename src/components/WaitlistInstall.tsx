@@ -4,7 +4,7 @@ import { WaitlistForm } from './Shared'
 
 export function WaitlistSection() {
   return (
-    <section className="waitlist-section content-section" id="waitlist"><div className="waitlist-panel"><div><span className="eyebrow">EARLY ACCESS</span><h2>Be first to try <em>MCP Agent</em><br />on your own repo.</h2><p>Join the list for updates as LoCoDex becomes available to more agent workflows.</p></div><WaitlistForm /></div>
+    <section className="waitlist-section act-wash content-section" id="waitlist"><div className="waitlist-panel"><div><span className="eyebrow">EARLY ACCESS</span><h2>Be first to try <em>MCP Agent</em><br />on your own repo.</h2><p>Join the list for updates as LoCoDex becomes available to more agent workflows.</p></div><WaitlistForm /></div>
     </section>
   )
 }
@@ -21,7 +21,7 @@ export function InstallSection() {
         </div>
         <div className="install-code">
           <div className="code-top"><span>SETUP</span><span>bash</span></div>
-          <pre><code><span className="comment"># install with MCP support</span>{'\n'}pip install <span className="string">".[mcp]"</span>{'\n'}{`cd <your-repo>`}{'\n'}locodex setup{'\n'}locodex init{'\n'}locodex index{'\n'}locodex install-mcp</code></pre>
+          <pre><code><span className="comment"># from source — the repository is public (not on PyPI yet)</span>{'\n'}git clone <span className="string">https://github.com/locodex-thrive360/LoCoDex.git</span>{'\n'}cd LoCoDex && pip install <span className="string">-e ".[mcp]"</span>{'\n'}{`cd <your-repo>`}{'\n'}locodex setup{'\n'}locodex init{'\n'}locodex index{'\n'}locodex install-mcp</code></pre>
           <div className="code-footer"><Check size={14} /> agent-agnostic · local-first · Apache-2.0</div>
         </div>
         <div className="install-note">

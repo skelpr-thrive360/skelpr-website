@@ -9,11 +9,11 @@ import { gsap, ScrollTrigger } from '../lib/anim'
  * hijacks the axis, and every effect runs backwards when the reader scrolls
  * back up. Four layers, in increasing subtlety:
  *
- * 1. Reveals — blocks rise and fade as they cross the fold. Batched
- *    ScrollTrigger groups blocks that arrive together, and the per-section
- *    index sets each block's delay so a section enters as one gesture. Leaving
- *    back through the fold retracts them (fast, no stagger) so returning to a
- *    section replays it rather than presenting a half-faded page.
+ * 1. Reveals — blocks rise and fade as they cross the fold. Each block carries
+ *    a delay set from its position inside its section, so a section enters as
+ *    one gesture. Leaving back through the fold retracts them (fast, no
+ *    stagger) so returning to a section replays it rather than presenting a
+ *    half-faded page.
  *
  *    A block animates because of where it sits, not because someone remembered
  *    to list it: every direct child of a section is a block, in document order.
@@ -61,9 +61,23 @@ const MAX_STAGGER_STEPS = 4 // after the 5th block, the stagger stops growing
 const REVEAL_RISE = 20 // px a block rises from on entry
 const REVEAL_DURATION = 0.9 // forward pass
 const RETRACT_DURATION = 0.35 // backward pass, deliberately quicker
-const RULE_SCRUB = 0.5 // seconds of catch-up on the line draw
 const DRIFT_PERCENT = 4 // ±% of the figure's own height
-const DRIFT_SCRUB = 0.8
+
+/**
+ * Every scroll-linked value is scrubbed with `true`, never with a numeric lag,
+ * and that is deliberate.
+ *
+ * `scrub: 0.5` means "catch up over half a second", which ScrollTrigger animates
+ * with its own tween — and a tween only advances while the GSAP ticker is awake.
+ * The ticker sleeps whenever the page has no active animation, so a lagged wash,
+ * rule or drift could sit frozen at its last value with the scroll position
+ * saying otherwise (the CTA wash measured exactly that: 0 while the scroll sat
+ * mid-act). `scrub: true` writes progress straight from the scroll update, with
+ * no tween in between, so a linked value can never disagree with the position
+ * that produced it. Smoothness is unaffected: Lenis is already smoothing the
+ * scroll itself, and these values ride on top of it.
+ */
+const LINK = true
 // ---------------------------------------------------------------------------
 
 export function useScrollChoreography() {
@@ -106,12 +120,23 @@ export function useScrollChoreography() {
       }
 
       gsap.set(targets, { opacity: 0, y: REVEAL_RISE })
-      ScrollTrigger.batch(targets, {
-        start: 'top 88%',
-        onEnter: reveal,
-        onEnterBack: reveal, // returning from above replays the entrance
-        onLeaveBack: retract, // scrolling back up past the fold takes it away
-      })
+      // One trigger per block rather than ScrollTrigger.batch(). batch() delivers
+      // its callbacks through a gsap.delayedCall — and a delayed call is a tween,
+      // whose delivery depends on the ticker being awake. That indirection is how
+      // blocks were left visible on the way back up while others retracted: the
+      // per-block triggers below fire synchronously inside the same scroll
+      // update, so a block can only ever end in the state its position implies.
+      // The choreography itself is unchanged: the stagger lives in each block's
+      // own delay, not in the batching.
+      for (const target of targets) {
+        ScrollTrigger.create({
+          trigger: target,
+          start: 'top 88%',
+          onEnter: () => reveal([target]),
+          onEnterBack: () => reveal([target]), // returning from above replays it
+          onLeaveBack: () => retract([target]),
+        })
+      }
 
       // One scrubbed draw per rule: forward as the block's end approaches,
       // backwards when the reader returns. The line and the scroll are the
@@ -123,7 +148,7 @@ export function useScrollChoreography() {
           {
             '--rule-x': 1,
             ease: 'none',
-            scrollTrigger: { trigger: block, start: 'bottom 105%', end: 'bottom 88%', scrub: RULE_SCRUB },
+            scrollTrigger: { trigger: block, start: 'bottom 105%', end: 'bottom 88%', scrub: LINK },
           },
         )
       })
@@ -139,14 +164,14 @@ export function useScrollChoreography() {
             y: -70,
             opacity: 0.5,
             ease: 'none',
-            scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: 0.6 },
+            scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: LINK },
           })
         }
         if (heroVisual) {
           gsap.to(heroVisual, {
             yPercent: -6,
             ease: 'none',
-            scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: 0.6 },
+            scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: LINK },
           })
         }
       }
@@ -161,10 +186,39 @@ export function useScrollChoreography() {
             {
               yPercent: -DRIFT_PERCENT,
               ease: 'none',
-              scrollTrigger: { trigger: figure, start: 'top bottom', end: 'bottom top', scrub: DRIFT_SCRUB },
+              scrollTrigger: { trigger: figure, start: 'top bottom', end: 'bottom top', scrub: LINK },
             },
           )
         })
+      }
+
+      // Act washes. An act whose section carries `.act-wash` cross-fades the
+      // page to its own colour as it takes the screen and back out as it hands
+      // over — the one moment on this page where the background itself moves.
+      // It is a timeline rather than two tweens so a short act (the waitlist
+      // band is shorter than the viewport) can never have its fade-out start
+      // before its fade-in ends. Scroll position is the whole clock: scroll
+      // back up and the colour withdraws with it.
+      document.querySelectorAll<HTMLElement>('.act-wash').forEach((act) => {
+        gsap
+          .timeline({
+            scrollTrigger: { trigger: act, start: 'top 85%', end: 'bottom 15%', scrub: LINK },
+          })
+          .fromTo(act, { '--act-wash': 0 }, { '--act-wash': 1, duration: 0.2, ease: 'none' })
+          .to(act, { '--act-wash': 0, duration: 0.2, ease: 'none' }, 0.8)
+      })
+
+      // Reading rail: how much of the document is behind you, drawn across the
+      // header's bottom edge. It follows the scroll rather than a timer, so on
+      // a page this tall it answers "how much is left?" at a glance — and it is
+      // the one line on the site that is allowed to be incomplete on purpose.
+      const rail = document.querySelector<HTMLElement>('.read-rail span')
+      if (rail) {
+        gsap.fromTo(
+          rail,
+          { scaleX: 0 },
+          { scaleX: 1, ease: 'none', scrollTrigger: { start: 0, end: 'max', scrub: LINK } },
+        )
       }
     })
 

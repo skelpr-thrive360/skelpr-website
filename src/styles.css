@@ -442,6 +442,27 @@ pre code {
   transition: border-color var(--dur-2) var(--ease-standard);
 }
 
+/* Reading rail: how much of the document is behind you, drawn along the
+   header's bottom edge. Transform-only (scaleX), so scrolling it never causes
+   layout, and it starts at zero width — a rail with no progress to report is
+   simply absent. */
+.read-rail {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  pointer-events: none;
+}
+
+.read-rail span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
 .site-header.is-scrolled {
   border-bottom-color: var(--rule-strong);
 }
@@ -1045,9 +1066,47 @@ pre code {
   white-space: nowrap;
 }
 
-/* A single quiet band for the evidence section; the rest sit on paper. */
+/* --- act washes ---------------------------------------------------------
+   An act declares its colour; the page cross-fades to it as the act takes the
+   screen and back out as it hands over. Two acts only, and both are meaningful:
+   the evidence band goes quiet (surface-sunken) and the conversion band takes
+   the accent wash, the one place the site's "accent means you can act" rule is
+   painted on a background rather than a control.
+
+   The wash is a pseudo-element behind the content, so a scroll costs one
+   opacity, not a repaint of a section several screens tall. It is pinned to
+   scroll position (see useScrollChoreography), which makes it reversible: the
+   colour withdraws exactly when you scroll back up.
+
+   `--act-wash` defaults to 1 so a visitor without JS — or with reduced motion,
+   where the hook never runs — sees the designed band, not a missing one. */
+.act-wash {
+  --act-wash: 1;
+}
+
+.act-wash::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--act-color, var(--surface-sunken));
+  opacity: var(--act-wash);
+  pointer-events: none;
+}
+
 .benchmark-section {
-  background: var(--surface-sunken);
+  --act-color: var(--surface-sunken);
+}
+
+/* The ask dips too. Deliberately *not* the accent wash, which was the first
+   choice: painting body text on it measures ink-2 at 9.83:1 against the
+   palette's 10.5:1 target in dark theme (and ink-1, ink-3 and accent land just
+   under their budgets too), because the palette solves text against the three
+   surfaces it audits and accent-wash is not one of them. The accent's job on
+   this band is already carried by the panel's top rule and the button — a mark,
+   not a surface — which is the rule the palette was built around. */
+.waitlist-section {
+  --act-color: var(--surface-sunken);
 }
 
 .two-column-heading,

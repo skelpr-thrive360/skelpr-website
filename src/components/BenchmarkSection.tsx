@@ -60,7 +60,7 @@ export function BenchmarkSection() {
   }
 
   return (
-    <section className="benchmark-section content-section" id="benchmark">
+    <section className="benchmark-section act-wash content-section" id="benchmark">
       <div className="section-kicker">Benchmark evidence</div>
       <div className="two-column-heading"><h2>Does it actually<br /><em>work better?</em></h2><p>In the repository’s self-reported MCP Agent A/B, an Antigravity agent answered seven Sock Shop tasks with native tools only, then with LoCoDex MCP available. Pick any task to read the exact prompt and both verbatim answers.</p></div>
       <div className="benchmark-meta"><span><strong>7 × 2</strong> tasks × arms</span><span><strong>Antigravity</strong> Gemini 3.6 Flash Medium</span><span><strong>Sock Shop</strong> microservices demo</span><span><strong>2026-09</strong> run dates</span></div>

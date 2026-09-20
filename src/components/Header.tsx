@@ -45,6 +45,9 @@ export function Header() {
         <a className="nav-waitlist" href="#waitlist">Join waitlist</a>
         <a className="header-cta" href="#install">Get started <ArrowRight size={15} /></a>
       </div>
+      {/* Decorative: the rail reports scroll position, which a screen reader
+          already gets from the document itself. */}
+      <div className="read-rail" aria-hidden="true"><span /></div>
     </header>
   )
 }

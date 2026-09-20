@@ -48,8 +48,8 @@ stillest at the call to action.
 2. **Scrubbed rules** — the full-bleed dividers between blocks are not
    entrances; they *are* the scroll position, drawn via the `--rule-x` custom
    property (scaleX) as a block's bottom edge crosses from 105% to 88% of the
-   viewport, with 0.5s of scrub catch-up. Retracting on scroll-up reads as a
-   rule being un-drawn, not as progress lost.
+   viewport. Retracting on scroll-up reads as a rule being un-drawn, not as
+   progress lost.
 3. **Hero exit** — the first parallax the reader meets: copy and console move at
    different rates across the hero's traversal, both returning fully at the top.
 4. **Figure depth** — ±4% `yPercent` drift on the three narrative figures
@@ -78,8 +78,15 @@ class list, so a new scroller is covered by the CSS that makes it one.
 | Anchor glide duration | `components/Shared.tsx` | 0.5–1.4s, distance-scaled |
 | Reveal rise / duration / stagger | `useScrollChoreography.ts` dial block | 20px · 0.9s · 70ms×4 |
 | Retract duration | same | 0.35s |
-| Rule scrub | same | 0.5s |
-| Figure drift / scrub | same | ±4% · 0.8s |
+| Figure drift | same | ±4% of the figure's height |
+| Act wash | same | fade in over the act's first 20%, out over its last 20% |
+
+**Scroll-linked values are always `scrub: true`, never a numeric lag.** A lag
+(`scrub: 0.5`) is animated by a GSAP tween, and a tween only advances while the
+GSAP ticker is awake — so a lagged rule, wash or drift can sit frozen at a value
+that contradicts the scroll position. `scrub: true` writes progress straight from
+the scroll update, so a linked value cannot disagree with the position that
+produced it, and Lenis is already smoothing the scroll underneath it.
 
 ## Guarantees
 
