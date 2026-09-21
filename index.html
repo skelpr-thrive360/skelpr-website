@@ -27,23 +27,43 @@
     <link rel="apple-touch-icon" href="/brand/apple-touch-icon-180.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="description" content="Skelpr — surgical code retrieval for AI agents, PR reviews, and fixes." />
-    <!-- Replace https://skelpr.com with the deployed canonical domain when it is known,
-         together with the matching loc entry in public/sitemap.xml and public/robots.txt. -->
+    <!-- Canonical domain: https://skelpr.com — kept in sync with public/sitemap.xml,
+         public/robots.txt, and the og/twitter URLs below. -->
     <link rel="canonical" href="https://skelpr.com/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Skelpr" />
     <meta property="og:url" content="https://skelpr.com/" />
     <meta property="og:title" content="Skelpr — Surgical code retrieval" />
     <meta property="og:description" content="Surgical code retrieval for AI agents, PR reviews, and fixes. Grounded in syntax-aware context and precise file:line citations." />
-    <meta property="og:image" content="https://skelpr.com/brand/icon-512.png" />
-    <meta property="og:image:width" content="512" />
-    <meta property="og:image:height" content="512" />
-    <!-- Square mark only: generate a 1200×630 card before a large-image card is used. -->
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content="https://skelpr.com/brand/og-card.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Skelpr — Surgical code retrieval" />
     <meta name="twitter:description" content="Surgical code retrieval for AI agents, PR reviews, and fixes. Grounded in syntax-aware context and precise file:line citations." />
-    <meta name="twitter:image" content="https://skelpr.com/brand/icon-512.png" />
+    <meta name="twitter:image" content="https://skelpr.com/brand/og-card.png" />
     <title>Skelpr — Surgical code retrieval</title>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "name": "Skelpr",
+          "url": "https://skelpr.com/"
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "Skelpr",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "Linux, macOS, Windows",
+          "description": "Surgical code retrieval for AI agents, PR reviews, and fixes. Grounded in syntax-aware context and precise file:line citations.",
+          "url": "https://skelpr.com/",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
