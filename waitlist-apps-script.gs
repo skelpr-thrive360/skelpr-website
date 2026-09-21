@@ -1,5 +1,5 @@
 /**
- * LoCoDex waitlist backend — paste this into a Google Apps Script bound to your
+ * Skelpr waitlist backend — paste this into a Google Apps Script bound to your
  * Google Sheet (Extensions → Apps Script), then deploy as a Web App.
  * Full checklist in website/README.md ("Waitlist setup").
  *

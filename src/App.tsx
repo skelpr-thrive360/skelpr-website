@@ -43,9 +43,9 @@ function App() {
           <div className="hero-copy">
             <div className="eyebrow"><span className="status-dot" /> Code intelligence for agents</div>
             <h1>Don’t give an agent the whole repo.<br /><em>Give it the right code.</em></h1>
-            <p className="hero-lede">LoCoDex finds the right code for AI agents, PR reviews, and fixes — grounded in syntax-aware context and precise <code>file:line</code> citations.</p>
+            <p className="hero-lede">Skelpr finds the right code for AI agents, PR reviews, and fixes — grounded in syntax-aware context and precise <code>file:line</code> citations.</p>
             <div className="hero-actions">
-              <a className="button primary" href="#workflow">Explore LoCoDex <ArrowDown size={16} /></a>
+              <a className="button primary" href="#workflow">Explore skelpr <ArrowDown size={16} /></a>
               <a className="button text-button" href="#benchmark">See the benchmark <ArrowRight size={16} /></a>
             </div>
             <div className="hero-proof">
@@ -53,7 +53,7 @@ function App() {
               <span><strong>-43%</strong> wall-clock</span>
               <span><strong>113 → 32</strong> files opened</span>
             </div>
-            <p className="hero-boundary">LoCoDex retrieves and cites — your agent still does the reasoning.<br />It speaks MCP (Model Context Protocol), so Claude Code, Cursor and Windsurf can call it as they are.</p>
+            <p className="hero-boundary">Skelpr retrieves and cites — your agent still does the reasoning.<br />It speaks MCP (Model Context Protocol), so Claude Code, Cursor and Windsurf can call it as they are.</p>
           </div>
           <HeroVisual />
         </section>

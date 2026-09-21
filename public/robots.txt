@@ -1,4 +1,4 @@
 # Replace the sitemap host with the deployed canonical domain when it is known.
 User-agent: *
 Allow: /
-Sitemap: https://locodex.dev/sitemap.xml
+Sitemap: https://skelpr.com/sitemap.xml

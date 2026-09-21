@@ -5,7 +5,7 @@ export type Mode = 'standalone' | 'agent'
 export type WorkflowStep = {
   id: string
   label: string
-  owner: 'agent' | 'locodex'
+  owner: 'agent' | 'skelpr'
   simple: string
   technical: string
   code: string
@@ -25,16 +25,16 @@ export const workflowSteps: WorkflowStep[] = [
   {
     id: 'mcp',
     label: 'MCP Server',
-    owner: 'locodex',
-    simple: 'The agent asks LoCoDex for focused code intelligence instead of opening everything.',
-    technical: 'The vendor-neutral LoCoDex MCP Server exposes locodex_search and related tools over MCP.',
-    code: 'locodex_search(query, top_k=5)',
+    owner: 'skelpr',
+    simple: 'The agent asks skelpr for focused code intelligence instead of opening everything.',
+    technical: 'The vendor-neutral skelpr MCP Server exposes skelpr_search and related tools over MCP.',
+    code: 'skelpr_search(query, top_k=5)',
     accent: 'blue',
   },
   {
     id: 'retrieve',
     label: 'Retrieve',
-    owner: 'locodex',
+    owner: 'skelpr',
     simple: 'Several kinds of evidence are combined: exact matches, symbols, relationships, and meaning.',
     technical: 'HybridRetriever runs lexical, keyword, filename, symbol, graph, and vector retrieval in a deterministic-first order.',
     code: 'lexical → symbol → graph → vector',
@@ -43,7 +43,7 @@ export const workflowSteps: WorkflowStep[] = [
   {
     id: 'rank',
     label: 'Rank + cite',
-    owner: 'locodex',
+    owner: 'skelpr',
     simple: 'The strongest snippets are ranked, de-duplicated, and labeled with exact file locations.',
     technical: 'Fusion Ranker applies source priority, overlap merging, file-level deduplication, and source hydration.',
     code: '[LEXICAL] deploy/kubernetes/...:1-23',
@@ -61,10 +61,10 @@ export const workflowSteps: WorkflowStep[] = [
   {
     id: 'verify',
     label: 'Verify',
-    owner: 'locodex',
+    owner: 'skelpr',
     simple: 'When code changes, validation can run in an isolated sandbox or local fallback.',
-    technical: 'locodex_validate runs configured test, lint, and typecheck commands through ValidationRunner.',
-    code: 'locodex_validate(["test", "lint"])',
+    technical: 'skelpr_validate runs configured test, lint, and typecheck commands through ValidationRunner.',
+    code: 'skelpr_validate(["test", "lint"])',
     accent: 'red',
   },
 ]
@@ -104,7 +104,7 @@ export const benchmarkQa: { task: string; question: string; verdict: QaVerdict; 
       { label: 'Tokens', without: '79.8k', withValue: '49.0k (↓39%)' },
       { label: 'Duration', without: '25.7s', withValue: '21.5s (↓16%)' },
       { label: 'Files read', without: '14', withValue: '5 (↓64%)' },
-      { label: 'Tool calls', without: '15 native', withValue: '5 native + 3 LoCoDex' },
+      { label: 'Tool calls', without: '15 native', withValue: '5 native + 3 skelpr' },
     ],
   },
   {
@@ -124,7 +124,7 @@ export const benchmarkQa: { task: string; question: string; verdict: QaVerdict; 
       { label: 'Tokens', without: '140.5k', withValue: '39.3k (↓72%)' },
       { label: 'Duration', without: '73.1s', withValue: '18.9s (↓74%)' },
       { label: 'Files read', without: '24', withValue: '3 (↓88%)' },
-      { label: 'Tool calls', without: '28 native', withValue: '3 native + 3 LoCoDex' },
+      { label: 'Tool calls', without: '28 native', withValue: '3 native + 3 skelpr' },
     ],
   },
   {
@@ -144,7 +144,7 @@ export const benchmarkQa: { task: string; question: string; verdict: QaVerdict; 
       { label: 'Tokens', without: '158.9k', withValue: '64.5k (↓59%)' },
       { label: 'Duration', without: '84.0s', withValue: '31.3s (↓63%)' },
       { label: 'Files read', without: '24', withValue: '6 (↓75%)' },
-      { label: 'Tool calls', without: '31 native', withValue: '7 native + 3 LoCoDex' },
+      { label: 'Tool calls', without: '31 native', withValue: '7 native + 3 skelpr' },
     ],
   },
   {
@@ -164,7 +164,7 @@ export const benchmarkQa: { task: string; question: string; verdict: QaVerdict; 
       { label: 'Tokens', without: '176.1k', withValue: '63.6k (↓64%)' },
       { label: 'Duration', without: '51.0s', withValue: '19.1s (↓63%)' },
       { label: 'Files read', without: '28', withValue: '6 (↓79%)' },
-      { label: 'Tool calls', without: '32 native', withValue: '6 native + 3 LoCoDex' },
+      { label: 'Tool calls', without: '32 native', withValue: '6 native + 3 skelpr' },
     ],
   },
   {
@@ -184,7 +184,7 @@ export const benchmarkQa: { task: string; question: string; verdict: QaVerdict; 
       { label: 'Tokens', without: '72.9k', withValue: '59.3k (↓19%)' },
       { label: 'Duration', without: '301s', withValue: '186s (↓38%)' },
       { label: 'Files read', without: '8', withValue: '4 (↓50%)' },
-      { label: 'Tool calls', without: '9 native', withValue: '4 native + 3 LoCoDex' },
+      { label: 'Tool calls', without: '9 native', withValue: '4 native + 3 skelpr' },
     ],
   },
   {
@@ -204,7 +204,7 @@ export const benchmarkQa: { task: string; question: string; verdict: QaVerdict; 
       { label: 'Tokens', without: '88.7k', withValue: '44.5k (↓50%)' },
       { label: 'Duration', without: '19.9s', withValue: '18.4s (↓7%)' },
       { label: 'Files read', without: '9', withValue: '4 (↓56%)' },
-      { label: 'Tool calls', without: '13 native', withValue: '4 native + 3 LoCoDex' },
+      { label: 'Tool calls', without: '13 native', withValue: '4 native + 3 skelpr' },
     ],
   },
   {
@@ -223,7 +223,7 @@ export const benchmarkQa: { task: string; question: string; verdict: QaVerdict; 
       { label: 'Tokens', without: '49.4k', withValue: '46.8k (↓5%)' },
       { label: 'Duration', without: '26.0s', withValue: '36.5s (↑40%)' },
       { label: 'Files read', without: '6', withValue: '4 (↓33%)' },
-      { label: 'Tool calls', without: '8 native', withValue: '4 native + 3 LoCoDex' },
+      { label: 'Tool calls', without: '8 native', withValue: '4 native + 3 skelpr' },
     ],
   },
 ]
@@ -232,9 +232,9 @@ export const heroIcons = { agent: Sparkles, mcp: Network, retrieval: Search, res
 
 export const heroStages: { id: keyof typeof heroIcons; label: string; detail: string; code: string; className: string }[] = [
   { id: 'agent', label: 'You ask', detail: 'A question about the codebase', code: '“does a recommendations service exist?”', className: 'node-agent' },
-  { id: 'mcp', label: 'LoCoDex MCP', detail: 'The agent calls a focused tool instead of reading files', code: 'locodex_search(query, top_k=5)', className: 'node-mcp' },
+  { id: 'mcp', label: 'skelpr MCP', detail: 'The agent calls a focused tool instead of reading files', code: 'skelpr_search(query, top_k=5)', className: 'node-mcp' },
   { id: 'retrieval', label: 'Hybrid retrieval', detail: 'Lexical, symbol, graph, and vector evidence fused', code: 'lexical → symbol → graph → vector', className: 'node-retrieval' },
-  { id: 'result', label: 'Cited answer', detail: 'Evidence with exact file:line locations', code: '[SYMBOL] locodex/engine.py:354-379', className: 'node-result' },
+  { id: 'result', label: 'Cited answer', detail: 'Evidence with exact file:line locations', code: '[SYMBOL] skelpr/engine.py:354-379', className: 'node-result' },
 ]
 
 export const architectureNodes = [
@@ -279,15 +279,15 @@ export const architectureEdges = [
 
 
 export const modeOptions = [
-  { value: 'agent' as Mode, chip: 'MCP AGENT', title: 'Agent Integration', sub: 'MCP Server', heading: 'Agent Integration (MCP Server)', panelChip: 'NO LLM KEY REQUIRED', bestFor: 'Enhancing an existing agent', llm: 'Agent brings its own', reasoning: 'External agent', body: 'LoCoDex runs as a code intelligence backend for Claude Code, Cursor, Windsurf, or any MCP-compatible agent. The agent’s LLM handles reasoning; LoCoDex provides retrieval and validation.' },
-  { value: 'standalone' as Mode, chip: 'CLI', title: 'Standalone Package', sub: 'CLI + Own LLM', heading: 'Standalone Package (CLI + Own LLM)', panelChip: 'FULL PIPELINE', bestFor: 'Self-contained workflow', llm: 'Your endpoint', reasoning: 'LoCoDex model router', body: 'You run locodex commands directly. LoCoDex handles retrieval, context building, LLM calls, patching, and validation end to end through your configured endpoint.' },
+  { value: 'agent' as Mode, chip: 'MCP AGENT', title: 'Agent Integration', sub: 'MCP Server', heading: 'Agent Integration (MCP Server)', panelChip: 'NO LLM KEY REQUIRED', bestFor: 'Enhancing an existing agent', llm: 'Agent brings its own', reasoning: 'External agent', body: 'Skelpr runs as a code intelligence backend for Claude Code, Cursor, Windsurf, or any MCP-compatible agent. The agent’s LLM handles reasoning; skelpr provides retrieval and validation.' },
+  { value: 'standalone' as Mode, chip: 'CLI', title: 'Standalone Package', sub: 'CLI + Own LLM', heading: 'Standalone Package (CLI + Own LLM)', panelChip: 'FULL PIPELINE', bestFor: 'Self-contained workflow', llm: 'Your endpoint', reasoning: 'skelpr model router', body: 'You run skelpr commands directly. Skelpr handles retrieval, context building, LLM calls, patching, and validation end to end through your configured endpoint.' },
 ]
 
-export const modesDetail = 'The MCP Agent integration uses an external agent through MCP/CLI/HTTP. Headless / Enterprise deployments route application or CI traffic through the LoCoDex API, retrieval, and LLM gateway.'
+export const modesDetail = 'The MCP Agent integration uses an external agent through MCP/CLI/HTTP. Headless / Enterprise deployments route application or CI traffic through the skelpr API, retrieval, and LLM gateway.'
 
 export const architectureCopy = (id: string, detailMode: 'simple' | 'technical') => {
   const simple: Record<string, string> = {
-    repo: 'The repository is the source of truth. LoCoDex starts from its tracked text files.',
+    repo: 'The repository is the source of truth. Skelpr starts from its tracked text files.',
     scan: 'The scanner walks the repository, respects ignore rules, and classifies files.',
     ast: 'Code structure is extracted when possible. A regex fallback keeps indexing functional.',
     chunk: 'Code is split around symbols such as functions, classes, and methods.',
@@ -301,7 +301,7 @@ export const architectureCopy = (id: string, detailMode: 'simple' | 'technical')
   }
   const technical: Record<string, string> = {
     repo: 'scan_repository() prefers git ls-files and filters non-text files before indexing.',
-    scan: 'Repo Scanner applies .locodex.yaml ignore patterns and records language metadata and hashes.',
+    scan: 'Repo Scanner applies .skelpr.yaml ignore patterns and records language metadata and hashes.',
     ast: 'tree_sitter_indexer.extract() emits symbols/imports; language-aware regex extraction is the fallback.',
     chunk: 'chunk_by_symbols() aligns chunks to outermost symbol spans and falls back to overlapping line windows.',
     store: 'PostgreSQL stores file/chunk/symbol/import records and index state under tenant-aware metadata access.',
@@ -310,7 +310,7 @@ export const architectureCopy = (id: string, detailMode: 'simple' | 'technical')
     symbol: 'SymbolIndex uses SCIP when available in the environment; otherwise it uses the AST-backed symbol table.',
     graph: 'GraphifyAdapter currently reports static-import-graph and persists nodes, edges, and summary.txt.',
     hybrid: 'HybridRetriever executes lexical → symbol → graph → vector, dedups by path/line, reranks, and hydrates source.',
-    mcp: 'mcp_server registers locodex_search, get_context, find_symbol, dependencies, validate, health, and AST patching.',
+    mcp: 'mcp_server registers skelpr_search, get_context, find_symbol, dependencies, validate, health, and AST patching.',
   }
   return detailMode === 'simple' ? simple[id] : technical[id]
 }

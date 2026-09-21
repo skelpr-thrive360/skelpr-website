@@ -1,5 +1,5 @@
 /* =========================================================================
-   LoCoDex — design system
+   skelpr — design system
    -------------------------------------------------------------------------
    Layers:  tokens → base → type → layout → sections → figures → motion
    Themes:  paper (default) + dark — visitor-chosen, the system by default
@@ -655,8 +655,7 @@ pre code {
 .button {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  /* A control label is one line, always: "Explore LoCoDex" was breaking into three
+  gap: var(--space-2);   /* A control label is one line, always: "Explore skelpr" was breaking into three
      at phone widths, which turns a button into a paragraph. Narrow viewports stack
      the row instead (see the ≤700px block) rather than wrapping the words. */
   white-space: nowrap;
@@ -724,7 +723,7 @@ pre code {
 }
 
 /* The scope boundary, stated in the open instead of inside a details
-   toggle: LoCoDex retrieves, the agent reasons. It is also where MCP is
+   toggle: skelpr retrieves, the agent reasons. It is also where MCP is
    first spelled out, so the acronym is not a wall further down the page. */
 .hero-boundary {
   max-width: 56ch;
@@ -1488,7 +1487,7 @@ pre code {
 }
 
 .legend-agent,
-.legend-locodex {
+.legend-skelpr {
   width: 10px;
   height: 2px;
 }
@@ -1497,7 +1496,7 @@ pre code {
   background: var(--ink-3);
 }
 
-.legend-locodex {
+.legend-skelpr {
   background: var(--accent);
 }
 
@@ -1692,7 +1691,7 @@ pre code {
   color: var(--ink-3);
 }
 
-.owner-tag.locodex {
+.owner-tag.skelpr {
   color: var(--accent);
 }
 
@@ -3434,8 +3433,7 @@ pre code {
 
   .hero-lede {
     font-size: var(--text-base);
-  }
-  /* Two nowrap labels cannot share a 330px row — "Explore LoCoDex" and "See the
+  }   /* Two nowrap labels cannot share a 330px row — "Explore skelpr" and "See the
      benchmark" together are wider than the phone, and wrapping them was worse than
      stacking them. */
   .hero-actions {

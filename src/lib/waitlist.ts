@@ -18,7 +18,7 @@ export type WaitlistDetails = {
   trap?: string
 }
 
-const STUB_KEY = 'locodex-waitlist-email'
+const STUB_KEY = 'skelpr-waitlist-email'
 
 export async function submitWaitlistEmail(
   emailInput: string,

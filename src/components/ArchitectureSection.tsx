@@ -28,7 +28,7 @@ export function ArchitectureSection({ open, onToggle }: { open: boolean; onToggl
       <div className="architecture-layout">
         <div className="architecture-map" ref={mapRef}>
           <div className="map-label">SHARED RETRIEVAL ENGINE <span className="map-hint">DRAG NODES · THEY KEEP THEIR DISTANCE</span><button type="button" className="map-reset" onClick={drag.reset}>Reset</button></div>
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="LoCoDex architecture diagram" role="img">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="skelpr architecture diagram" role="img">
             {architectureEdges.map(([from, to]) => {
               const a = drag.positions[from]
               const b = drag.positions[to]
@@ -58,7 +58,7 @@ export function ArchitectureSection({ open, onToggle }: { open: boolean; onToggl
           ))}
         </div>
         <div className="architecture-inspector">
-          <span className="owner-tag locodex">{activeArchitecture.group.toUpperCase()}</span>
+          <span className="owner-tag skelpr">{activeArchitecture.group.toUpperCase()}</span>
           <h3>{activeArchitecture.label}</h3>
           <p>{architectureCopy(activeArchitecture.id, open ? 'technical' : 'simple')}</p>
           <div className="inspector-detail"><span>BACKEND / FALLBACK</span><code>{architectureBackend(activeArchitecture.id)}</code></div>

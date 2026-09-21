@@ -13,7 +13,7 @@ import { useEffect, useSyncExternalStore } from 'react'
 // Also hard-coded in the pre-paint script in index.html, which has to read the
 // choice before any module loads. Change both or the first paint will disagree
 // with the first render.
-export const THEME_STORAGE_KEY = 'locodex-theme'
+export const THEME_STORAGE_KEY = 'skelpr-theme'
 
 export type ThemeChoice = 'light' | 'dark' | 'system'
 

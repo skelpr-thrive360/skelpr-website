@@ -12,7 +12,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 // a sibling checkout (`<workspace>/website/…` + `<workspace>/main/…`). An explicit
 // override wins for anything else.
 const candidates = [
-  process.env.LOCODEX_COMPARISON_DOC,
+  process.env.SKELPR_COMPARISON_DOC,
   join(here, '..', '..', 'docs', 'comparisons', 'COMP_ANTIGRAVITY.md'),
   join(here, '..', '..', 'main', 'docs', 'comparisons', 'COMP_ANTIGRAVITY.md'),
   join(here, '..', '..', '..', 'main', 'docs', 'comparisons', 'COMP_ANTIGRAVITY.md'),
@@ -22,8 +22,8 @@ const docPath = candidates.find((candidate) => existsSync(candidate))
 if (!docPath) {
   console.error(
     'Could not find docs/comparisons/COMP_ANTIGRAVITY.md in the engine checkout.\n' +
-      'Set LOCODEX_COMPARISON_DOC to its path, e.g.\n' +
-      '  LOCODEX_COMPARISON_DOC=../main/docs/comparisons/COMP_ANTIGRAVITY.md npm run extract:answers',
+      'Set SKELPR_COMPARISON_DOC to its path, e.g.\n' +
+      '  SKELPR_COMPARISON_DOC=../main/docs/comparisons/COMP_ANTIGRAVITY.md npm run extract:answers',
   )
   process.exit(1)
 }

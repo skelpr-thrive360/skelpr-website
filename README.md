@@ -1,6 +1,6 @@
-# LoCoDex website
+# Skelpr website
 
-The public product website for [LoCoDex](https://github.com/locodex-thrive360/LoCoDex) —
+The public product website for [skelpr](https://github.com/skelpr-thrive360/skelpr) —
 surgical code retrieval for AI agents. Isolated React/Vite app: product copy and benchmark
 figures are grounded in the repository's README and `docs/`, never invented.
 
@@ -74,7 +74,7 @@ rendered, still page.
 ## Theming
 
 The site ships `light`, `dark` and `system`, chosen from the three-way control in the
-header and remembered in `localStorage` (`locodex-theme`). `system` — the default —
+header and remembered in `localStorage` (`skelpr-theme`). `system` — the default —
 follows `prefers-color-scheme`; a stored choice pins the theme, and a short inline
 script in `index.html` applies it before the first paint so the page never flashes the
 wrong theme.
@@ -194,6 +194,7 @@ filtering then has to happen on their dashboard (spam settings).
 
 ## Canonical URL
 
-`sitemap.xml` and `robots.txt` currently use `https://locodex.dev` as a placeholder
-because the repository does not specify the deployed public domain. Replace both before
-launch (they feed SEO — sitemap submission, social preview crawlers).
+The canonical domain is `https://skelpr.com`, used in three places that have to stay in
+sync: the canonical/og/twitter meta tags in `index.html`, `public/sitemap.xml`, and
+`public/robots.txt`. If the deployed public domain ever changes, update all three
+together (they feed SEO — sitemap submission, social preview crawlers).

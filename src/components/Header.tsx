@@ -21,9 +21,9 @@ export function Header() {
   const closeNav = () => setMobileNav(false)
   return (
     <header className={scrolled ? 'site-header is-scrolled' : 'site-header'}>
-      <a className="brand" href="#top" aria-label="LoCoDex home">
+      <a className="brand" href="#top" aria-label="skelpr home">
         <BrandMark />
-        <span>LoCoDex</span>
+        <span>skelpr</span>
       </a>
       <nav className={mobileNav ? 'main-nav open' : 'main-nav'} aria-label="Primary navigation">
         {navItems.map((item) => (
@@ -35,7 +35,7 @@ export function Header() {
             One conversion point per width: the drawer carries the link here, the
             header carries it there, and the hero carries none. */}
         <a className="nav-join" href="#waitlist" onClick={closeNav}>Join waitlist</a>
-        {/* GitHub link temporarily disabled: <a href="https://github.com/locodex-thrive360/LoCoDex" target="_blank" rel="noreferrer">GitHub <ExternalLink size={13} /></a> */}
+        {/* GitHub link temporarily disabled: <a href="https://github.com/skelpr-thrive360/skelpr" target="_blank" rel="noreferrer">GitHub <ExternalLink size={13} /></a> */}
       </nav>
       <div className="header-actions">
         <ThemeToggle />

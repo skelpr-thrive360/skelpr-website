@@ -1,6 +1,6 @@
 {
-  "name": "LoCoDex",
-  "short_name": "LoCoDex",
+  "name": "Skelpr",
+  "short_name": "Skelpr",
   "description": "Surgical code retrieval for AI agents, PR reviews, and fixes.",
   "icons": [
     { "src": "/brand/icon-192.png", "sizes": "192x192", "type": "image/png" },

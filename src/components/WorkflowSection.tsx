@@ -40,7 +40,7 @@ export function WorkflowSection({ open, onToggle }: { open: boolean; onToggle: (
         <div><h2>A live path from <em>question</em><br />to cited context.</h2></div>
         <div>
           <p>The MCP Agent integration is not a search box. It is a boundary between an agent’s reasoning and a repository’s evidence.</p>
-          <div className="ownership-legend"><span><i className="legend-agent" /> External agent owns</span><span><i className="legend-locodex" /> LoCoDex owns</span></div>
+          <div className="ownership-legend"><span><i className="legend-agent" /> External agent owns</span><span><i className="legend-skelpr" /> skelpr owns</span></div>
         </div>
       </div>
       <div className="workflow-shell">
@@ -65,10 +65,10 @@ export function WorkflowSection({ open, onToggle }: { open: boolean; onToggle: (
           <div className={`workflow-terminal accent-${currentWorkflow.accent}`}>
             <div className="terminal-top"><span><Circle size={7} fill="currentColor" /> workflow.trace</span><span>step {String(activeWorkflow + 1).padStart(2, '0')} / 06</span></div>
             <div className="terminal-body"><span className="terminal-prompt">$</span><strong>{currentWorkflow.code}</strong><span className="terminal-cursor" /></div>
-            <div className="terminal-source">source · {currentWorkflow.owner === 'agent' ? 'external agent' : 'LoCoDex core'}</div>
+            <div className="terminal-source">source · {currentWorkflow.owner === 'agent' ? 'external agent' : 'skelpr core'}</div>
           </div>
           <div className="workflow-explanation">
-            <span className={`owner-tag ${currentWorkflow.owner}`}>{currentWorkflow.owner === 'agent' ? 'EXTERNAL AGENT' : 'LOCODEX CORE'}</span>
+            <span className={`owner-tag ${currentWorkflow.owner}`}>{currentWorkflow.owner === 'agent' ? 'EXTERNAL AGENT' : 'SKELPR CORE'}</span>
             <h3>{currentWorkflow.label}</h3>
             <p>{currentWorkflow.simple}</p>
             <DetailButton open={open} onClick={onToggle} />
@@ -80,7 +80,7 @@ export function WorkflowSection({ open, onToggle }: { open: boolean; onToggle: (
           </div>
         </div>
       </div>
-      <div className="tool-row"><span>MCP Agent exposes</span><code>locodex_search</code><code>locodex_get_context</code><code>locodex_find_symbol</code><code>locodex_dependencies</code><code>locodex_validate</code><code>locodex_health</code></div>
+      <div className="tool-row"><span>MCP Agent exposes</span><code>skelpr_search</code><code>skelpr_get_context</code><code>skelpr_find_symbol</code><code>skelpr_dependencies</code><code>skelpr_validate</code><code>skelpr_health</code></div>
     </section>
   )
 }

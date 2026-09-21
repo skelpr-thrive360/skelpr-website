@@ -10,7 +10,7 @@ import react from '@vitejs/plugin-react'
  */
 function waitlistEndpointGuard(endpoint: string | undefined): Plugin {
   return {
-    name: 'locodex:waitlist-endpoint-guard',
+    name: 'skelpr:waitlist-endpoint-guard',
     apply: 'build',
     buildStart() {
       if (!endpoint) {
