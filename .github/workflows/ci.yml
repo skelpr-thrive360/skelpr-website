@@ -57,8 +57,11 @@ jobs:
     # `src/data/benchmarkAnswers.ts` — generated content extracted from the engine's
     # docs — and posts to a waitlist endpoint; taint tracking over that path is why
     # this exists. Pull requests count only when they target the protected branches;
-    # pushes and the weekly sweep always run.
-    if: github.event_name != 'pull_request' || github.base_ref == 'main' || github.base_ref == 'dev'
+    # pushes and the weekly sweep always run. Uploading results is an Advanced
+    # Security feature a private repository does not have, so the job also skips
+    # there instead of failing every run — and starts by itself at the visibility
+    # flip, no edit needed (same guard as dependency-review).
+    if: github.event.repository.private == false && (github.event_name != 'pull_request' || github.base_ref == 'main' || github.base_ref == 'dev')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
