@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
-import { ChevronDown, ChevronRight, Equal, Expand, Shrink, ShieldCheck, TrendingDown, TrendingUp } from 'lucide-react'
+import { ArrowRight, ChevronDown, ChevronRight, Equal, Expand, Shrink, ShieldCheck, TrendingDown, TrendingUp } from 'lucide-react'
 import { benchmarkQa, benchmarkTasks } from '../data/siteData'
 import type { QaVerdict } from '../data/siteData'
 import { Metric, scrollToElement } from './Shared'
@@ -65,7 +65,12 @@ export function BenchmarkSection() {
       <div className="two-column-heading"><h2>Does it actually<br /><em>work better?</em></h2><p>In the repository’s self-reported MCP Agent A/B, an Antigravity agent answered seven Sock Shop tasks with native tools only, then with skelpr MCP available. Pick any task to read the exact prompt and both verbatim answers.</p></div>
       <div className="benchmark-meta"><span><strong>7 × 2</strong> tasks × arms</span><span><strong>Antigravity</strong> Gemini 3.6 Flash Medium</span><span><strong>Sock Shop</strong> microservices demo</span><span><strong>2026-09</strong> run dates</span></div>
 
-      <div className="metric-grid"><Metric label="Total tokens" simple="How much context work did the agent do?" without="766,393" withValue="367,045" change="−52.1%" /><Metric label="Wall-clock time" simple="How long did each suite take?" without="581s" withValue="330s" change="−43.2%" /><Metric label="Accuracy" simple="How many checklist points did the answers earn?" without="619" withValue="635" change="+16 pts" /><Metric label="Files opened" simple="How many files did the agent inspect?" without="113" withValue="32" change="−71.7%" /></div>
+      {/* Bars are the table's own encoding at card scale, on one shared scale (each
+          pair as % of that metric's max). Accuracy is deliberately omitted: its bars
+          would be two near-equal slivers implying a flat line, while the +16 lives
+          entirely in one negative task — the caveat below owns that honesty, and a
+          chart there would argue against it. */}
+      <div className="metric-grid"><Metric label="Total tokens" simple="How much context work did the agent do?" without="766,393" withValue="367,045" change="−52.1%" withoutPct={100} withPct={Math.round((367045 / 766393) * 100)} /><Metric label="Wall-clock time" simple="How long did each suite take?" without="581s" withValue="330s" change="−43.2%" withoutPct={100} withPct={Math.round((330 / 581) * 100)} /><Metric label="Accuracy" simple="How many checklist points did the answers earn?" without="619" withValue="635" change="+16 pts" /><Metric label="Files opened" simple="How many files did the agent inspect?" without="113" withValue="32" change="−71.7%" withoutPct={100} withPct={Math.round((32 / 113) * 100)} /></div>
 
       <div className="benchmark-table-wrap">
         <div className="table-heading"><div><span className="eyebrow">THE SEVEN TASKS</span><h3>Same questions. Different context path.</h3></div><span className="table-key"><i className="without-key" /> WITHOUT <i className="with-key" /> WITH · <em>click a row to read the answers</em><span className="scroll-cue">swipe for all columns →</span></span></div>
@@ -111,6 +116,19 @@ export function BenchmarkSection() {
 
       <div className="caveat"><ShieldCheck size={17} /><div><strong>Read the accuracy number with care.</strong><p>The +16 swing is driven by the negative task’s phrase match (60 → 100); the repository notes both answers were equally correct. On the other six tasks, WITH totals 535 vs. 559. Token and time savings are unaffected.</p></div></div>
       <button className="methodology-toggle" onClick={() => setMethodologyOpen(!methodologyOpen)} aria-expanded={methodologyOpen}><span>Technical methodology & limitations</span><ChevronDown size={17} className={methodologyOpen ? 'rotate' : ''} /></button>{methodologyOpen && <><div className="methodology"><div><strong>WITHOUT</strong><p>Skelpr removed from MCP config. Native browse/read/glob/grep tools only.</p></div><div><strong>WITH</strong><p>Native tools plus skelpr MCP, with search-first guidance and 1–3 targeted searches.</p></div><div><strong>Evaluation</strong><p>Accuracy uses task-specific keyword/checklist evaluators. No LLM judge. Raw prompts and verbatim outputs are saved in the benchmark artifacts.</p></div></div><div className="mode-one-benchmark"><div><span className="eyebrow">CLI / REFERENCE BASELINE</span><h3>Standalone retrieval vs. a full-repo dump</h3><p>Gemini 2.5 Flash on a mid-size repository. The docs explicitly label this a worst-case reference, not typical user behavior.</p></div><div className="mode-one-table"><div><span>Strategy</span><span>Latency</span><span>Tokens</span><span>Accuracy</span></div><div><strong>Naive full-repo dump</strong><span>16.37s</span><span>122,710</span><span>8.7 / 10</span></div><div><strong>Agentic multi-turn</strong><span>19.62s</span><span>7,491</span><span>8.7 / 10</span></div><div className="highlight-row"><strong>skelpr hybrid engine</strong><span>5.61s</span><span>2,474</span><span>9.0 / 10</span></div></div></div></>}
+
+      {/* The exit. The page spends three sections proving the claim; the reader who is
+          convinced by it needs the next step where the proof ends, not four thousand
+          pixels later behind two infrastructure sections. The accent is the same
+          "you can act on this" rule the palette enforces everywhere else — this is
+          the one place between the hero and the waitlist where the reader can act. */}
+      <div className="benchmark-exit">
+        <div>
+          <strong>Those numbers came from one agent, one repo, one afternoon.</strong>
+          <p>Your repository, your agent, your next task — the setup is two prerequisites and four commands.</p>
+        </div>
+        <a className="button primary" href="#install">Run it on your repo <ArrowRight size={15} /></a>
+      </div>
     </section>
   )
 }

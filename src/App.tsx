@@ -9,6 +9,7 @@ import { WorkflowSection } from './components/WorkflowSection'
 import { BenchmarkSection } from './components/BenchmarkSection'
 import { ArchitectureSection } from './components/ArchitectureSection'
 import { RealWorldSection } from './components/RealWorldSection'
+import { PrerequisitesSection } from './components/PrerequisitesSection'
 import { Footer, InstallSection, WaitlistSection } from './components/WaitlistInstall'
 import { useSmoothScroll } from './hooks/useSmoothScroll'
 import { useScrollChoreography } from './hooks/useScrollChoreography'
@@ -67,6 +68,7 @@ function App() {
         <WorkflowSection open={isDetailed('workflow')} onToggle={() => toggleDetails('workflow')} />
         <BenchmarkSection />
         <ArchitectureSection open={isDetailed('architecture')} onToggle={() => toggleDetails('architecture')} />
+        <PrerequisitesSection />
         <InstallSection />
         <WaitlistSection />
       </main>

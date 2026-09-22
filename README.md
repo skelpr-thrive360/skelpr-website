@@ -25,6 +25,7 @@ website/
 │   │   ├── VerbatimAnswers.tsx     # side-by-side verbatim answer panes
 │   │   ├── Shared.tsx              # WaitlistForm, Metric, small shared bits
 │   │   ├── ThemeToggle.tsx         # light / dark / system control
+│   │   ├── PrerequisitesSection.tsx # Docker Desktop + the embedding model, ahead of install
 │   │   └── WaitlistInstall.tsx     # waitlist panel + install section + footer
 │   ├── data/
 │   │   ├── siteData.tsx            # page copy, benchmark metrics, per-task Q&A

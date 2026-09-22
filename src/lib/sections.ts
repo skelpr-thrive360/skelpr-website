@@ -14,6 +14,7 @@ export const sectionIds = [
   'workflow',
   'benchmark',
   'architecture',
+  'prerequisites',
   'install',
   'waitlist',
 ] as const
