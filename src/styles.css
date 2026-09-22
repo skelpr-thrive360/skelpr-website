@@ -3060,6 +3060,201 @@ pre code {
   font-size: var(--text-micro);
 }
 
+/* --- prerequisites ------------------------------------------------------
+   Sits directly above the install block, and exists because of what the install
+   block cannot say for itself: neither prerequisite raises an error when it is
+   missing. Docker stops `skelpr setup` at step 1, and an absent embedding server
+   only makes the index quietly worse — so both have to be stated before the commands.
+
+   Rows, not cards. The three prerequisites differ wildly in detail (a Docker
+   checklist, a six-field model card, one sentence of generation advice), and cards
+   sharing a grid row stretch to the tallest of them — which left the first and last
+   two-thirds empty. A row is exactly as tall as its own contents, so the same
+   imbalance lands in the right rail, where a label/value column reads as data rather
+   than as a hole. The rules between rows are the section dividers the rest of the
+   page already uses. */
+
+.prereq-section {
+  padding-bottom: var(--space-7);
+}
+
+.prereq-list {
+  margin-top: var(--space-6);
+  border-bottom: 1px solid var(--rule);
+}
+
+.prereq-row {
+  display: grid;
+  /* number · prose · data rail. The rail is sized so the longest value (the embedding
+     model identifier, 31 mono characters) holds one line beside its label — at 348px
+     it wrapped with a pixel to spare, which is why this is not a round number. */
+  grid-template-columns: 52px minmax(0, 1fr) minmax(0, 380px);
+  gap: var(--space-4) min(4vw, 48px);
+  align-items: start;
+  padding: var(--space-5) 0;
+  border-top: 1px solid var(--rule);
+}
+
+.prereq-number {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+.prereq-main {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.prereq-head {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.prereq-aside {
+  min-width: 0;
+}
+
+.prereq-chip {
+  padding: 6px 9px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  color: var(--ink-3);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  /* A label that breaks across two lines stops reading as a chip, so it wraps as a
+     unit — onto its own line under the heading when the row is narrow. */
+  white-space: nowrap;
+}
+
+.prereq-body {
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+}
+
+/* The model card, reproduced as LM Studio reports it — the fields a reader compares
+   against their own download when the endpoint answers "model not found" because they
+   picked a different quantization. Boxed, so the one row carrying data reads as a
+   figure rather than as loose text in a rail.
+
+   Both rails are one grid with a single shared label column. These pairs are a table,
+   and a table whose value column starts somewhere new on every row is not one —
+   `subgrid` is what lets a row keep its own box and padding while inheriting the
+   tracks declared here. A browser without subgrid drops the declaration and stacks
+   each pair, which is a legible fallback rather than a broken one. */
+.prereq-model,
+.prereq-facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  margin: 0;
+}
+
+.prereq-model {
+  gap: 0 var(--space-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+}
+
+/* The non-model rails are the same pair without the box: those rows carry two or three
+   facts, and a border around them would be a frame for content that does not need one. */
+.prereq-facts {
+  gap: var(--space-2) var(--space-4);
+}
+
+.prereq-spec {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: baseline;
+}
+
+.prereq-model .prereq-spec {
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--rule);
+}
+
+.prereq-model .prereq-spec:first-child {
+  border-top: 0;
+}
+
+.prereq-spec dt {
+  color: var(--ink-3);
+  font-size: var(--text-xs);
+}
+
+.prereq-spec dd {
+  margin: 0;
+  color: var(--ink-1);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}
+
+.prereq-note-line {
+  color: var(--ink-3);
+  font-size: var(--text-xs);
+}
+
+.prereq-verify {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: min(6vw, 72px);
+  align-items: center;
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--rule);
+}
+
+.prereq-verify p {
+  max-width: 58ch;
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+}
+
+.prereq-verify strong {
+  color: var(--ink-1);
+  font-weight: 600;
+}
+
+.prereq-verify code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  color: var(--ink-1);
+}
+
+/* A second dark figure, matching the install snippet's recipe: the surround paints
+   the semantic foregrounds, so .code-top / .code-footer above pick up figure ink. */
+.prereq-code {
+  --fg-1: var(--fig-ink);
+  --fg-wash: var(--fig-wash);
+  --fg-3: var(--fig-ink-3);
+  --fg-rule: var(--fig-rule);
+  --fg-warn: var(--fig-warn);
+
+  min-width: 0;
+  border: 1px solid var(--fg-rule);
+  border-radius: var(--radius-panel);
+  background: var(--fig-bg);
+  color: var(--fg-1);
+}
+
+.prereq-code pre {
+  margin: 0;
+  padding: var(--space-4) var(--space-5);
+  overflow-x: auto;
+  color: var(--fg-1);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.7;
+}
+
 /* --- waitlist ---------------------------------------------------------- */
 
 .waitlist-section {
@@ -3348,9 +3543,30 @@ pre code {
   .real-world-grid,
   .waitlist-panel,
   .install-layout,
+  .prereq-verify,
   .mode-one-benchmark {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-6);
+  }
+  /* The data rail drops under its row instead of squeezing the prose to a column
+     too narrow to read; the number stays in the gutter so the rows still line up. */
+  .prereq-row {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+  .prereq-aside {
+    grid-column: 2;
+  }
+  .prereq-model,
+  .prereq-facts {
+    max-width: 26rem;
+  }
+  /* Buy the value column back as much width as the gutter can spare, now that the
+     rail sits under its row. The tracks live on the lists, not on the rows, so this
+     is where a subgrid's gutters can be narrowed at all. */
+  .prereq-model,
+  .prereq-facts {
+    column-gap: var(--space-2);
   }
   .metric-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
