@@ -1077,9 +1077,10 @@ pre code {
 /* --- act washes ---------------------------------------------------------
    An act declares its colour; the page cross-fades to it as the act takes the
    screen and back out as it hands over. Two acts only, and both are meaningful:
-   the evidence band goes quiet (surface-sunken) and the conversion band takes
-   the accent wash, the one place the site's "accent means you can act" rule is
-   painted on a background rather than a control.
+   Three bands take it, spaced so the page's surface alternates instead of running
+   flat: the first proof (the negative-task result), the evidence stretch
+   (surface-sunken), and the two practical bands before the ask. The wash is the
+   one place the site's tonal shift is painted on a background rather than a control.
 
    The wash is a pseudo-element behind the content, so a scroll costs one
    opacity, not a repaint of a section several screens tall. It is pinned to
@@ -1102,7 +1103,9 @@ pre code {
   pointer-events: none;
 }
 
-.benchmark-section {
+.real-world-section,
+.benchmark-section,
+.prereq-section {
   --act-color: var(--surface-sunken);
 }
 
@@ -1334,11 +1337,25 @@ pre code {
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr);
   gap: var(--space-4);
+  /* start, not the grid's default stretch: a stretched letter box would let the
+     glyph float relative to the row instead of pinning to its heading line. */
+  align-items: start;
+}
+
+/* The rules separate the specs from each other — the first one has nothing above it,
+   so a rule there just drew a line under the section's own white space. */
+.identity-specs > div + div {
   padding-top: var(--space-4);
   border-top: 1px solid var(--rule);
 }
 
 .spec-index {
+  display: flex;
+  align-items: center;
+  /* One heading line tall, the glyph vertically centred in it: the A/B/C then sit
+     centred on the "Index once" line rather than hanging above or below it. The
+     multiplier is the line-height the heading itself inherits. */
+  min-height: calc(var(--text-md) * 1.65);
   color: var(--ink-3);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
@@ -1833,6 +1850,34 @@ pre code {
 
 .metric-arrow {
   color: var(--ink-3);
+}
+
+/* Card-scale echo of the table's paired bars (same track, same two inks, same
+   overlay): the without stroke on the baseline, the with stroke at the 4px offset
+   below it. Plotted from the real totals, one shared scale per metric. */
+.metric-bars {
+  margin-top: var(--space-4);
+}
+
+.metric-bar {
+  display: flex;
+  position: relative;
+  width: 100%;
+  height: 7px;
+  background: var(--rule);
+}
+
+.metric-bar i {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: var(--ink-3);
+}
+
+.metric-bar .with-bar {
+  top: 4px;
+  background: var(--positive);
 }
 
 .with-value strong,
@@ -3045,8 +3090,10 @@ pre code {
   color: var(--fg-3);
 }
 
+/* The quoted values (model id, git URL) read as plain code, not as a warning:
+   same near-white ink as the rest of the figure in both themes. */
 .string {
-  color: var(--fg-warn);
+  color: var(--fg-1);
 }
 
 .code-footer {
@@ -3058,6 +3105,36 @@ pre code {
   color: var(--fg-3);
   font-family: var(--font-mono);
   font-size: var(--text-micro);
+}
+
+/* --- benchmark exit -----------------------------------------------------
+   The conviction-to-action bridge. Three sections argue the claim; this is the
+   reader's next step at the exact moment the argument lands, instead of four
+   thousand pixels later behind architecture and prerequisites. The accent here
+   is the palette's own "you can act on this" rule doing its job. */
+.benchmark-exit {
+  display: flex;
+  gap: var(--space-5);
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-6);
+  padding: var(--space-5);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-panel);
+  background: var(--surface-raised);
+}
+
+.benchmark-exit strong {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.benchmark-exit p {
+  max-width: 58ch;
+  color: var(--ink-2);
+  font-size: var(--text-sm);
 }
 
 /* --- prerequisites ------------------------------------------------------
@@ -3080,7 +3157,6 @@ pre code {
 
 .prereq-list {
   margin-top: var(--space-6);
-  border-bottom: 1px solid var(--rule);
 }
 
 .prereq-row {
@@ -3092,13 +3168,22 @@ pre code {
   gap: var(--space-4) min(4vw, 48px);
   align-items: start;
   padding: var(--space-5) 0;
+}
+
+/* Hairlines only between rows — the block's edges are the heading above and the
+   verify panel below (same treatment as the identity list's A/B/C rules). */
+.prereq-row + .prereq-row {
   border-top: 1px solid var(--rule);
 }
 
 .prereq-number {
-  color: var(--ink-3);
+  /* The row's only figure: the two digits carry the scan rhythm across three
+     tall rows, so they get display weight rather than a caption. */
+  color: var(--ink-2);
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
+  font-size: var(--text-xl);
+  line-height: 1;
+  padding-top: 2px;
 }
 
 .prereq-main {
@@ -3574,6 +3659,10 @@ pre code {
   .install-note {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-4);
+  }
+  .benchmark-exit {
+    flex-direction: column;
+    align-items: flex-start;
   }
   .qa-columns {
     grid-template-columns: minmax(0, 1fr);

@@ -62,18 +62,19 @@ const prerequisites: Prerequisite[] = [
     index: '03',
     chip: 'CLI mode only',
     title: 'A model to reason with',
-    body: 'ask, chat, review and fix need a generation model at the same endpoint — qwen2.5-14b-instruct with as much context as your hardware allows. MCP mode needs none: there the agent’s own model does the reasoning, and Skelpr only retrieves.',
+    body: 'ask, chat, review and fix need a generation model. Run one locally — qwen2.5-14b-instruct with as much context as your hardware allows — or skip the hardware and configure an API key instead. MCP mode needs none of this: the agent’s own model does the reasoning, and Skelpr only retrieves.',
     facts: [
-      { label: 'Generation model', value: 'qwen2.5-14b-instruct' },
-      { label: 'Endpoint', value: 'http://127.0.0.1:1234/v1' },
+      { label: 'Local model', value: 'qwen2.5-14b-instruct' },
+      { label: 'or an API key', value: 'Gemini · OpenAI · Anthropic · OpenRouter · Groq' },
+      { label: 'Key setup', value: 'skelpr init --gemini / --openai / --anthropic' },
     ],
-    note: 'Both models can sit on one server, or on two — Skelpr reads them from separate model and embeddings blocks in .skelpr.yaml.',
+    note: 'A local model and the embedding server can share one endpoint or run on two — separate model and embeddings blocks in .skelpr.yaml. With an API key, only the embedding endpoint stays local.',
   },
 ]
 
 export function PrerequisitesSection() {
   return (
-    <section className="prereq-section content-section" id="prerequisites">
+    <section className="prereq-section act-wash content-section" id="prerequisites">
       <div className="section-kicker">Before you start</div>
       <div className="two-column-heading">
         <h2>Two things running<br /><em>before the first index.</em></h2>

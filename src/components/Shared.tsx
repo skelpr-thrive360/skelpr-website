@@ -152,8 +152,13 @@ export function SectionDetail({ open, children }: { open: boolean; children: Rea
   )
 }
 
-export function Metric({ label, simple, without, withValue, change }: { label: string; simple: string; without: string; withValue: string; change: string }) {
-  return <div className="metric-card"><span className="metric-label">{label}</span><span className="metric-simple">{simple}</span><div className="metric-values"><div><small>WITHOUT</small><strong>{without}</strong></div><div className="metric-arrow">→</div><div className="with-value"><small>WITH</small><strong>{withValue}</strong></div></div><span className="metric-change">{change}</span></div>
+// `withoutPct`/`withPct` optionally draw the paired bars from the benchmark table
+// at card scale: same track, same two inks (grey WITHOUT over green WITH), widths as
+// a percentage of the pair's max so every card shares one scale. They are redundant
+// with the printed numbers by design — decoration that echoes the table's encoding,
+// hence aria-hidden. Omit them and the card renders exactly as before.
+export function Metric({ label, simple, without, withValue, change, withoutPct, withPct }: { label: string; simple: string; without: string; withValue: string; change: string; withoutPct?: number; withPct?: number }) {
+  return <div className="metric-card"><span className="metric-label">{label}</span><span className="metric-simple">{simple}</span><div className="metric-values"><div><small>WITHOUT</small><strong>{without}</strong></div><div className="metric-arrow">→</div><div className="with-value"><small>WITH</small><strong>{withValue}</strong></div></div>{withoutPct !== undefined && withPct !== undefined && <div className="metric-bars" aria-hidden="true"><span className="metric-bar"><i style={{ width: `${withoutPct}%` }} /><i className="with-bar" style={{ width: `${withPct}%` }} /></span></div>}<span className="metric-change">{change}</span></div>
 }
 
 // Extra payload handed to onSubmit: honeypot value (bots that fill it are dropped server-side).
