@@ -21,6 +21,10 @@
         // Storage blocked: the page simply follows the system preference.
       }
     </script>
+    <!-- Modern browsers pick the SVG first: it flips to the light mark in dark
+         tabs via an embedded prefers-color-scheme query. Safari ignores SVG
+         favicons and falls through to the ICO, then the PNGs. -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/brand/favicon-16.png" />

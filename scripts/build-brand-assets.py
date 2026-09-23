@@ -30,9 +30,13 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 # --- brand palette ---------------------------------------------------------
-INK = (0x17, 0x18, 0x1A)     # --ink: the frame (the whole repository)
-ACCENT = (0x1D, 0x4F, 0x7C)  # --accent: the located fragment
+INK = (0x17, 0x18, 0x1A)     # --ink-1: the frame (the whole repository)
+ACCENT = (0x15, 0x48, 0x74)  # --accent: the located fragment (kept in sync with styles.css)
 PAPER = (0xF9, 0xF8, 0xF4)   # light surface, used behind opaque icons
+# Dark-theme tokens from styles.css: the SVG favicon flips to these in dark tabs,
+# and the raster icons draw with them (see the icons section in main()).
+DARK_INK = (0xED, 0xEF, 0xF1)     # --ink-1, dark side
+DARK_ACCENT = (0x8A, 0xB4, 0xE0)  # --accent, dark side
 
 # --- mark geometry on a 24-unit grid --------------------------------------
 # Measured from the sources: outer silhouette 18 units, stroke 2 units, fragment
@@ -109,8 +113,13 @@ def check_geometry() -> None:
 
 
 def render(size: int, colour: tuple[int, int, int], channel: float = CHANNEL,
-           content: float = DEFAULT_CONTENT) -> Image.Image:
+           content: float = DEFAULT_CONTENT,
+           fragment: tuple[int, int, int] | None = ACCENT) -> Image.Image:
     """Render the mark at `size` px as a transparent RGBA image.
+
+    The frame is drawn in `colour` and the located fragment in `fragment`,
+    matching the inline BrandMark component (ink frame, accent fragment).
+    Pass ``fragment=None`` for a monochrome mark (or set both to the same colour).
 
     The geometry already includes its own margins, so the only offset applied is
     the extra padding needed to bring the frame down to `content` of the canvas.
@@ -129,7 +138,7 @@ def render(size: int, colour: tuple[int, int, int], channel: float = CHANNEL,
 
     for rect in frame_rects(channel):
         draw.rectangle(to_px(rect), fill=colour + (255,))
-    draw.rectangle(to_px(block_rect()), fill=colour + (255,))
+    draw.rectangle(to_px(block_rect()), fill=(colour if fragment is None else fragment) + (255,))
     return img.resize((size, size), Image.LANCZOS)
 
 
@@ -197,6 +206,46 @@ def flatten(mark: Image.Image, size: int, background: tuple[int, int, int]) -> I
     base = Image.new("RGBA", (size, size), background + (255,))
     base.alpha_composite(mark.resize((size, size), Image.LANCZOS))
     return base.convert("RGB")
+
+
+def hexs(rgb: tuple[int, int, int]) -> str:
+    return "#{:02X}{:02X}{:02X}".format(*rgb)
+
+
+def write_favicon_svg(path: Path, dark: bool = False) -> None:
+    """The mark as a favicon SVG.
+
+    The light variant carries an embedded prefers-color-scheme query so the
+    no-JS default follows the OS; the dark variant is hard-coded, because the
+    site's own theme toggle — not the OS — is what the running page follows,
+    and src/lib/theme.ts re-points the icon link at this file when the
+    visitor chooses dark. The two files must stay in sync with that swap.
+    Safari ignores SVG favicons entirely and falls back to the ICO/PNG links.
+    The widened FAVICON_CHANNEL keeps the 16px gap readable.
+    """
+    path_d, _ = svg_markup(FAVICON_CHANNEL)
+    block = MARGIN + FRAME_OUTER - BLOCK
+    frame, fragment = (hexs(DARK_INK), hexs(DARK_ACCENT)) if dark else (hexs(INK), hexs(ACCENT))
+    if dark:
+        rules = (f'    path {{ stroke: {frame}; }}\n'
+                 f'    rect {{ fill: {fragment}; }}\n')
+    else:
+        rules = (f'    path {{ stroke: {frame}; }}\n'
+                 f'    rect {{ fill: {fragment}; }}\n'
+                 '    @media (prefers-color-scheme: dark) {\n'
+                 f'      path {{ stroke: {hexs(DARK_INK)}; }}\n'
+                 f'      rect {{ fill: {hexs(DARK_ACCENT)}; }}\n'
+                 '    }\n')
+    path.write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">\n'
+        '  <style>\n'
+        f'{rules}'
+        '  </style>\n'
+        f'  <path d="{path_d}" fill="none" stroke-width="{STROKE:g}"/>\n'
+        f'  <rect x="{block:g}" y="{block:g}" width="{BLOCK:g}" height="{BLOCK:g}"/>\n'
+        '</svg>\n',
+        encoding="utf-8",
+    )
 
 
 def write_ico(path: Path, layers: list[tuple[int, Image.Image]]) -> None:
@@ -274,31 +323,40 @@ def main() -> int:
         recoloured.putalpha(accent_stripped.getchannel("A"))
         normalise(recoloured).save(brand / "mark-accent-source.png")
 
-    # 2. Geometry renders — sharp at every size.
-    for name, size, colour, channel, content in [
-        ("mark-ink.png", 512, INK, CHANNEL, DEFAULT_CONTENT),
-        ("mark-accent.png", 512, ACCENT, CHANNEL, DEFAULT_CONTENT),
-        ("mark-paper.png", 512, PAPER, CHANNEL, DEFAULT_CONTENT),
+    # 2. Geometry renders — sharp at every size. The fragment colour is explicit:
+    # the component's look is an ink frame + accent fragment, not monochrome fill.
+    for name, size, colour, fragment in [
+        ("mark-ink.png", 512, INK, ACCENT),        # ink frame + accent fragment (the component)
+        ("mark-accent.png", 512, ACCENT, ACCENT),  # all-accent monochrome
+        ("mark-paper.png", 512, PAPER, None),      # all-paper monochrome, for dark backgrounds
     ]:
-        render(size, colour, channel, content).save(brand / name)
+        render(size, colour, CHANNEL, DEFAULT_CONTENT, fragment).save(brand / name)
 
-    # 3. Icons.
-    render(32, INK).save(brand / "favicon-32.png")
-    render(16, INK, channel=FAVICON_CHANNEL).save(brand / "favicon-16.png")
+    # 3. Icons — every raster is transparent, no baked-in tile. White lines
+    # everywhere: the ICO and PNG links cannot read media queries, and the
+    # surfaces that composite transparency themselves (iOS home screen, app
+    # launchers) put it on dark, so the light mark is the one that reads
+    # everywhere without a background. The theme-aware SVG favicon does the
+    # real light/dark switching wherever SVG favicons are supported.
+    render(32, DARK_INK, fragment=DARK_ACCENT).save(brand / "favicon-32.png")
+    render(16, DARK_INK, channel=FAVICON_CHANNEL, fragment=DARK_ACCENT).save(brand / "favicon-16.png")
     write_ico(public / "favicon.ico", [
-        (16, render(16, INK, channel=FAVICON_CHANNEL)),
-        (32, render(32, INK)),
-        (48, render(48, INK)),
+        (16, render(16, DARK_INK, channel=FAVICON_CHANNEL, fragment=DARK_ACCENT)),
+        (32, render(32, DARK_INK, fragment=DARK_ACCENT)),
+        (48, render(48, DARK_INK, fragment=DARK_ACCENT)),
     ])
+    write_favicon_svg(public / "favicon.svg")  # OS-aware default (no-JS)
+    write_favicon_svg(public / "favicon-dark.svg", dark=True)  # hard-coded, swapped in by theme.ts
 
-    # Opaque icons: iOS composites transparency onto black, and maskable icons clip.
-    flatten(render(180, INK), 180, PAPER).save(brand / "apple-touch-icon-180.png")
+    # Transparent icons (user request: no backgrounds anywhere). iOS composites
+    # transparency onto dark, so the light mark keeps its contrast there.
+    render(180, DARK_INK, fragment=DARK_ACCENT).save(brand / "apple-touch-icon-180.png")
     for size in (192, 512):
-        flatten(render(size, INK), size, PAPER).save(brand / f"icon-{size}.png")
+        render(size, DARK_INK, fragment=DARK_ACCENT).save(brand / f"icon-{size}.png")
         # Maskable variants: launchers crop these, so the mark is pulled in.
-        flatten(render(size, INK, content=MASKABLE_CONTENT), size, PAPER).save(
+        render(size, DARK_INK, fragment=DARK_ACCENT, content=MASKABLE_CONTENT).save(
             brand / f"icon-maskable-{size}.png")
-    flatten(render(460, INK, content=0.64), 460, PAPER).save(brand / "github-avatar.png")
+    render(460, DARK_INK, fragment=DARK_ACCENT, content=0.64).save(brand / "github-avatar.png")
 
     # 4. Self-checks.
     notch = (MARGIN + FRAME_OUTER) - BLOCK - CHANNEL
@@ -337,7 +395,8 @@ def main() -> int:
         print(f"    channel visible: {'YES' if min(row) < 128 and min(col) < 128 else 'NO'}")
 
     print("== written ==")
-    for path in sorted([*brand.glob("*.png"), public / "favicon.ico"]):
+    for path in sorted([*brand.glob("*.png"), public / "favicon.ico",
+                        public / "favicon.svg", public / "favicon-dark.svg"]):
         print(f"  {path}  ({path.stat().st_size:,} bytes)")
     return 0
 
