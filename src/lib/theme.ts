@@ -82,6 +82,14 @@ function apply() {
   document.documentElement.dataset.theme = choice
   const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
   if (meta) meta.content = surfaceColor()
+
+  // The favicon follows the site's theme, not the OS: the default /favicon.svg
+  // carries an OS media query for the no-JS case, but once this script runs the
+  // visitor's in-page choice wins, so the link is re-pointed at the hard-coded
+  // dark variant. Kept in sync with scripts/build-brand-assets.py, which emits
+  // both files from the same geometry.
+  const icon = document.querySelector<HTMLLinkElement>('link[rel="icon"][type="image/svg+xml"]')
+  if (icon) icon.href = effectiveTheme() === 'dark' ? '/favicon-dark.svg' : '/favicon.svg'
 }
 
 export function setTheme(next: ThemeChoice) {
