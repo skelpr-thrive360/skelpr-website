@@ -2579,12 +2579,17 @@ pre code {
   border-top: 1px solid var(--rule);
 }
 
-/* Inside the methodology panel it answers the same question as the rest of
-   that panel ("how were these numbers produced"), so it stops competing with
-   the MCP A/B as a second headline result. */
-.methodology + .mode-one-benchmark {
-  margin-top: var(--space-6);
-  border-top: 0;
+/* Standalone, after the methodology toggle: the CLI comparison is a first-class
+   result — its own headline row, not an appendix to "how were these numbers
+   produced". The section rule (border-top) and full section spacing apply. */
+
+/* The latency caveat is an honesty note, not body copy: slightly smaller and
+   quieter than the explainer above it, so the ⚠️ marks in the table read as
+   "see the note below", not as a second warning voice. */
+.cli-latency-note {
+  margin-top: var(--space-3);
+  color: var(--ink-2);
+  font-size: var(--text-xs);
 }
 
 .mode-one-benchmark h3 {
@@ -2599,7 +2604,7 @@ pre code {
 
 .mode-one-table > div {
   display: grid;
-  grid-template-columns: 1.8fr repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1.8fr repeat(4, minmax(0, 1fr));
   gap: var(--space-3);
   padding: var(--space-4) var(--space-3);
   border-bottom: 1px solid var(--rule);
