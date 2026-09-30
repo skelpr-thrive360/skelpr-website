@@ -14,12 +14,20 @@ figures are grounded in the repository's README and `docs/`, never invented.
 
 ```
 website/
-├── index.html                      # Vite entry; SEO meta tags live here
+├── index.html                      # Vite entry (marketing page); SEO meta tags live here
+├── docs/
+│   └── index.html                  # Vite entry #2 — the /docs page's own head/meta
+├── brand-source/                   # source art the brand scripts read — see "Brand assets"
 ├── public/
+│   ├── brand/                      # generated icons, logo plates and the og card
 │   ├── robots.txt                  # placeholder domain — see "Canonical URL"
 │   └── sitemap.xml                 # placeholder domain — see "Canonical URL"
 ├── src/
 │   ├── main.tsx / App.tsx          # bootstrap + section order
+│   ├── docs/                       # the /docs page (see "Docs page" below)
+│   │   ├── main.tsx / DocsApp.tsx  # bootstrap + shell (header, contents rail, prose)
+│   │   ├── install.md              # the document itself — the content lives here
+│   │   └── docs.css                # docs-only layout and prose styles
 │   ├── components/                 # one file per page section
 │   │   ├── BenchmarkSection.tsx    # 05 — benchmark table + task detail
 │   │   ├── VerbatimAnswers.tsx     # side-by-side verbatim answer panes
@@ -32,6 +40,7 @@ website/
 │   │   └── benchmarkAnswers.ts     # AUTO-GENERATED verbatim answers (see below)
 │   ├── lib/theme.ts                # theme choice + persistence
 │   └── lib/waitlist.ts             # waitlist submit/withdraw client + local stub
+├── scripts/build-brand-assets.py   # plates, favicons, app icons + og card, from brand-source/
 ├── scripts/palette.config.mjs      # surfaces, hue anchors, contrast targets
 ├── scripts/derive-palette.mjs      # solves the palette into src/styles.css
 ├── scripts/contrast-audit.mjs      # measures the committed palette
@@ -50,6 +59,27 @@ npm install
 npm run dev        # dev server
 npm run build      # typecheck + production build into dist/
 npm run preview    # serve the production build locally
+```
+
+## Docs page (`/docs`)
+
+The site serves a second page at **`/docs`**: the install-and-activate guide, built from
+`src/docs/install.md`. It is a Vite entry of its own (`docs/index.html`, registered in the
+`build.rollupOptions.input` map in `vite.config.ts`), so it has its own title, description
+and canonical URL rather than being a section of the marketing page.
+
+The markdown is the single source of truth: `DocsApp.tsx` imports it with `?raw` and
+renders it with `react-markdown` + `remark-gfm`. The contents rail on the left is parsed
+out of that same string, and each heading's `id` is the slug of its own text — so renaming
+a heading renames its link in the contents in the same edit, and a heading cannot lose its
+anchor. Fenced code is skipped when the contents are parsed, or a `#` shell comment inside
+a command block would be listed as a section.
+
+Preview it with the normal scripts; `/docs/` is served by both:
+
+```bash
+npm run dev      # http://localhost:5173/docs/
+npm run preview  # the built page, after npm run build
 ```
 
 ## Checks
@@ -119,6 +149,53 @@ npm run extract:answers   # docs/comparisons/COMP_ANTIGRAVITY.md → src/data/be
 benchmark doc changes. The task questions/metrics/verdicts themselves live in
 `src/data/siteData.tsx` (`benchmarkQa`), grounded in `tests/benchmarking/constants.py`
 and `tests/benchmarking/generate_comparison_doc.py`.
+
+## Brand assets are generated
+
+Nothing visual about the brand is edited by hand. One script writes it all from the one
+source file:
+
+```bash
+python scripts/build-brand-assets.py   # plates, favicons, app icons, social card
+```
+
+The source is the vendor-supplied logo, `brand-source/mainlogo-skeplr.png` — flat colour
+art on an opaque near-white page: three inks (a dark node, a light-grey network, one
+green link) and 84% paper. The script lifts the paper off by solving every pixel against
+those three inks — which ink, at what alpha, would have made this colour — rather than by
+a luminance ramp, which assumes one ink level and would bring the light-grey network back
+nearly transparent. The result is snapped flat, dropping the ±2 drift the file's
+compression left in it.
+
+Two variants come out of that, not one: `public/brand/logo-skeplr.png` for light
+surfaces, and `logo-skeplr-dark.png` with the node swapped for `--ink-1`'s dark value.
+`#141718` is that token's *light* value, so on the dark surface it sinks into the
+background; the network and the green already read there, and changing them would make it
+a second logo instead of one mark in two themes. `src/components/BrandMark.tsx` renders
+both, and the same theme machinery the palette uses decides which is on show.
+
+The icons are transparent everywhere — no baked-in tile — but the drawing is 1.77:1, so
+small and large surfaces are framed differently:
+
+- **Small (16–48px):** the ICO, the PNG favicon links and the SVG favicon crop to the
+  drawing's *detail* — the loaded node, the green link, the located node — because a 16px
+  tab needs a subject, not a map.
+- **Large (180px and up):** apple-touch and the PWA icons carry the whole network.
+- **The SVG favicon** embeds both variants as rasters with a `prefers-color-scheme`
+  query, so the no-JS default follows the OS, and `src/lib/theme.ts` re-points the link
+  at `favicon-dark.svg` when the visitor chooses dark in the page.
+- **The rasters** cannot read media queries, and the surfaces that composite transparency
+  themselves (iOS home screen, browser tab strips) put it on dark — so they draw with the
+  dark variant.
+
+The social card is composed from `brand-source/og-card-template.png` — a pristine copy of
+`public/brand/og-card.png` — so re-running clears the artwork column back to paper and
+re-places the mark, rather than pasting onto its own last output. The template's
+typography is kept as it is: the wordmark is set in the site's webfonts, which ship as
+woff2, which Pillow cannot read, so only the artwork in the card's left column is ours to
+regenerate.
+
+Pillow does the image work (`pip install pillow`).
 
 ## Waitlist
 
