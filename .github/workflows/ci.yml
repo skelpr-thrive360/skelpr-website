@@ -2,12 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [main, dev]
+    # main only. A merge into dev was already validated by the pull request that
+    # produced it, so running the whole suite again on the merge commit spends a
+    # second full job re-answering a settled question. The trade: a commit pushed
+    # straight to dev, bypassing review, now goes unvalidated — PR it instead.
+    branches: [main]
   # Every commit of a pull request *into* main or dev — the merge gate. `branches`
-  # here is the base branch, not the head, so a PR that is stacked on some other
-  # branch (or is internal and will never land) no longer spends a run. A push to
-  # a feature branch is covered by this event and by nothing else: `push` above is
-  # filtered to main and dev, so a branch with an open PR is not run twice.
+  # here is the base branch, not the head, so a PR stacked on some other branch (or
+  # internal, and never to land) no longer spends a run. This is also the only event
+  # covering a feature branch, so a branch with an open PR is not run twice.
   pull_request:
     branches: [main, dev]
   schedule:
