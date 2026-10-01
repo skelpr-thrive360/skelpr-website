@@ -1,41 +1,28 @@
 /**
- * The brand mark: an open frame — the repository — with the located fragment
- * seated in the notch at its lower-right corner, separated by a channel exactly
- * one stroke wide. The open corner is what makes it a cut rather than the
- * box-with-a-square-in-it that every other tool in this category uses.
+ * The brand mark, in the header and the footer.
  *
- * Geometry is a 24-unit grid: 3-unit margin, 18-unit frame, 2-unit stroke,
- * 7-unit fragment flush with the frame's outer silhouette, 2-unit channel.
- * These are the same numbers `scripts/build-brand-assets.py` renders the icons
- * from, so the header and the favicon are one drawing at different sizes.
- *
- * Size is not set here — `.brand-mark` in styles.css owns it, one source for
- * both header and footer. At 20px the frame's ink is 15px against the
- * wordmark's 13px cap height: an open, outlined mark carries less optical
- * weight than semibold serif type, so it is drawn slightly larger to sit level
- * with it.
- *
- * Colour: the frame inherits the current ink and the fragment uses the accent,
- * and both tokens flip with the theme — so this is one mark, not one per theme.
+ * The vendor logo is a raster, not a drawing, so it cannot simply be a token —
+ * but it has the tokens' problem: the light file's near-black node sinks into the
+ * dark surface. Two files, and CSS decides which is on show (rules in
+ * `styles.css`); the component carries no theme logic.
  */
 export function BrandMark() {
   return (
-    <svg
-      className="brand-mark"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      focusable="false"
-    >
-      {/* Butt caps are load-bearing: the channel is measured from where the ink stops. */}
-      <path
-        d="M12 20 H4 V4 H20 V12"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2}
-        strokeLinecap="butt"
-        strokeLinejoin="miter"
+    <>
+      <img
+        className="brand-mark brand-mark-light"
+        src="/brand/logo-skeplr.png"
+        alt=""
+        aria-hidden="true"
+        draggable={false}
       />
-      <rect className="brand-mark-fragment" x={14} y={14} width={7} height={7} />
-    </svg>
+      <img
+        className="brand-mark brand-mark-dark"
+        src="/brand/logo-skeplr-dark.png"
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+      />
+    </>
   )
 }

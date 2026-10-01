@@ -477,24 +477,33 @@ pre code {
   letter-spacing: -0.01em;
 }
 
-/* An open frame with the located fragment seated in its notch, drawn as inline
-   SVG from the same 24-unit geometry the favicons are rendered from, so the
-   header and the icons are one drawing at different sizes. The frame takes the
-   page ink; only the fragment — the selected part — carries the accent. */
+/* The vendor logo, two rasters deep. Which shows follows the theme the way the
+   palette does: the pinned choice wins, otherwise the media query decides. */
 .brand-mark {
-  display: block;
-  flex: none;
-  /* 20px, not the wordmark's 19px: the frame's ink (15px) is then slightly
-     taller than the cap height (13px), which is what makes an outlined mark sit
-     level with semibold serif type instead of shrinking beside it. */
-  width: 20px;
-  height: 20px;
-  color: var(--ink-1);
+  /* The drawing is 1.77:1; height leads, width follows — 18px is the box the
+     old geometric mark occupied, keeping the header's rhythm. */
+  height: 18px;
+  width: auto;
+  user-select: none;
 }
 
-.brand-mark-fragment {
-  fill: var(--accent);
+.brand-mark-light {
+  display: block;
 }
+
+.brand-mark-dark {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .brand-mark-light { display: none; }
+  html:not([data-theme="light"]) .brand-mark-dark { display: block; }
+}
+
+html[data-theme="light"] .brand-mark-light { display: block; }
+html[data-theme="light"] .brand-mark-dark { display: none; }
+html[data-theme="dark"] .brand-mark-light { display: none; }
+html[data-theme="dark"] .brand-mark-dark { display: block; }
 
 .main-nav {
   display: flex;
@@ -2579,12 +2588,17 @@ pre code {
   border-top: 1px solid var(--rule);
 }
 
-/* Inside the methodology panel it answers the same question as the rest of
-   that panel ("how were these numbers produced"), so it stops competing with
-   the MCP A/B as a second headline result. */
-.methodology + .mode-one-benchmark {
-  margin-top: var(--space-6);
-  border-top: 0;
+/* Standalone, after the methodology toggle: the CLI comparison is a first-class
+   result — its own headline row, not an appendix to "how were these numbers
+   produced". The section rule (border-top) and full section spacing apply. */
+
+/* The latency caveat is an honesty note, not body copy: slightly smaller and
+   quieter than the explainer above it, so the ⚠️ marks in the table read as
+   "see the note below", not as a second warning voice. */
+.cli-latency-note {
+  margin-top: var(--space-3);
+  color: var(--ink-2);
+  font-size: var(--text-xs);
 }
 
 .mode-one-benchmark h3 {
@@ -2599,7 +2613,7 @@ pre code {
 
 .mode-one-table > div {
   display: grid;
-  grid-template-columns: 1.8fr repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1.8fr repeat(4, minmax(0, 1fr));
   gap: var(--space-3);
   padding: var(--space-4) var(--space-3);
   border-bottom: 1px solid var(--rule);

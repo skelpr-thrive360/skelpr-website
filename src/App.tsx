@@ -7,7 +7,8 @@ import { IdentitySection } from './components/IdentitySection'
 import { ModesSection } from './components/ModesSection'
 import { WorkflowSection } from './components/WorkflowSection'
 import { BenchmarkSection } from './components/BenchmarkSection'
-import { ArchitectureSection } from './components/ArchitectureSection'
+// Private launch: architecture stays out of the public page for now.
+// import { ArchitectureSection } from './components/ArchitectureSection'
 import { RealWorldSection } from './components/RealWorldSection'
 import { PrerequisitesSection } from './components/PrerequisitesSection'
 import { Footer, InstallSection, WaitlistSection } from './components/WaitlistInstall'
@@ -50,9 +51,9 @@ function App() {
               <a className="button text-button" href="#benchmark">See the benchmark <ArrowRight size={16} /></a>
             </div>
             <div className="hero-proof">
-              <span><strong>-52%</strong> agent tokens</span>
-              <span><strong>-43%</strong> wall-clock</span>
-              <span><strong>113 → 32</strong> files opened</span>
+              <span><strong>-59%</strong> agent tokens</span>
+              <span><strong>-76%</strong> files opened</span>
+              <span><strong>-69%</strong> cache-read tokens</span>
             </div>
             <p className="hero-boundary">Skelpr retrieves and cites — your agent still does the reasoning.<br />It speaks MCP (Model Context Protocol), so Claude Code, Cursor and Windsurf can call it as they are.</p>
           </div>
@@ -67,7 +68,8 @@ function App() {
         <ModesSection open={isDetailed('modes')} onToggle={() => toggleDetails('modes')} />
         <WorkflowSection open={isDetailed('workflow')} onToggle={() => toggleDetails('workflow')} />
         <BenchmarkSection />
-        <ArchitectureSection open={isDetailed('architecture')} onToggle={() => toggleDetails('architecture')} />
+        {/* Private launch: section parked — see the import note above. */}
+        {/* <ArchitectureSection open={isDetailed('architecture')} onToggle={() => toggleDetails('architecture')} /> */}
         <PrerequisitesSection />
         <InstallSection />
         <WaitlistSection />

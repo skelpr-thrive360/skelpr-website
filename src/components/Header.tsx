@@ -4,15 +4,12 @@ import { BrandMark } from './BrandMark'
 import { ThemeToggle } from './ThemeToggle'
 import { useActiveSection } from '../hooks/useSectionSpy'
 import { useScrolled } from '../hooks/useScrolled'
+import { navItems } from '../lib/navItems'
 
 // The nav is a list of anchors, not buttons: the link, the hash it writes and
 // the active state all then name the same section, so the URL and the highlight
-// can never disagree with where the reader is.
-const navItems = [
-  { id: 'workflow', label: 'How it works' },
-  { id: 'benchmark', label: 'Benchmark' },
-  { id: 'architecture', label: 'Architecture' },
-] as const
+// can never disagree with where the reader is. The list itself is shared with
+// the docs header, which points the same items at this page.
 
 export function Header() {
   const [mobileNav, setMobileNav] = useState(false)
@@ -29,6 +26,9 @@ export function Header() {
         {navItems.map((item) => (
           <a key={item.id} href={`#${item.id}`} aria-current={active === item.id ? 'location' : undefined} onClick={closeNav}>{item.label}</a>
         ))}
+        {/* A page, not a section: /docs is its own document, so unlike the three
+            above it takes no active state and never appears in the section spy. */}
+        <a href="/docs" onClick={closeNav}>Docs</a>
         {/* The header's waitlist CTA is hidden at phone widths, where the hamburger
             took the free space — and the hero used to carry a second copy of the
             form, so a phone had a route to it above the fold and a desktop had two.
