@@ -3,7 +3,13 @@ name: CI
 on:
   push:
     branches: [main, dev]
+  # Every commit of a pull request *into* main or dev — the merge gate. `branches`
+  # here is the base branch, not the head, so a PR that is stacked on some other
+  # branch (or is internal and will never land) no longer spends a run. A push to
+  # a feature branch is covered by this event and by nothing else: `push` above is
+  # filtered to main and dev, so a branch with an open PR is not run twice.
   pull_request:
+    branches: [main, dev]
   schedule:
     # Weekly CodeQL sweep, carried over from the standalone workflow this file absorbed.
     - cron: "37 5 * * 2"
@@ -11,8 +17,10 @@ on:
 concurrency:
   # Keyed on the branch, not the ref, so a push that is also a pull request's head
   # produces one live run instead of one per workflow file — the later run cancels
-  # the earlier one.
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  # the earlier one. The scheduled sweep is keyed apart from the branch it runs on:
+  # it is the only run of its week, so a main push cancelling it would lose the
+  # sweep outright rather than reschedule it.
+  group: ${{ github.workflow }}-${{ github.event_name == 'schedule' && 'weekly' || github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 permissions:
@@ -21,6 +29,10 @@ permissions:
 jobs:
   checks:
     name: Checks
+    # The weekly run exists for the CodeQL sweep alone. These checks already ran on
+    # the push that carried this commit to main, so repeating them days later buys a
+    # settled answer at the price of a whole job.
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

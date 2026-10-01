@@ -23,12 +23,26 @@ function publish(id: string) {
   for (const listener of listeners) listener()
 }
 
-/** How far below the sticky header a heading counts as the one you are reading. */
-const READING_GAP = 8
+/**
+ * The line the reader is measured against, in document coordinates: where a
+ * heading lands when its link in the rail is followed.
+ *
+ * `html` reserves the sticky header with `scroll-padding-top`, and a heading's
+ * own `scroll-margin-top` is *added* to it rather than clamped against it — so
+ * reserving the header in both places dropped a clicked heading ~100px below the
+ * line the spy watched, and the rail lit the heading *before* the one that was
+ * asked for. The docs headings keep their `scroll-margin-top` at 0 and let the
+ * scroll padding place them, so reading that same padding here makes the jump
+ * and the highlight agree by construction. The extra pixel keeps a heading that
+ * lands exactly on the line counted as being at it.
+ */
+function readingLine(): number {
+  const padding = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)
+  return window.scrollY + (Number.isFinite(padding) ? padding : 0) + 1
+}
 
 function headingUnderHeader(ids: string[]): string {
-  const header = document.querySelector<HTMLElement>('.site-header')
-  const line = window.scrollY + (header?.offsetHeight ?? 72) + READING_GAP
+  const line = readingLine()
   let current = ''
   for (const id of ids) {
     const element = document.getElementById(id)

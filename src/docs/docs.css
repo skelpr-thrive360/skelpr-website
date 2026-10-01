@@ -169,7 +169,6 @@
   border-top: 1px solid var(--rule);
   color: var(--ink-1);
   font-size: var(--text-xl);
-  scroll-margin-top: calc(var(--header-h) + var(--space-5));
 }
 
 .docs-prose h2:first-of-type {
@@ -180,7 +179,18 @@
   margin: var(--space-6) 0 var(--space-3);
   color: var(--ink-1);
   font-size: var(--text-md);
-  scroll-margin-top: calc(var(--header-h) + var(--space-5));
+}
+
+/* A heading leaves the anchor offset to `html`'s `scroll-padding-top`, which
+   already reserves the sticky header — so this is 0, not a second reservation.
+   `scroll-margin-top` is *added* to the scroll padding, never clamped against it:
+   reserving the header in both places put a followed link ~100px below the line
+   the rail measures against, and the rail then lit the heading before the one
+   that was clicked. `useTocSpy.ts` reads the scroll padding as its reading line.
+   The rule out-specifies the global `[id]` margin in styles.css. */
+.docs-prose h2,
+.docs-prose h3 {
+  scroll-margin-top: 0;
 }
 
 .docs-prose p,

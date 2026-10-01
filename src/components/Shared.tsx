@@ -13,7 +13,7 @@ import { gsap, getLenis, ScrollTrigger, smoothEase } from '../lib/anim'
  * reader named. `offsetTop` walks the layout instead — it is immune to every
  * transform on the page — so a jump lands where the target actually sits.
  */
-function documentTop(element: HTMLElement) {
+export function documentTop(element: HTMLElement) {
   let top = 0
   for (let node: HTMLElement | null = element; node; node = node.offsetParent as HTMLElement | null) {
     top += node.offsetTop
@@ -31,10 +31,35 @@ function documentTop(element: HTMLElement) {
  * commute), and a wheel input mid-flight hands control straight back — Lenis
  * treats fresh user scroll as authoritative over a running programmatic one.
  */
-export function scrollToElement(target: HTMLElement, offset = 16) {
+/**
+ * The scroll position that puts `target` just clear of the sticky header.
+ *
+ * Split out from the scrolling itself because the position is also worth *asking
+ * about*: a caller that has to know whether the page actually arrived (rather than
+ * merely glide and hope) needs the number without triggering a scroll.
+ */
+export function landingTop(target: HTMLElement, offset = 16) {
   const header = document.querySelector<HTMLElement>('.site-header')
   const headerHeight = header?.offsetHeight ?? 72
-  const top = Math.max(documentTop(target) - headerHeight - offset, 0)
+  return Math.max(documentTop(target) - headerHeight - offset, 0)
+}
+
+/**
+ * The element a jump to section `id` should aim at, or null if there is no such
+ * section. The section's first block, not the section box — a section carries a
+ * large padding-top so it breathes while you scroll past it, and honouring that on
+ * a jump drops the kicker a whole section-padding below the header, which reads as
+ * landing somewhere else.
+ */
+export function sectionTarget(id: string): HTMLElement | null {
+  const target = document.getElementById(id)
+  if (!target) return null
+  const first = target.firstElementChild
+  return first instanceof HTMLElement ? first : target
+}
+
+export function scrollToElement(target: HTMLElement, offset = 16) {
+  const top = landingTop(target, offset)
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   if (reduced) {
     window.scrollTo({ top, behavior: 'auto' })
@@ -62,17 +87,10 @@ export function scrollToElement(target: HTMLElement, offset = 16) {
   window.scrollTo({ top, behavior: 'smooth' })
 }
 
-/**
- * Jump to a section by id. Targets the section first block rather than its
- * box: a section carries a large padding-top so it breathes while you scroll
- * past it, and honouring that on a jump drops the kicker a whole
- * section-padding below the header, which reads as landing somewhere else.
- */
+/** Jump to a section by id — see `sectionTarget` for what gets aimed at. */
 export function scrollToSection(id: string) {
-  const target = document.getElementById(id)
-  if (!target) return
-  const first = target.firstElementChild
-  scrollToElement(first instanceof HTMLElement ? first : target)
+  const target = sectionTarget(id)
+  if (target) scrollToElement(target)
 }
 
 export function DetailButton({ open, onClick }: { open: boolean; onClick: () => void }) {
