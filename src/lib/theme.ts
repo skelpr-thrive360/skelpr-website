@@ -1,13 +1,17 @@
 import { useEffect, useSyncExternalStore } from 'react'
 
 /**
- * The visitor's colour theme: `light`, `dark`, or `system` (the default).
+ * The visitor's colour theme: `light`, `dark`, or `system`.
  *
  * The choice lives in a module-level store rather than React state, the same
  * shape as the section spy: the header switch is the only subscriber, so changing
  * the theme re-renders the switch and nothing else. The document itself is the
  * source of truth for what is painted — `data-theme` plus `color-scheme` are what
  * the stylesheet reads, and the palette's `light-dark()` pairs resolve from them.
+ *
+ * A first visit defaults to light — the brand's primary palette, the one the
+ * og card and the screenshots are drawn in — rather than following the OS;
+ * `system` remains a choice in the switch.
  */
 
 // Also hard-coded in the pre-paint script in index.html, which has to read the
@@ -29,14 +33,14 @@ function isThemeChoice(value: unknown): value is ThemeChoice {
   return value === 'light' || value === 'dark' || value === 'system'
 }
 
-/** The remembered choice, or `system`. Storage can be unavailable — private
- *  windows, blocked cookies — in which case the page just follows the system. */
+/** The remembered choice, or the light default. Storage can be unavailable —
+ *  private windows, blocked cookies — in which case the page stays light. */
 function storedChoice(): ThemeChoice {
   try {
     const stored = localStorage.getItem(THEME_STORAGE_KEY)
-    return isThemeChoice(stored) ? stored : 'system'
+    return isThemeChoice(stored) ? stored : 'light'
   } catch {
-    return 'system'
+    return 'light'
   }
 }
 

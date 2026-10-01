@@ -7,7 +7,8 @@ import { IdentitySection } from './components/IdentitySection'
 import { ModesSection } from './components/ModesSection'
 import { WorkflowSection } from './components/WorkflowSection'
 import { BenchmarkSection } from './components/BenchmarkSection'
-import { ArchitectureSection } from './components/ArchitectureSection'
+// Private launch: architecture stays out of the public page for now.
+// import { ArchitectureSection } from './components/ArchitectureSection'
 import { RealWorldSection } from './components/RealWorldSection'
 import { PrerequisitesSection } from './components/PrerequisitesSection'
 import { Footer, InstallSection, WaitlistSection } from './components/WaitlistInstall'
@@ -67,7 +68,8 @@ function App() {
         <ModesSection open={isDetailed('modes')} onToggle={() => toggleDetails('modes')} />
         <WorkflowSection open={isDetailed('workflow')} onToggle={() => toggleDetails('workflow')} />
         <BenchmarkSection />
-        <ArchitectureSection open={isDetailed('architecture')} onToggle={() => toggleDetails('architecture')} />
+        {/* Private launch: section parked — see the import note above. */}
+        {/* <ArchitectureSection open={isDetailed('architecture')} onToggle={() => toggleDetails('architecture')} /> */}
         <PrerequisitesSection />
         <InstallSection />
         <WaitlistSection />

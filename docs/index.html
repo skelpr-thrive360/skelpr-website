@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f9f8f4" />
+    <script>
+      // Same key and same reasoning as index.html: the docs page is a second entry
+      // into the same bundle graph, so it has to read the remembered theme before
+      // the first paint too — otherwise arriving here from a dark page flashes
+      // light until React mounts. Keep in sync with src/lib/theme.ts.
+      try {
+        var choice = localStorage.getItem('skelpr-theme')
+        if (choice === 'light' || choice === 'dark' || choice === 'system') {
+          document.documentElement.dataset.theme = choice
+        }
+      } catch (error) {
+        // Storage blocked: the page simply follows the system preference.
+      }
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/brand/favicon-16.png" />
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon-180.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="description" content="Install and activate Skelpr: prerequisites, pip configuration, per-platform steps, activation with your token, first run, and uninstall." />
+    <!-- Canonical domain: https://skelpr.com — kept in sync with public/sitemap.xml
+         and public/robots.txt. -->
+    <link rel="canonical" href="https://skelpr.com/docs" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Skelpr" />
+    <meta property="og:url" content="https://skelpr.com/docs" />
+    <meta property="og:title" content="Install &amp; activate Skelpr" />
+    <meta property="og:description" content="Prerequisites, installation, activation and first run — with the exact commands and the output to expect." />
+    <meta property="og:image" content="https://skelpr.com/brand/og-card.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Install &amp; activate Skelpr" />
+    <meta name="twitter:description" content="Prerequisites, installation, activation and first run — with the exact commands and the output to expect." />
+    <meta name="twitter:image" content="https://skelpr.com/brand/og-card.png" />
+    <title>Install &amp; activate — Skelpr docs</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/docs/main.tsx"></script>
+  </body>
+</html>

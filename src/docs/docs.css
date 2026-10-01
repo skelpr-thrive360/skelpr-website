@@ -1,0 +1,443 @@
+/* =========================================================================
+   /docs — the install & activation page
+   -------------------------------------------------------------------------
+   Layered on top of the shared design system in src/styles.css, which owns the
+   tokens, the fonts and the header/footer furniture this page reuses. Nothing
+   here redefines a colour: every value is one of the semantic foregrounds, so
+   both themes keep working and `npm run audit:contrast` still measures this
+   page's tokens where it already measured them.
+
+   Layout is a two-column shell — contents rail on the left, prose on the right
+   — that collapses to one column when the rail would be narrower than the
+   headings it lists.
+   ========================================================================= */
+
+.docs-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--surface);
+}
+
+/* The header is deliberately *not* restyled here. `.site-header` insets itself with
+   `--sheet-inset`, which is what puts the brand and the actions on the same grid as
+   the marketing page's content — so both pages line up at every width, and there is
+   one place to change it. Overriding that inset to the plain gutter was what pushed
+   this page's brand out to the window edge while the content below sat on a
+   different, centred 1180px column. */
+
+/* The docs header carries the same nav as the marketing page (styled by
+   `.main-nav` itself); `Docs` is a marker, so it needs the link box and the
+   active state `.main-nav a[aria-current]` would otherwise supply. */
+.docs-nav span[aria-current] {
+  display: flex;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--accent);
+  color: var(--ink-1);
+  font-size: var(--text-sm);
+}
+
+/* --- shell --------------------------------------------------------------- */
+
+/* Same inset as the header and the marketing page's sections, so the contents rail
+   starts under the brand rather than somewhere of its own. The sheet comes from the
+   inset itself, exactly as it does for `.content-section` on the homepage — no
+   separate max-width, which would be a second, competing measurement. */
+.docs-body {
+  display: grid;
+  grid-template-columns: minmax(180px, 236px) minmax(0, 1fr);
+  gap: clamp(28px, 5vw, 72px);
+  width: 100%;
+  padding: clamp(28px, 4vw, 56px) var(--sheet-inset) clamp(56px, 7vw, 96px);
+  align-items: start;
+}
+
+/* styles.css caps every `main` at the marketing sheet; this one is already
+   inside a capped grid, so the cap would only fight the column. */
+.docs-main {
+  max-width: none;
+  margin-inline: 0;
+  min-width: 0;
+}
+
+.docs-aside {
+  position: sticky;
+  top: calc(var(--header-h) + var(--space-5));
+}
+
+.docs-toc-label {
+  margin-bottom: var(--space-3);
+  color: var(--ink-3);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+}
+
+.docs-toc-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-left: 1px solid var(--rule);
+}
+
+.docs-toc-list li {
+  margin: 0;
+}
+
+.docs-toc-list a {
+  display: block;
+  padding: 5px 0 5px var(--space-4);
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  border-left: 2px solid transparent;
+  margin-left: -1px;
+  transition: color var(--dur-1) var(--ease-standard),
+    border-color var(--dur-1) var(--ease-standard);
+}
+
+.docs-toc-list a:hover {
+  color: var(--ink-1);
+  border-left-color: var(--accent);
+}
+
+/* The rail follows the reader: full ink and the accent rule on the active one. */
+.docs-toc-list a.is-active {
+  color: var(--ink-1);
+  border-left-color: var(--accent);
+}
+
+.docs-toc-sub a {
+  padding-left: var(--space-6);
+  color: var(--ink-3);
+  font-size: var(--text-xs);
+}
+
+/* The rail is a wide-screen affordance; below the breakpoint the copy above the
+   first heading carries the same links in a disclosure. */
+.docs-toc-mobile {
+  display: none;
+  margin-bottom: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+}
+
+.docs-toc-mobile summary {
+  color: var(--ink-1);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.docs-toc-mobile .docs-toc-list {
+  margin-top: var(--space-3);
+  border-left: 0;
+}
+
+.docs-toc-mobile .docs-toc-list a {
+  padding-left: 0;
+  border-left: 0;
+}
+
+/* --- prose --------------------------------------------------------------- */
+
+/* One place where the document's measure, heading rhythm and code panels are
+   decided. Everything is token-driven, so both themes and every width scale.
+
+   No max-width: the article fills its grid column right out to the sheet's edge,
+   which is what keeps the code panels and the tables — the widest things here —
+   from stopping short of the page's own margin. The column is bounded by the
+   grid, and the grid by `--sheet-inset`, so this is the page's measure, not the
+   window's. */
+.docs-prose {
+  color: var(--ink-2);
+}
+
+.docs-prose h1 {
+  margin: 0 0 var(--space-5);
+  color: var(--ink-1);
+  font-size: var(--text-2xl);
+}
+
+.docs-prose h2 {
+  margin: var(--space-8) 0 var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--rule);
+  color: var(--ink-1);
+  font-size: var(--text-xl);
+}
+
+.docs-prose h2:first-of-type {
+  margin-top: var(--space-6);
+}
+
+.docs-prose h3 {
+  margin: var(--space-6) 0 var(--space-3);
+  color: var(--ink-1);
+  font-size: var(--text-md);
+}
+
+/* A heading leaves the anchor offset to `html`'s `scroll-padding-top`, which
+   already reserves the sticky header — so this is 0, not a second reservation.
+   `scroll-margin-top` is *added* to the scroll padding, never clamped against it:
+   reserving the header in both places put a followed link ~100px below the line
+   the rail measures against, and the rail then lit the heading before the one
+   that was clicked. `useTocSpy.ts` reads the scroll padding as its reading line.
+   The rule out-specifies the global `[id]` margin in styles.css. */
+.docs-prose h2,
+.docs-prose h3 {
+  scroll-margin-top: 0;
+}
+
+.docs-prose p,
+.docs-prose li {
+  font-size: var(--text-base);
+  line-height: 1.7;
+}
+
+.docs-prose p {
+  margin: var(--space-4) 0;
+}
+
+.docs-prose ul,
+.docs-prose ol {
+  margin: var(--space-4) 0;
+  padding-left: 1.35em;
+}
+
+.docs-prose li {
+  margin: var(--space-2) 0;
+}
+
+.docs-prose li::marker {
+  color: var(--ink-3);
+}
+
+.docs-prose a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.docs-prose a:hover {
+  color: var(--accent-hover);
+}
+
+.docs-prose strong {
+  color: var(--ink-1);
+  font-weight: 600;
+}
+
+.docs-prose hr {
+  margin: var(--space-7) 0;
+  border: 0;
+  border-top: 1px solid var(--rule);
+}
+
+/* Fenced blocks: the commands and the terminal output that follows them. A
+   horizontal scroller rather than a wrap, because a wrapped shell command stops
+   being copy-pasteable. The padding itself is set with the copy control below,
+   because the two share one pair of measurements. */
+.docs-prose pre {
+  margin: var(--space-4) 0;
+  overflow-x: auto;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-panel);
+  background: var(--surface-sunken);
+  line-height: 1.6;
+  tab-size: 2;
+}
+
+.docs-prose pre code {
+  padding: 0;
+  background: none;
+  color: var(--ink-1);
+  font-size: var(--text-sm);
+}
+
+.docs-prose :not(pre) > code {
+  font-size: 0.9em;
+}
+
+/* Tables: the prerequisites and the two troubleshooting lists. */
+.docs-prose table {
+  width: 100%;
+  margin: var(--space-5) 0;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.docs-prose th,
+.docs-prose td {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.55;
+}
+
+.docs-prose th {
+  background: var(--ink-wash);
+  color: var(--ink-1);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.docs-prose td code {
+  overflow-wrap: anywhere;
+}
+
+/* Blockquotes carry the notes: the things that are true but easy to miss. */
+.docs-prose blockquote {
+  margin: var(--space-5) 0;
+  padding: var(--space-3) var(--space-5);
+  border-left: 2px solid var(--accent);
+  background: var(--accent-wash);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.docs-prose blockquote p {
+  margin: var(--space-2) 0;
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+}
+
+/* --- copy control --------------------------------------------------------
+   An icon on the block's own first line, not a bar above it: a bar spends a row of
+   its height on every one of these blocks and reads as a heading for the code.
+   The control is visible at rest, because a touch screen has no hover to reveal it.
+
+   The block's padding is declared once, here, and the control is positioned from
+   the same two values — so the icon starts on the block's first line and inset by
+   the block's own padding, and the two cannot drift apart in a later edit. */
+
+.docs-code {
+  /* The block's padding, and the size of the control that shares it. */
+  --code-pad-y: 12px;
+  --code-pad-x: 16px;
+  --code-control: 26px;
+  position: relative;
+}
+
+.docs-code pre {
+  padding: var(--code-pad-y) var(--code-pad-x);
+}
+
+/* Only blocks with a control reserve the lane for it. */
+.docs-code.has-copy pre {
+  padding-right: calc(var(--code-pad-x) + var(--code-control) + 8px);
+}
+
+.docs-copy {
+  display: inline-flex;
+  position: absolute;
+  /* On the block's first line, at the block's padding — not on a row of its own. */
+  top: var(--code-pad-y);
+  right: var(--code-pad-x);
+  z-index: 1;
+  width: var(--code-control);
+  height: var(--code-control);
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  color: var(--ink-2);
+  transition: color var(--dur-1) var(--ease-standard),
+    border-color var(--dur-1) var(--ease-standard),
+    background var(--dur-1) var(--ease-standard);
+}
+
+.docs-copy:hover {
+  color: var(--ink-1);
+  border-color: var(--accent);
+  background: var(--accent-wash);
+}
+
+.docs-copy.is-failed {
+  border-color: var(--warn);
+  color: var(--warn);
+  cursor: default;
+}
+
+/* For the status line a screen reader hears but nobody sees. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- pager and footer ---------------------------------------------------- */
+
+.docs-pager {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+  justify-content: space-between;
+  margin-top: var(--space-8);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--rule);
+}
+
+.docs-pager a {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  color: var(--accent);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.docs-pager a:hover {
+  color: var(--accent-hover);
+}
+
+.docs-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--rule);
+}
+
+.docs-footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--sheet-inset);
+}
+
+.docs-footer-inner p {
+  color: var(--ink-3);
+  font-size: var(--text-xs);
+}
+
+.docs-footer-note {
+  color: var(--ink-3);
+  font-size: var(--text-xs);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+}
+
+@media (max-width: 960px) {
+  .docs-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .docs-aside {
+    display: none;
+  }
+
+  .docs-toc-mobile {
+    display: block;
+  }
+}
