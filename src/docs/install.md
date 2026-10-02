@@ -68,24 +68,10 @@ it can travel.
 
 ## Install
 
-### 1. Point pip at the release channel
+### 1. Install the package
 
-Skelpr is not on PyPI. Add the vendor's index once, and every `pip install` afterwards finds it:
-
-| Platform | File |
-|---|---|
-| Linux / macOS | `~/.config/pip/pip.conf` |
-| Windows | `%APPDATA%\pip\pip.ini` |
-
-```ini
-[global]
-extra-index-url = https://skelpr-packages.storage.googleapis.com/simple/
-```
-
-`extra-index-url`, **never** `index-url`: the channel carries `skelpr` and nothing else, so replacing
-PyPI outright would leave its dependencies unresolvable. The line goes in once — not per project.
-
-### 2. Install the package
+Skelpr ships a wheel to PyPI, so there is nothing to configure first — `pip install skelpr` resolves
+on any machine.
 
 ```bash
 python3 -m pip install skelpr
@@ -130,7 +116,7 @@ install the wheel the vendor sent you instead:
 pip install ./skelpr-<version>-py3-none-any.whl
 ```
 
-### 3. Check it installed
+### 2. Check it installed
 
 ```bash
 skelpr --version
@@ -330,7 +316,7 @@ wiping a machine, so the seat is not held by a laptop nobody uses.
 | Symptom | What it means |
 |---|---|
 | `skelpr: command not found` | pip's script directory is not on your `PATH`. Add it and open a new terminal. |
-| `No matches found` from pip, or no distribution found | The `extra-index-url` line is missing, or in the wrong file for your platform. |
+| `No matches found` from pip, or no distribution found | Check the version exists (`pip index versions skelpr`), or you are on a Python older than 3.10. |
 | `error: license required: this machine is not activated` | The token is installed but `activate` has not run on *this* machine. A token alone does not open the gate. |
 | `That token cannot be used` | Expired, revoked, or signed by another key. Send it back to the vendor. |
 | `No seats left` | Every seat is in use. `skelpr deactivate` on a machine you no longer use, or ask for a bigger count. |
