@@ -196,6 +196,15 @@ function Contents({ entries, ids }: { entries: TocEntry[]; ids: string[] }) {
 export function DocsApp() {
   useThemeEffect()
   const scrolled = useScrolled()
+  // Land an incoming deep link. A heading is rendered from markdown, so the id the
+  // URL names does not exist while the browser does its own fragment jump and
+  // `/docs#troubleshooting` opens at the top. By the time this runs the article is on
+  // screen, and `scrollIntoView` honours the `scroll-padding-top` that reserves the
+  // header. In-page clicks need none of this: the element is already there.
+  useEffect(() => {
+    const id = window.location.hash.slice(1)
+    if (id) document.getElementById(id)?.scrollIntoView()
+  }, [])
   const entries = useMemo(() => tocOf(install), [])
   // Stable across renders, so the spy's listener is attached once, not per highlight.
   const entryIds = useMemo(() => entries.map((entry) => entry.id), [entries])
