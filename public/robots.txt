@@ -1,4 +1,5 @@
-# Replace the sitemap host with the deployed canonical domain when it is known.
+# Canonical host https://www.skelpr.com — the apex domain 308-redirects here.
+# This line, sitemap.xml and the canonical tags must agree (`check:seo`).
 User-agent: *
 Allow: /
-Sitemap: https://skelpr.com/sitemap.xml
+Sitemap: https://www.skelpr.com/sitemap.xml

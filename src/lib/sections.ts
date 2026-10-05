@@ -17,6 +17,7 @@ export const sectionIds = [
   // 'architecture',
   'prerequisites',
   'install',
+  'faq',
   'waitlist',
 ] as const
 

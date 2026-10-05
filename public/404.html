@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f9f8f4" />
+    <!-- Served with a real 404 status; noindex is belt-and-braces for a host
+         that answers 200. -->
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Page not found — Skelpr</title>
+    <!-- No bundle: this must render for a visitor who asked for a path that does
+         not exist. Palette inlined from src/styles.css so it still matches. -->
+    <style>
+      :root {
+        color-scheme: light dark;
+        --surface: light-dark(#f9f8f4, #0d0e11);
+        --ink-1: light-dark(#17181a, #edeff1);
+        --ink-2: light-dark(#2a2a2e, #d3d7dd);
+        --ink-3: light-dark(#3a3a3e, #bbc1c7);
+        --rule: light-dark(#9f9e9b, #56585b);
+        --accent: light-dark(#154874, #8ab4e0);
+        --font-sans: "IBM Plex Sans Variable", ui-sans-serif, system-ui, sans-serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+      }
+      * { box-sizing: border-box; }
+      body {
+        display: flex;
+        min-height: 100vh;
+        margin: 0;
+        padding: clamp(28px, 6vw, 72px);
+        background: var(--surface);
+        color: var(--ink-2);
+        font-family: var(--font-sans);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      main { max-width: 60ch; margin: auto; }
+      .status {
+        color: var(--ink-3);
+        font-family: var(--font-mono);
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 18px 0 10px;
+        color: var(--ink-1);
+        font-size: clamp(30px, 5vw, 44px);
+        line-height: 1.12;
+        font-weight: 600;
+      }
+      h1 em { font-style: italic; font-weight: 400; }
+      p { margin: 0 0 28px; }
+      nav { display: flex; flex-wrap: wrap; gap: 14px; padding-top: 22px; border-top: 1px solid var(--rule); }
+      nav a {
+        color: var(--accent);
+        font-size: 14.5px;
+        text-decoration: none;
+      }
+      nav a:hover, nav a:focus-visible { text-decoration: underline; }
+      nav span { color: var(--ink-3); font-size: 14.5px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="status">Error 404 · page not found</p>
+      <h1>This path has no index.<br /><em>Retrieval needs something to retrieve.</em></h1>
+      <p>
+        The URL you asked for does not exist on skelpr — it may have moved, or it may never have
+        been there. The two pages that do exist are below.
+      </p>
+      <nav aria-label="Not-found navigation">
+        <a href="/">← skelpr home</a>
+        <a href="/docs">Install &amp; activate guide</a>
+        <a href="/#waitlist">Join the waitlist</a>
+        <span>theskelpr@gmail.com</span>
+      </nav>
+    </main>
+  </body>
+</html>

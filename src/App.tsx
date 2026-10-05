@@ -11,6 +11,7 @@ import { BenchmarkSection } from './components/BenchmarkSection'
 // import { ArchitectureSection } from './components/ArchitectureSection'
 import { RealWorldSection } from './components/RealWorldSection'
 import { PrerequisitesSection } from './components/PrerequisitesSection'
+import { FaqSection } from './components/FaqSection'
 import { Footer, InstallSection, WaitlistSection } from './components/WaitlistInstall'
 import { useSmoothScroll } from './hooks/useSmoothScroll'
 import { useScrollChoreography } from './hooks/useScrollChoreography'
@@ -43,7 +44,9 @@ function App() {
       <main id="top">
         <section className="hero">
           <div className="hero-copy">
-            <div className="eyebrow"><span className="status-dot" /> Code intelligence for agents</div>
+            {/* The brand in the page's first line of text — a crawler used to meet
+                "skelpr" for the first time in the lede. One word, no layout change. */}
+            <div className="eyebrow"><span className="status-dot" /> Skelpr — code intelligence for agents</div>
             <h1>Don’t give an agent the whole repo.<br /><em>Give it the right code.</em></h1>
             <p className="hero-lede">Skelpr finds the right code for AI agents, PR reviews, and fixes — grounded in syntax-aware context and precise <code>file:line</code> citations.</p>
             <div className="hero-actions">
@@ -72,6 +75,8 @@ function App() {
         {/* <ArchitectureSection open={isDetailed('architecture')} onToggle={() => toggleDetails('architecture')} /> */}
         <PrerequisitesSection />
         <InstallSection />
+        {/* Directly before the ask: what is still open, at the moment of deciding. */}
+        <FaqSection />
         <WaitlistSection />
       </main>
 

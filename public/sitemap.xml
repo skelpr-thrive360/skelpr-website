@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Replace https://skelpr.com with the deployed canonical domain when it is known. -->
+<!-- Canonical host https://www.skelpr.com: Vercel 308-redirects the apex domain
+     there, so www is what answers 200. Must match the canonical tags and
+     robots.txt — `check:seo` fails the build if they drift. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://skelpr.com/</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://www.skelpr.com/</loc>
+    <lastmod>2026-10-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://skelpr.com/docs</loc>
-    <lastmod>2026-09-30</lastmod>
+    <loc>https://www.skelpr.com/docs</loc>
+    <lastmod>2026-10-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

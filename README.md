@@ -8,7 +8,7 @@ figures are grounded in the repository's README and `docs/`, never invented.
 
 - **React 19 + TypeScript** on **Vite**, no other runtime dependencies beyond `lucide-react` (icons) and `react-markdown` + `remark-gfm` (renders the verbatim benchmark answers).
 - Plain CSS in `src/styles.css` (design tokens as CSS variables at the top; no CSS framework).
-- Static output: `npm run build` produces a fully static `dist/` — host anywhere (Netlify, Vercel, GitHub Pages, S3…).
+- Static output: `npm run build` produces a fully static `dist/` — host anywhere (Netlify, Vercel, GitHub Pages, S3…). The build also **prerenders both pages into that output**, so the HTML a crawler receives already contains the page — see [SEO](#seo).
 
 ## Project structure
 
@@ -20,10 +20,12 @@ website/
 ├── brand-source/                   # source art the brand scripts read — see "Brand assets"
 ├── public/
 │   ├── brand/                      # generated icons, logo plates and the og card
-│   ├── robots.txt                  # placeholder domain — see "Canonical URL"
-│   └── sitemap.xml                 # placeholder domain — see "Canonical URL"
+│   ├── 404.html                    # branded not-found page the host serves
+│   ├── robots.txt                  # canonical host — see "Canonical URL"
+│   └── sitemap.xml                 # canonical host — see "Canonical URL"
 ├── src/
 │   ├── main.tsx / App.tsx          # bootstrap + section order
+│   ├── entry-server.tsx            # the same two pages, rendered for the prerender pass
 │   ├── docs/                       # the /docs page (see "Docs page" below)
 │   │   ├── main.tsx / DocsApp.tsx  # bootstrap + shell (header, contents rail, prose)
 │   │   ├── install.md              # the document itself — the content lives here
@@ -34,6 +36,7 @@ website/
 │   │   ├── Shared.tsx              # WaitlistForm, Metric, small shared bits
 │   │   ├── ThemeToggle.tsx         # light / dark / system control
 │   │   ├── PrerequisitesSection.tsx # Docker Desktop + the embedding model, ahead of install
+│   │   ├── FaqSection.tsx          # the six-question FAQ block — paired with the FAQPage schema
 │   │   └── WaitlistInstall.tsx     # waitlist panel + install section + footer
 │   ├── data/
 │   │   ├── siteData.tsx            # page copy, benchmark metrics, per-task Q&A
@@ -45,6 +48,8 @@ website/
 ├── scripts/derive-palette.mjs      # solves the palette into src/styles.css
 ├── scripts/contrast-audit.mjs      # measures the committed palette
 ├── scripts/check-links.mjs         # in-page hash + section registry audit
+├── scripts/prerender.mjs           # writes the rendered pages into dist/ — see "SEO"
+├── scripts/check-seo.mjs           # built pages indexable, every SEO surface in agreement
 ├── scripts/lib/                    # colour maths, palette region reader/writer
 ├── scripts/extract-benchmark-answers.mjs
 ├── waitlist-apps-script.gs         # backend for the waitlist (Google Sheet)
@@ -85,13 +90,16 @@ npm run preview  # the built page, after npm run build
 ## Checks
 
 Every check is a plain Node script — no linter, no test runner to install — and all
-four run in CI (`.github/workflows/ci.yml`) on every push and pull request:
+five run in CI (`.github/workflows/ci.yml`) on every push and pull request, after the
+build (`check:seo` reads `dist/`):
 
 ```bash
 npm run check:palette    # the palette in styles.css still matches palette.config.mjs
-npm run build            # tsc --build (typecheck) + vite build
+npm run build            # tsc --build (typecheck) + vite build + SSR build + prerender
 npm run check:links      # every in-page #hash resolves, sections and registry agree
 npm run audit:contrast   # every token meets its contrast target, accent stays distinct
+npm run check:seo        # built HTML is indexable and canonical/sitemap/robots agree (needs `build`)
+npm run check:audit       # 22-point ranking audit — HTTPS, titles, Q&A, llms.txt, AI crawlers…
 ```
 
 ## Motion
@@ -270,9 +278,53 @@ VITE_WAITLIST_ENDPOINT=https://formspree.io/f/yourFormId
 Note: with Formspree the `trap` field is simply recorded as form data; honeypot
 filtering then has to happen on their dashboard (spam settings).
 
+## SEO
+
+Three things decide whether a search engine can rank a page here, and all three are
+enforced by a check rather than remembered.
+
+**1. The page is in the HTML.** The site is a client-rendered React app, and it used to
+ship `<div id="root"></div>` — every word of the copy existed only after the bundle ran,
+so Google indexed the URL with nothing in it (the result read "No information is
+available for this page"). The build now ends with a prerender pass:
+
+```bash
+npm run build    # tsc → vite build → vite build --config vite.ssr.config.ts → npm run prerender
+```
+
+`src/entry-server.tsx` renders both pages with `renderToString`; `scripts/prerender.mjs`
+writes that markup into the `<div id="root">` of each built document, leaving the
+authored head — favicons, canonical, JSON-LD — untouched. The client then *hydrates*
+what arrived (`src/main.tsx`, `src/docs/main.tsx`) instead of rebuilding it; when the
+root is empty (dev, or a build that skipped the pass) it mounts fresh, so the two can
+never disagree. The rule that makes this work: no component may read the browser during
+render — every `window`/`document` touch in the app is in an effect, a handler, or a
+`useSyncExternalStore` server snapshot.
+
+**2. One host, named in every file.** See [Canonical URL](#canonical-url) below.
+
+**3. `npm run check:seo` fails the build when any of it drifts.** It reads `dist/` and
+asserts the rendered text is present, exactly one `<h1>`, title/description inside their
+length bands (Google truncates past ~60/160 characters), the canonical and `og:url` and
+sitemap and robots all naming the same origin, `og:image` actually shipping, every
+JSON-LD block parsing, and the FAQPage schema matching the answers the page renders. It
+runs in CI straight after the build — and it has been checked against its own failure
+cases: drop the prerender pass or point the canonical at the redirecting host and it
+exits non-zero.
+
+The FAQ is the one piece of copy living in two files: the visible answers in
+`src/components/FaqSection.tsx`, the schema in `index.html`. `check:seo` compares them
+text-for-text, so they cannot drift apart quietly.
+
 ## Canonical URL
 
-The canonical domain is `https://skelpr.com`, used in three places that have to stay in
-sync: the canonical/og/twitter meta tags in `index.html`, `public/sitemap.xml`, and
-`public/robots.txt`. If the deployed public domain ever changes, update all three
-together (they feed SEO — sitemap submission, social preview crawlers).
+The canonical host is `https://www.skelpr.com`. Vercel 308-redirects the apex domain
+there, so www is the URL that answers 200 — the tags used to declare `https://skelpr.com`
+canonical, which pointed every signal (and the sitemap) at a URL that bounces.
+
+Four files have to agree: the canonical/og/twitter tags in `index.html`, the same tags in
+`docs/index.html`, `public/sitemap.xml`, and the `Sitemap:` line in `public/robots.txt`.
+`npm run check:seo` derives the origin from the home canonical and fails if any of the
+others drifts. If the deployed domain ever changes, update those four **and** the
+`ORIGIN` constant at the top of `scripts/check-seo.mjs` together — the check will name
+whichever file you missed.

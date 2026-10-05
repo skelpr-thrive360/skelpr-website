@@ -5,14 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && npm run build:ssr && npm run prerender",
+    "build:ssr": "vite build --config vite.ssr.config.ts",
+    "prerender": "node scripts/prerender.mjs",
     "preview": "vite preview",
     "extract:answers": "node scripts/extract-benchmark-answers.mjs",
     "audit:contrast": "node scripts/contrast-audit.mjs",
     "derive:palette": "node scripts/derive-palette.mjs",
     "check:palette": "node scripts/derive-palette.mjs --check",
     "check:links": "node scripts/check-links.mjs",
-    "check:hygiene": "node scripts/check-hygiene.mjs"
+    "check:hygiene": "node scripts/check-hygiene.mjs",
+    "check:seo": "node scripts/check-seo.mjs",
+    "check:audit": "node scripts/audit22.mjs"
   },
   "dependencies": {
     "@fontsource-variable/ibm-plex-sans": "^5.3.0",
