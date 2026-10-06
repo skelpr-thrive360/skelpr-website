@@ -25,21 +25,108 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/brand/favicon-16.png" />
     <link rel="apple-touch-icon" href="/brand/apple-touch-icon-180.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta name="description" content="Install and activate Skelpr: prerequisites, pip configuration, per-platform steps, activation with your token, first run, and uninstall." />
-    <!-- Canonical domain: https://skelpr.com — kept in sync with public/sitemap.xml
-         and public/robots.txt. -->
-    <link rel="canonical" href="https://skelpr.com/docs" />
+    <!-- The install guide's own sentence, in the order a searcher hits the
+         commands. 152 characters — inside the band `check:seo` enforces. -->
+    <meta
+      name="description"
+      content="Install Skelpr in minutes: prerequisites, pip install on Linux, macOS and Windows, activation with your token, first run, troubleshooting and uninstall."
+    />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    <!-- Canonical host: https://www.skelpr.com — kept in sync with index.html,
+         public/sitemap.xml and public/robots.txt (`check:seo`). -->
+    <link rel="canonical" href="https://www.skelpr.com/docs" />
     <meta property="og:type" content="article" />
     <meta property="og:site_name" content="Skelpr" />
-    <meta property="og:url" content="https://skelpr.com/docs" />
-    <meta property="og:title" content="Install &amp; activate Skelpr" />
-    <meta property="og:description" content="Prerequisites, installation, activation and first run — with the exact commands and the output to expect." />
-    <meta property="og:image" content="https://skelpr.com/brand/og-card.png" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:url" content="https://www.skelpr.com/docs" />
+    <meta property="og:title" content="Install &amp; activate Skelpr — setup guide | Skelpr docs" />
+    <meta
+      property="og:description"
+      content="Install Skelpr in minutes: prerequisites, pip install on Linux, macOS and Windows, activation with your token, first run, troubleshooting and uninstall."
+    />
+    <meta property="og:image" content="https://www.skelpr.com/brand/og-card.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Skelpr — surgical code retrieval for AI agents, with file:line citations." />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Install &amp; activate Skelpr" />
-    <meta name="twitter:description" content="Prerequisites, installation, activation and first run — with the exact commands and the output to expect." />
-    <meta name="twitter:image" content="https://skelpr.com/brand/og-card.png" />
-    <title>Install &amp; activate — Skelpr docs</title>
+    <meta name="twitter:title" content="Install &amp; activate Skelpr — setup guide | Skelpr docs" />
+    <meta
+      name="twitter:description"
+      content="Install Skelpr in minutes: prerequisites, pip install on Linux, macOS and Windows, activation with your token, first run, troubleshooting and uninstall."
+    />
+    <meta name="twitter:image" content="https://www.skelpr.com/brand/og-card.png" />
+    <meta name="twitter:image:alt" content="Skelpr — surgical code retrieval for AI agents, with file:line citations." />
+    <title>Install &amp; activate Skelpr — setup guide | Skelpr docs</title>
+    <!-- Document-shaped schema: the piece, the procedure it teaches (steps mirror
+         the install/activate/first-run headings of src/docs/install.md), and its
+         place in the site. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "TechArticle",
+          "headline": "Install & activate Skelpr",
+          "description": "Prerequisites, installation, activation and first run — with the exact commands and the output to expect.",
+          "inLanguage": "en",
+          "url": "https://www.skelpr.com/docs",
+          "mainEntityOfPage": { "@type": "WebPage", "@id": "https://www.skelpr.com/docs" },
+          "publisher": { "@id": "https://www.skelpr.com/#organization" },
+          "author": { "@id": "https://www.skelpr.com/#organization" }
+        },
+        {
+          "@type": "HowTo",
+          "name": "Install and activate Skelpr",
+          "description": "From prerequisites to a first indexed repository: the five steps of setting Skelpr up on one machine.",
+          "url": "https://www.skelpr.com/docs",
+          "step": [
+            {
+              "@type": "HowToStep",
+              "name": "Meet the prerequisites",
+              "text": "Python 3.10 or newer, git on your PATH, Docker Desktop running, and an embeddings server — by default LM Studio serving nomic-embed-text-v1.5 at http://127.0.0.1:1234/v1."
+            },
+            {
+              "@type": "HowToStep",
+              "name": "Get a token",
+              "text": "Request access and you are issued a personal token of the form LDX1.<payload>.<signature>. It records your features, expiry and seat count — a seat is a machine."
+            },
+            {
+              "@type": "HowToStep",
+              "name": "Install the package",
+              "text": "python3 -m pip install skelpr — or pip install \"skelpr[mcp]\" for the MCP server. Then check it with skelpr --version."
+            },
+            {
+              "@type": "HowToStep",
+              "name": "Activate this machine",
+              "text": "skelpr activate <the token from your email>. The signature is verified offline first, then the machine takes one seat and receives a lease stored at ~/.skelpr/lease.key."
+            },
+            {
+              "@type": "HowToStep",
+              "name": "Run it on your repository",
+              "text": "cd into the repo, then skelpr setup, skelpr init, skelpr index — and skelpr ask \"how does authentication token refresh work?\""
+            }
+          ]
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Skelpr",
+              "item": "https://www.skelpr.com/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Install & activate",
+              "item": "https://www.skelpr.com/docs"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>

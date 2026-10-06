@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type RefObject } from 'react'
 import { heroIcons, heroStages } from '../data/siteData'
 
 // Node centres in viewBox units (x/6 and y/4 give the % position of the card
@@ -60,14 +60,19 @@ const HERO_LAYOUTS: { desktop: Layout; mobile: Layout } = {
 
 function useCompactLayout() {
   const query = '(max-width: 700px)'
-  const [compact, setCompact] = useState(() => window.matchMedia(query).matches)
-  useEffect(() => {
-    const mq = window.matchMedia(query)
-    const onChange = (event: MediaQueryListEvent) => setCompact(event.matches)
-    mq.addEventListener('change', onChange)
-    return () => mq.removeEventListener('change', onChange)
-  }, [])
-  return compact
+  // A store, not useState: this is the one value that differs between the server
+  // render and the browser's. The server snapshot is the desktop layout; the first
+  // client read corrects it before paint, so no mismatch — a phone still gets its
+  // 2×2 grid on frame one.
+  return useSyncExternalStore(
+    (onChange) => {
+      const mq = window.matchMedia(query)
+      mq.addEventListener('change', onChange)
+      return () => mq.removeEventListener('change', onChange)
+    },
+    () => window.matchMedia(query).matches,
+    () => false,
+  )
 }
 
 // The canvas is measured rather than assumed: the cards are a fixed size but the

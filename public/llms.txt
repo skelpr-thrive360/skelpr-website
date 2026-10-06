@@ -1,0 +1,28 @@
+# Skelpr
+
+> Surgical code retrieval for AI agents, PR reviews, and fixes. Skelpr finds the
+> parts of a repository that matter, ranks them, and hands the agent a small,
+> token-efficient context package with precise file:line citations. It retrieves
+> and cites — the agent still does the reasoning.
+
+Install is open (`pip install skelpr`); running is licensed per machine through an
+offline-verified activation token. Retrieval, indexing and review run locally, and
+there is no telemetry. It speaks MCP, so Claude Code, Cursor and Windsurf call it
+as they are; the CLI covers the same retrieval path for review, diff and fix.
+
+## Docs
+
+- [Install & activate](https://www.skelpr.com/docs): prerequisites, pip install on Linux/macOS/Windows, activation with your token, first run, troubleshooting, uninstall.
+- [Home](https://www.skelpr.com/): problem, integration modes, benchmark evidence, requirements, waitlist.
+
+## Evidence
+
+- The repository's MCP Agent A/B: 59% fewer agent tokens and 76% fewer files opened, at answer parity.
+- Prerequisites: Python 3.10+, Docker Desktop running, and a local embeddings server (LM Studio serving nomic-embed-text-v1.5 by default).
+
+## Facts
+
+- Name: Skelpr
+- Website: https://www.skelpr.com
+- Docs: https://www.skelpr.com/docs
+- Contact: theskelpr@gmail.com

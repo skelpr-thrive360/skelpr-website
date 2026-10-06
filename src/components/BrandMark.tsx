@@ -9,18 +9,19 @@
 export function BrandMark() {
   return (
     <>
+      {/* Descriptive alt rather than "decorative": this is the site's logo, and
+          image search reads it. The link's own aria-label stays the accessible
+          name, so nothing is announced twice. */}
       <img
         className="brand-mark brand-mark-light"
         src="/brand/logo-skeplr.png"
-        alt=""
-        aria-hidden="true"
+        alt="Skelpr"
         draggable={false}
       />
       <img
         className="brand-mark brand-mark-dark"
         src="/brand/logo-skeplr-dark.png"
-        alt=""
-        aria-hidden="true"
+        alt="Skelpr"
         draggable={false}
       />
     </>

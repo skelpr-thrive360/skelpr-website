@@ -60,6 +60,11 @@ jobs:
       - name: Typecheck & build
         run: npm run build
 
+      - name: Built pages are indexable and SEO surfaces agree
+        # Reads dist/, so it follows the build: text present, one host across
+        # canonical/sitemap/robots, length bands, FAQ schema matches the page.
+        run: npm run check:seo
+
       - name: In-page hash links resolve
         run: npm run check:links
 
