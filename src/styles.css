@@ -4145,6 +4145,45 @@ html.lenis body {
   overflow: hidden;
 }
 
+/* --- skip link + reading measure ------------------------------------------ */
+
+/* The first thing in the tab order. Sighted mouse users never see it; a keyboard
+   or screen-reader user bypasses the header and the whole nav in one press
+   (WCAG 2.4.1). It is the standard pattern this page was missing. */
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  padding: 10px 14px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  color: var(--ink-1);
+  font-size: var(--text-sm);
+  transform: translateY(calc(-100% - 30px));
+  transition: transform var(--dur-1) var(--ease-standard);
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+/* Reading measure. These blocks ran to 99-162 characters per line — past twice
+   the comfortable range — so the eye loses its place on the return sweep to the
+   left margin. Cap the box, not the font: no type size changes and no layout
+   reflows, the line simply stops before it outruns the reader. */
+.prereq-body,
+.prereq-note-line,
+.qa-question p,
+.qa-judgement p,
+.qa-verdict p,
+.qa-diffs li,
+.caveat p {
+  max-width: 76ch;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

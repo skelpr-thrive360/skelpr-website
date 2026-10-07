@@ -39,6 +39,8 @@ function App() {
 
   return (
     <div className="site-shell">
+      {/* First in the tab order: bypass the header and its nav in one press. */}
+      <a className="skip-link" href="#top">Skip to main content</a>
       <Header />
 
       <main id="top">

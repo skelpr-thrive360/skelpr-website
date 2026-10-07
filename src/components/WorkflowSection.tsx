@@ -54,14 +54,19 @@ export function WorkflowSection({ open, onToggle }: { open: boolean; onToggle: (
         </div>
         <div className="workflow-steps" role="tablist" aria-label="MCP Agent workflow steps">
           {workflowSteps.map((step, index) => (
-            <button key={step.id} className={`workflow-step ${activeWorkflow === index ? 'active' : ''} ${step.owner}`} onClick={() => { setActiveWorkflow(index); setIsPlaying(false) }} role="tab" aria-selected={activeWorkflow === index}>
+            <button key={step.id} className={`workflow-step ${activeWorkflow === index ? 'active' : ''} ${step.owner}`} onClick={() => { setActiveWorkflow(index); setIsPlaying(false) }} role="tab" aria-selected={activeWorkflow === index} id={'workflow-tab-' + step.id} aria-controls="workflow-panel">
               <span className="step-index">0{index + 1}</span>
               <span>{step.label}</span>
               {index < workflowSteps.length - 1 && <ArrowRight size={14} />}
             </button>
           ))}
         </div>
-        <div className="workflow-detail">
+        <div
+          className="workflow-detail"
+          id="workflow-panel"
+          role="tabpanel"
+          aria-labelledby={`workflow-tab-${workflowSteps[activeWorkflow].id}`}
+        >
           <div className={`workflow-terminal accent-${currentWorkflow.accent}`}>
             <div className="terminal-top"><span><Circle size={7} fill="currentColor" /> workflow.trace</span><span>step {String(activeWorkflow + 1).padStart(2, '0')} / 06</span></div>
             <div className="terminal-body"><span className="terminal-prompt">$</span><strong>{currentWorkflow.code}</strong><span className="terminal-cursor" /></div>

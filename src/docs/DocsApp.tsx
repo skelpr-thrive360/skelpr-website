@@ -211,6 +211,7 @@ export function DocsApp() {
 
   return (
     <div className="docs-shell">
+      <a className="skip-link" href="#docs-content">Skip to main content</a>
       {/* The same header furniture as the marketing page — brand, theme switch,
           one way back — so /docs reads as the same document, not a different site. */}
       <header className={scrolled ? 'site-header is-scrolled' : 'site-header'}>
