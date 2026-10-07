@@ -281,7 +281,7 @@ export const architectureEdges = [
 
 
 export const modeOptions = [
-  { value: 'agent' as Mode, chip: 'MCP AGENT', title: 'Agent Integration', sub: 'MCP Server', heading: 'Agent Integration (MCP Server)', panelChip: 'NO LLM KEY REQUIRED', bestFor: 'Enhancing an existing agent', llm: 'Agent brings its own', reasoning: 'External agent', body: 'Skelpr runs as a code intelligence backend for Claude Code, Cursor, Windsurf, or any MCP-compatible agent. The agent’s LLM handles reasoning; skelpr provides retrieval and validation.' },
+  { value: 'agent' as Mode, chip: 'MCP AGENT', title: 'Agent Integration', sub: 'MCP Server', heading: 'Agent Integration (MCP Server)', panelChip: 'NO LLM KEY REQUIRED', bestFor: 'Enhancing an existing agent', llm: 'Agent brings its own', reasoning: 'External agent', body: 'Skelpr runs as a code intelligence backend for agents such as Claude Code, Cursor and Antigravity, or any MCP-compatible agent. The agent’s LLM handles reasoning; skelpr provides retrieval and validation.' },
   { value: 'standalone' as Mode, chip: 'CLI', title: 'Standalone Package', sub: 'CLI + Own LLM', heading: 'Standalone Package (CLI + Own LLM)', panelChip: 'FULL PIPELINE', bestFor: 'Self-contained workflow', llm: 'Your endpoint', reasoning: 'skelpr model router', body: 'You run skelpr commands directly. Skelpr handles retrieval, context building, LLM calls, patching, and validation end to end through your configured endpoint.' },
 ]
 

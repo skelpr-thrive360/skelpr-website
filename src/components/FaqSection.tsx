@@ -39,9 +39,10 @@ const faqs: Faq[] = [
     question: 'Which agents can call it?',
     answer: (
       <>
-        Anything that speaks MCP. <code>skelpr install-mcp</code> auto-detects Claude Code, Cursor
-        and Windsurf, and <code>skelpr register-agent</code> covers the rest. The CLI takes the same
-        retrieval path for review, diff and fix without an agent in the loop.
+        Anything that speaks MCP. <code>skelpr install-mcp</code> auto-detects common agents such as
+        Claude Code, Cursor and Antigravity, and <code>skelpr register-agent</code> covers the rest.
+        The CLI takes the same retrieval path for review, diff and fix without an agent in the
+        loop.
       </>
     ),
   },
@@ -49,10 +50,11 @@ const faqs: Faq[] = [
     question: 'What do I need to run it?',
     answer: (
       <>
-        Python 3.10 or newer, Docker Desktop running, and a local embedding model — by default LM
-        Studio serving <code>nomic-embed-text-v1.5</code> on port 1234. Without Docker the core
-        still runs on in-memory fallbacks; you lose sandboxed validation and the production stores,
-        not the assistant.
+        Python 3.10 or newer, Docker Desktop running, and an embeddings endpoint — the hosted one
+        if your token carries it, otherwise a local model such as LM Studio serving
+        <code>nomic-embed-text-v1.5</code> on port 1234. Without Docker the core still runs on
+        in-memory fallbacks; you lose sandboxed validation and the production stores, not the
+        assistant.
       </>
     ),
   },
