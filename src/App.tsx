@@ -58,7 +58,7 @@ function App() {
               <span><strong>-76%</strong> files opened</span>
               <span><strong>-69%</strong> cache-read tokens</span>
             </div>
-            <p className="hero-boundary">Skelpr retrieves and cites — your agent still does the reasoning.<br />It speaks MCP (Model Context Protocol), so Claude Code, Cursor and Windsurf can call it as they are.</p>
+            <p className="hero-boundary">Skelpr retrieves and cites — your agent still does the reasoning.<br />It speaks MCP (Model Context Protocol), so agents such as Claude Code, Cursor and Antigravity can call it as they are.</p>
           </div>
           <HeroVisual />
         </section>
@@ -69,7 +69,7 @@ function App() {
         <RealWorldSection />
         <IdentitySection open={isDetailed('product')} onToggle={() => toggleDetails('product')} />
         <ModesSection open={isDetailed('modes')} onToggle={() => toggleDetails('modes')} />
-        <WorkflowSection open={isDetailed('workflow')} onToggle={() => toggleDetails('workflow')} />
+        <WorkflowSection />
         <BenchmarkSection />
         {/* Private launch: section parked — see the import note above. */}
         {/* <ArchitectureSection open={isDetailed('architecture')} onToggle={() => toggleDetails('architecture')} /> */}

@@ -9,8 +9,9 @@ import { Check } from 'lucide-react'
 //
 // The point of the section is the one thing the install block cannot say for itself:
 // neither prerequisite raises an error when it is missing — Docker stops `skelpr setup`
-// at step 1, and a missing embedding server only makes the index quietly worse — so a
-// reader has to be told to start both *before* they run anything.
+// at step 1, and a missing embedding endpoint only makes the index quietly worse (or, for the
+// background watcher and any credentialed endpoint, abandons the run outright) — so a reader
+// has to be told to have both in place *before* they run anything.
 //
 // Laid out as rows rather than cards on purpose. The three prerequisites carry very
 // different amounts of detail (a Docker checklist, a six-field model card, one sentence
@@ -46,8 +47,8 @@ const prerequisites: Prerequisite[] = [
   {
     index: '02',
     chip: 'Required for retrieval',
-    title: 'LM Studio + the embedding model',
-    body: 'Download nomic-embed-text-v1.5 from the LM Studio catalog, load it, and start the local server on port 1234. Retrieval quality depends on it in both modes — the MCP server has no LLM, but its search still embeds your query.',
+    title: 'An embeddings endpoint, hosted or your own',
+    body: 'Indexing embeds your query in both modes — the MCP server has no LLM, but its search still turns text into vectors. The shortest path is the hosted endpoint: a token carrying the hosted-embeddings feature points embeddings.endpoint (or SKELPR_EMBEDDINGS_ENDPOINT) at Skelpr’s own service, and every command mints its own credential, so there is no server to run and nothing to configure. Otherwise download nomic-embed-text-v1.5 from the LM Studio catalog, load it, and start the local server on port 1234.',
     model: [
       { label: 'Model', value: 'nomic-ai/nomic-embed-text-v1.5' },
       { label: 'Format', value: 'GGUF' },
@@ -56,7 +57,7 @@ const prerequisites: Prerequisite[] = [
       { label: 'Domain', value: 'embedding' },
       { label: 'Size on disk', value: '~146 MB' },
     ],
-    note: 'Nothing requires it on localhost: run it on another box or a GPU host and point embeddings.endpoint at it. Leave it down and the index still builds — over a deterministic hashing embedder, which is why the symptom is worse recall rather than an error.',
+    note: 'A local server need not be on this machine — run it on another box or a GPU host and point embeddings.endpoint at it. Leave it down and the index still builds, over a deterministic hashing embedder, which is why the symptom is worse recall rather than an error. Two things refuse that fallback instead: an endpoint with a credential set, and the background watcher.',
   },
   {
     index: '03',
@@ -77,8 +78,8 @@ export function PrerequisitesSection() {
     <section className="prereq-section act-wash content-section" id="prerequisites">
       <div className="section-kicker">Before you start</div>
       <div className="two-column-heading">
-        <h2>Two things running<br /><em>before the first index.</em></h2>
-        <p>Skelpr cannot start either one for you, and neither one fails loudly. Start Docker Desktop and load your embedding model first, then run the setup block below.</p>
+        <h2>What has to be running<br /><em>before the first index.</em></h2>
+        <p>Skelpr cannot start either one for you, and neither one fails loudly. Start Docker Desktop and settle the embedding endpoint first, then run the setup block below.</p>
       </div>
       <div className="prereq-list">
         {prerequisites.map((item) => (
@@ -118,7 +119,7 @@ export function PrerequisitesSection() {
         ))}
       </div>
       <div className="prereq-verify">
-        <p><strong>Check the embedding server before you index.</strong> A 200 here, and the <code>Embedding server online</code> line in the <code>skelpr index</code> output, are the whole difference between a vector index and a keyword one.</p>
+        <p><strong>Check the embedding endpoint before you index.</strong> A 200 here, and the <code>Embedding server online</code> line in the <code>skelpr index</code> output, are the whole difference between a vector index and a keyword one. On the hosted endpoint there is nothing to check by hand — <code>skelpr index</code> probes and authenticates for you — so this is the local path.</p>
         <div className="prereq-code">
           <div className="code-top"><span>VERIFY</span><span>bash</span></div>
           {/* Split across lines to the width of the install snippet next door: this
@@ -128,7 +129,7 @@ export function PrerequisitesSection() {
 {'  -H \'Content-Type: application/json\' \\'}{'\n'}
 {'  -d \'{"input":["hi"],'}{'\n'}
 {'       '}<span className="string">{'"model":"text-embedding-nomic-embed-text-v1.5@q8_0"}\''}</span></code></pre>
-          <div className="code-footer"><Check size={14} /> one endpoint · local or self-hosted</div>
+          <div className="code-footer"><Check size={14} /> the local endpoint · the hosted one needs no check</div>
         </div>
       </div>
     </section>

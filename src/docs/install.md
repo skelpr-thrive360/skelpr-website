@@ -19,7 +19,7 @@ missing, which is why they lead.
 | **`git` on your `PATH`** | `review`, `diff` and `fix` | indexing and `ask` still work without it. |
 | **`ripgrep`** | fast lexical search | optional — a pure-Python fallback is used when it is absent. |
 | **Docker Desktop, running** | `skelpr setup`, and sandboxed `validate` | start it and let it finish booting; `skelpr setup` checks the daemon and stops at step 1 if it is down. |
-| **An embeddings server** | `skelpr index` and vector retrieval — in **both** modes | by default, LM Studio serving `nomic-embed-text-v1.5` at `http://127.0.0.1:1234/v1`. |
+| **An embeddings endpoint** | `skelpr index` and vector retrieval — in **both** modes | Skelpr's hosted endpoint if your token carries it, otherwise a local LM Studio serving `nomic-embed-text-v1.5` at `http://127.0.0.1:1234/v1`. |
 | **A generation model, or a provider key** | `ask`, `chat`, `review`, `fix` | not needed in MCP mode — your agent brings its own model. |
 
 > **Without Docker** the core still runs end to end on in-memory fallbacks. You lose the
@@ -37,8 +37,22 @@ missing, which is why they lead.
 
 ### The embedding model
 
-Indexing and retrieval both embed your query, so the embeddings server matters in **both** modes —
+Indexing and retrieval both embed your query, so an embeddings endpoint matters in **both** modes —
 the MCP server has no language model of its own, but its search still has to turn text into vectors.
+There are two ways to give it one, and you only need the first.
+
+**Hosted — nothing to run.** If your token carries the `hosted-embeddings` feature, point Skelpr at
+its own endpoint and every command authenticates itself:
+
+```bash
+export SKELPR_EMBEDDINGS_ENDPOINT=https://embeddings.skelpr.com   # your install's URL
+skelpr index
+```
+
+No model to download, no server to keep open, and nothing to copy into a config — the credential is
+minted for the command that needs it.
+
+**Local — your own endpoint.** Otherwise, run the model yourself:
 
 1. In LM Studio, download and load **`nomic-ai/nomic-embed-text-v1.5`** — GGUF, `Q8_0`, about 146 MB.
 2. Start the local server on port **1234**.
@@ -50,8 +64,14 @@ curl -s http://127.0.0.1:1234/v1/embeddings \
   -d '{"input":["hi"],"model":"text-embedding-nomic-embed-text-v1.5@q8_0"}'
 ```
 
+> A local server need not be on this machine: point `embeddings.endpoint` at a GPU box, a vLLM or an
+> Ollama host and the rest is identical.
+>
 > Leave it down and indexing still runs — over a deterministic hashing embedder. That is why the
-> symptom is quietly worse recall rather than an error message, and why it is worth the check.
+> symptom is quietly worse recall rather than an error message, and why it is worth the check. It
+> does not cover everything: an endpoint with a credential configured, and the background watcher
+> below, both refuse the fallback outright, because a hashed vector in a real-model index is
+> corruption rather than a degradation.
 
 ## Get a token
 
@@ -123,7 +143,7 @@ skelpr --version
 ```
 
 ```
-skelpr 0.1.2
+skelpr 0.1.4
 ```
 
 ```bash
@@ -135,25 +155,32 @@ skelpr --help
 
  Skelpr -- Fully local AI dev assistant (PR review, fix, patch, test, index).
 
-╭─ Commands ───────────────────────────────────────────────────────────────╮
-│ init             Create .skelpr.yaml and detect the stack.               │
-│ index            Build/refresh the hybrid knowledge base.                │
-│ ask              Ask a grounded question about the repo.                 │
-│ chat             Interactive loop for ask/fix - no shell quoting needed. │
-│ context          Export token-optimized context chunks to stdout.        │
-│ review           Review a git diff and emit structured findings.         │
-│ fix              Diagnose an issue and generate a minimal patch.         │
-│ validate         Run configured test/lint/typecheck in the sandbox.      │
-│ serve            Start the local FastAPI server.                         │
-│ setup            Build Docker sandbox and verify dependencies.           │
-│ install-mcp      Auto-configure MCP server for detected agents.          │
-│ uninstall-mcp    Remove Skelpr MCP config from detected agents.          │
-│ register-agent   Register a custom MCP-compatible agent.                 │
-│ activate         Bind this machine to your token, or renew its lease.    │
-│ license          Show the license state of this machine.                 │
-│ deactivate       Release this machine's seat at the license service.     │
-│ github           GitHub integration commands (opt-in).                   │
-╰──────────────────────────────────────────────────────────────────────────╯
+┌─ Options ───────────────────────────────────────────────────────────────────┐
+│ --verbose  -v        Verbose logs.                                          │
+│ --version  -V        Show the installed version and exit.                   │
+│ --help               Show this message and exit.                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+┌─ Commands ──────────────────────────────────────────────────────────────────┐
+│ init            Create .skelpr.yaml and detect the stack.                   │
+│ index           Build/refresh the hybrid knowledge base.                    │
+│ ask             Ask a grounded question about the repo.                     │
+│ chat            Interactive loop for ask/fix - no shell quoting needed.     │
+│ context         Export token-optimized context chunks to stdout.            │
+│ review          Review a git diff and emit structured findings.             │
+│ fix             Diagnose an issue and generate a minimal patch.             │
+│ validate        Run configured test/lint/typecheck in the sandbox.          │
+│ serve           Start the local FastAPI server.                             │
+│ watch           Re-embed changed files in the background.                   │
+│ setup           Build Docker sandbox and verify dependencies.               │
+│ install-mcp     Auto-configure MCP server for detected agents.              │
+│ uninstall-mcp   Remove Skelpr MCP config from detected agents.              │
+│ register-agent  Register a custom MCP-compatible agent.                     │
+│ activate        Bind this machine to your token, or renew its lease.        │
+│ license         Show the license state of this machine (exit 3 when         │
+│                 unlicensed).                                                │
+│ deactivate      Release this machine's seat at the license service.         │
+│ github          GitHub integration commands (opt-in).                       │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **`--version` and `--help` are never gated.** They work before a token exists, on purpose: help that
@@ -245,6 +272,38 @@ Next: skelpr index
 The language, test, lint and typecheck lines are detected from *your* repository, so they differ
 from repo to repo.
 
+### Keeping the index fresh
+
+`skelpr index` is a snapshot. Edit a file and a later query still searches the shape it had when you
+last indexed, so a long session slowly drifts away from the working tree. `skelpr watch` indexes
+once and then re-embeds what changed, in the background:
+
+```bash
+skelpr watch              # index, then keep both stores fresh
+skelpr watch --full       # force a full re-index first
+skelpr watch --poll 5 --debounce 2
+```
+
+It polls **git** rather than the filesystem, which is the point: an editor that writes a temporary
+file and renames it is one change, and a delete, a rename and a new file all arrive in the same
+place. It is off by default inside `serve` and the MCP server — background work should be opted
+into, not paid for silently — so switch it on there with either:
+
+```yaml
+indexing:
+  watch:
+    enabled: true
+```
+
+```bash
+export SKELPR_AUTO_REINDEX=1     # for one shell, without a config edit
+```
+
+The watcher is strict. If the endpoint is unreachable it abandons the run whole, leaves the
+previous index intact, and retries with backoff, rather than writing hashed vectors into a
+real-model index. A machine that never opts in has no watcher at all — queries still work, they
+just answer from the last index.
+
 ## Check the license
 
 ```bash
@@ -322,7 +381,7 @@ wiping a machine, so the seat is not held by a laptop nobody uses.
 | `No seats left` | Every seat is in use. `skelpr deactivate` on a machine you no longer use, or ask for a bigger count. |
 | `This build carries no activation key` | The build predates activation. Install the current release from the channel. |
 | `This lease was issued for a different machine` | A lease file was copied between machines. Run `skelpr activate` here. |
-| `skelpr index` runs, but answers cite almost nothing | The embedding server is not reachable; indexing fell back to keyword-only. Re-check the port-1234 call above. |
+| `skelpr index` runs, but answers cite almost nothing | The embedding endpoint is not reachable, so indexing fell back to keyword-only. Re-check the endpoint you configured — the port-1234 call above, or the hosted endpoint if your token carries it. |
 | It worked yesterday, not today | Run `skelpr license` first — it names an expired lease or a revocation before anything else guesses. |
 
 ## Uninstall

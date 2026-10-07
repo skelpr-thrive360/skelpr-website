@@ -7,8 +7,8 @@
 
 Install is open (`pip install skelpr`); running is licensed per machine through an
 offline-verified activation token. Retrieval, indexing and review run locally, and
-there is no telemetry. It speaks MCP, so Claude Code, Cursor and Windsurf call it
-as they are; the CLI covers the same retrieval path for review, diff and fix.
+there is no telemetry. It speaks MCP, so agents such as Claude Code, Cursor and Antigravity
+call it as they are; the CLI covers the same retrieval path for review, diff and fix.
 
 ## Docs
 
@@ -18,7 +18,7 @@ as they are; the CLI covers the same retrieval path for review, diff and fix.
 ## Evidence
 
 - The repository's MCP Agent A/B: 59% fewer agent tokens and 76% fewer files opened, at answer parity.
-- Prerequisites: Python 3.10+, Docker Desktop running, and a local embeddings server (LM Studio serving nomic-embed-text-v1.5 by default).
+- Prerequisites: Python 3.10+, Docker Desktop running, and an embeddings endpoint — the hosted one if the token carries the hosted-embeddings feature, otherwise a local server (LM Studio serving nomic-embed-text-v1.5 by default).
 
 ## Facts
 

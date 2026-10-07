@@ -1,29 +1,39 @@
 name: CI
 
+# Deliberately one job. This is a prerendered static site: what can break is the
+# build, the rendered copy, and the surfaces the crawler reads — so those are what
+# run. Everything the previous file carried has been weighed and cut:
+#
+#   CodeQL          2-4 minutes per run, on every push to main, every pull request
+#                   and a weekly cron. It looks for taint reaching the waitlist
+#                   fetch from `src/data/benchmarkAnswers.ts`, but that file is
+#                   string data rendered by React and there is no server, no
+#                   session and no secret in this repository to reach. Dependabot
+#                   alerts (free, always on) cover the dependency half.
+#   dependency-review  a second job per pull request for a moderate-severity
+#                   advisory, which Dependabot opens an alert for anyway.
+#   schedule        existed solely to carry the weekly CodeQL sweep.
+#   notify-engine   not a gate: it pings the engine repo so its claims job can
+#                   re-verify a number, and that job sweeps twice a week whether
+#                   or not the ping ever fires.
+#
+# Concurrency below is the other half of the saving: a second push to a branch
+# still re-cancels its own first run, so a rushed stack of commits costs one run
+# rather than one each.
+
 on:
   push:
     # main only. A merge into dev was already validated by the pull request that
-    # produced it, so running the whole suite again on the merge commit spends a
-    # second full job re-answering a settled question. The trade: a commit pushed
-    # straight to dev, bypassing review, now goes unvalidated — PR it instead.
+    # produced it. The trade: a commit pushed straight to dev, bypassing review,
+    # goes unvalidated — PR it instead.
     branches: [main]
-  # Every commit of a pull request *into* main or dev — the merge gate. `branches`
-  # here is the base branch, not the head, so a PR stacked on some other branch (or
-  # internal, and never to land) no longer spends a run. This is also the only event
-  # covering a feature branch, so a branch with an open PR is not run twice.
+  # The merge gate. `branches` is the base branch, so a pull request stacked on
+  # some other branch (or internal, never to land) spends no run at all.
   pull_request:
     branches: [main, dev]
-  schedule:
-    # Weekly CodeQL sweep, carried over from the standalone workflow this file absorbed.
-    - cron: "37 5 * * 2"
 
 concurrency:
-  # Keyed on the branch, not the ref, so a push that is also a pull request's head
-  # produces one live run instead of one per workflow file — the later run cancels
-  # the earlier one. The scheduled sweep is keyed apart from the branch it runs on:
-  # it is the only run of its week, so a main push cancelling it would lose the
-  # sweep outright rather than reschedule it.
-  group: ${{ github.workflow }}-${{ github.event_name == 'schedule' && 'weekly' || github.head_ref || github.ref_name }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 permissions:
@@ -32,10 +42,6 @@ permissions:
 jobs:
   checks:
     name: Checks
-    # The weekly run exists for the CodeQL sweep alone. These checks already ran on
-    # the push that carried this commit to main, so repeating them days later buys a
-    # settled answer at the price of a whole job.
-    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -57,12 +63,14 @@ jobs:
         # fails if an absolute file link or a maintainer home path reaches the site.
         run: npm run check:hygiene
 
+      # tsc -b, then vite build, then the SSR build, then the prerender pass — so a
+      # type error, a broken import and an empty document all fail here.
       - name: Typecheck & build
         run: npm run build
 
+      # Reads dist/, so it must follow the build: text present, one host across
+      # canonical/sitemap/robots, length bands, FAQ schema matches the page.
       - name: Built pages are indexable and SEO surfaces agree
-        # Reads dist/, so it follows the build: text present, one host across
-        # canonical/sitemap/robots, length bands, FAQ schema matches the page.
         run: npm run check:seo
 
       - name: In-page hash links resolve
@@ -70,84 +78,3 @@ jobs:
 
       - name: Contrast audit
         run: npm run audit:contrast
-
-  codeql:
-    name: CodeQL analysis
-    # The site is static and does not handle credentials, but it renders
-    # `src/data/benchmarkAnswers.ts` — generated content extracted from the engine's
-    # docs — and posts to a waitlist endpoint; taint tracking over that path is why
-    # this exists. Pull requests count only when they target the protected branches;
-    # pushes and the weekly sweep always run. Uploading results is an Advanced
-    # Security feature a private repository does not have, so the job also skips
-    # there instead of failing every run — and starts by itself at the visibility
-    # flip, no edit needed (same guard as dependency-review).
-    if: github.event.repository.private == false && (github.event_name != 'pull_request' || github.base_ref == 'main' || github.base_ref == 'dev')
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-      contents: read
-      security-events: write
-      actions: read
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
-        with:
-          languages: javascript-typescript
-          queries: security-extended
-
-      - name: Analyze
-        uses: github/codeql-action/analyze@v4
-        with:
-          category: "/language:javascript-typescript"
-
-  dependency-review:
-    name: Dependency review
-    # Dependency review reads GitHub's dependency graph, which a private repository
-    # only gets with Advanced Security. It cannot run here yet, so it skips instead
-    # of failing every pull request — and starts running by itself at the visibility
-    # flip, no edit needed.
-    if: github.event_name == 'pull_request' && github.event.repository.private == false
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Dependency review
-        uses: actions/dependency-review-action@v5
-        with:
-          fail-on-severity: moderate
-          comment-summary-in-pr: on-failure
-          deny-licenses: GPL-3.0, AGPL-3.0, SSPL-1.0
-
-  notify-engine:
-    name: Ask the engine to re-verify published claims
-    # The engine publishes the benchmark numbers, the site renders them, and the two
-    # live in different repositories — so a change here can invalidate a claim there.
-    # The engine's cross-repo claims job also runs on a schedule; this makes it
-    # immediate. It is a notification, never a gate: without the token it says so and
-    # passes, so a fork or a fresh clone stays green.
-    needs: checks
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Dispatch website-updated to the engine
-        env:
-          TOKEN: ${{ secrets.ENGINE_DISPATCH_TOKEN }}
-        run: |
-          if [ -z "$TOKEN" ]; then
-            echo "::notice::ENGINE_DISPATCH_TOKEN is not configured, so the engine was not notified."
-            echo "::notice::Its scheduled claims job still re-verifies every published number twice a week."
-            exit 0
-          fi
-          curl -fsS -X POST \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/skelpr-thrive360/skelpr/dispatches \
-            -d '{"event_type":"website-updated"}'
-          echo "Engine notified; see its 'Published claims' workflow."
