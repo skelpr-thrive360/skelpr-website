@@ -4,7 +4,7 @@ import { WaitlistForm } from './Shared'
 
 export function WaitlistSection() {
   return (
-    <section className="waitlist-section act-wash content-section" id="waitlist"><div className="waitlist-panel"><div><span className="eyebrow">STAY IN THE LOOP</span><h2>Run it today.<br /><em>Help shape what ships.</em></h2><p>Installing is open to anyone today; running is gated per machine. Access is invite-only while 0.2.0 — the engine behind the benchmarks above — is finished: join the list and we send you a token that activates one machine. That is release notes, new benchmark runs, and first access to the enterprise build too.</p></div><WaitlistForm /></div>
+    <section className="waitlist-section act-wash content-section" id="waitlist"><div className="waitlist-panel"><div><span className="eyebrow">STAY IN THE LOOP</span><h2>Run it today.<br /><em>Help shape what ships.</em></h2><p>Install is open today; running is licensed per machine. Access is invite-only until 0.2.0 — the engine behind these benchmarks — ships. Join the list and we send a token for one machine, plus release notes, new runs and early enterprise access.</p></div><WaitlistForm /></div>
     </section>
   )
 }

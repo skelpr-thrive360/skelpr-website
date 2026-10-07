@@ -4184,6 +4184,17 @@ html.lenis body {
   max-width: 76ch;
 }
 
+/* Cap the callout too, not just the text inside it. These four are tinted or
+   bordered panels: a paragraph stopped at 76ch inside a 1198px box left 530px of
+   dead colour on the right — 53 to 59 percent of the panel carrying nothing.
+   Narrowing the panel itself keeps the same readable measure with no empty half. */
+.qa-judgement,
+.qa-question,
+.qa-verdict,
+.caveat {
+  max-width: 76ch;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

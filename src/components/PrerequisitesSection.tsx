@@ -36,7 +36,7 @@ const prerequisites: Prerequisite[] = [
     index: '01',
     chip: 'Required for setup',
     title: 'Docker Desktop, running',
-    body: 'skelpr setup talks to the Docker daemon to start the metadata store, the vector store and the validation sandbox. Docker Desktop has to be started and finished booting first — if it is not running, setup stops after step 1 and says so rather than half-configuring the machine.',
+    body: 'skelpr setup starts the three services above. Docker Desktop must be running first — if it is not, setup stops at step 1 and says so instead of half-configuring the machine.',
     facts: [
       { label: 'Postgres 16', value: 'port 5434' },
       { label: 'Qdrant', value: 'ports 6333 / 6334' },
@@ -48,7 +48,7 @@ const prerequisites: Prerequisite[] = [
     index: '02',
     chip: 'Required for retrieval',
     title: 'An embeddings endpoint, hosted or your own',
-    body: 'Indexing embeds your query in both modes — the MCP server has no LLM, but its search still turns text into vectors. The shortest path is the hosted endpoint: a token carrying the hosted-embeddings feature points embeddings.endpoint (or SKELPR_EMBEDDINGS_ENDPOINT) at Skelpr’s own service, and every command mints its own credential, so there is no server to run and nothing to configure. Otherwise download nomic-embed-text-v1.5 from the LM Studio catalog, load it, and start the local server on port 1234.',
+    body: 'Both modes embed your query, so you need an endpoint — not a language model. Easiest: a hosted-embeddings token sets SKELPR_EMBEDDINGS_ENDPOINT, and every command authenticates itself. Nothing to run. Or run nomic-embed-text-v1.5 in LM Studio on port 1234.',
     model: [
       { label: 'Model', value: 'nomic-ai/nomic-embed-text-v1.5' },
       { label: 'Format', value: 'GGUF' },
@@ -57,13 +57,13 @@ const prerequisites: Prerequisite[] = [
       { label: 'Domain', value: 'embedding' },
       { label: 'Size on disk', value: '~146 MB' },
     ],
-    note: 'A local server need not be on this machine — run it on another box or a GPU host and point embeddings.endpoint at it. Leave it down and the index still builds, over a deterministic hashing embedder, which is why the symptom is worse recall rather than an error. Two things refuse that fallback instead: an endpoint with a credential set, and the background watcher.',
+    note: 'Point embeddings.endpoint at a GPU host if you prefer — it need not be local. Leave it down and the index still builds over a hashing embedder: worse recall, no error. A credentialed endpoint and the watcher refuse that fallback.',
   },
   {
     index: '03',
     chip: 'CLI mode only',
     title: 'A model to reason with',
-    body: 'ask, chat, review and fix need a generation model. Run one locally — qwen2.5-14b-instruct with as much context as your hardware allows — or skip the hardware and configure an API key instead. MCP mode needs none of this: the agent’s own model does the reasoning, and Skelpr only retrieves.',
+    body: 'ask, chat, review and fix need a generation model. Run qwen2.5-14b-instruct locally, or configure an API key and skip the hardware. MCP mode needs neither: your agent reasons, Skelpr only retrieves.',
     facts: [
       { label: 'Local model', value: 'qwen2.5-14b-instruct' },
       { label: 'or an API key', value: 'Gemini · OpenAI · Anthropic · OpenRouter · Groq' },
