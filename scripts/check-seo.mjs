@@ -192,7 +192,67 @@ else {
   if (!sitemapLine) bad('robots.txt names no sitemap')
   else if (sitemapLine[1] !== `${ORIGIN}/sitemap.xml`) bad('robots.txt points the sitemap at the wrong host', sitemapLine[1])
   else ok(`robots.txt: Sitemap ${sitemapLine[1]}`)
-  if (/^Disallow:\s*\/\s*$/im.test(robots)) bad('robots.txt disallows everything')
+  // A crawl rule is what Search Console files as "Indexed, though blocked by
+  // robots.txt": the page stays in the index while Googlebot is kept off it, so it
+  // can only ever be shown as a bare URL - no title, no snippet. Comments are
+  // stripped first, because `# Disallow: /` is a note and not a rule, and then any
+  // non-empty Disallow fails. The previous assertion matched an exact
+  // `Disallow: /` and read straight past a narrower one such as `Disallow: /docs`,
+  // which reports to a reader the same way.
+  const rules = robots
+    .split('\n')
+    .map((line) => line.replace(/#.*$/, '').trim())
+    .filter(Boolean)
+
+  const blocked = rules.filter((line) => /^Disallow:\s*\S/i.test(line))
+  if (blocked.length > 0) {
+    bad('robots.txt blocks a path', `${blocked.join(', ')} - blocked pages are indexed without a snippet`)
+  } else if (!rules.some((line) => /^User-agent:\s*\*/i.test(line))) {
+    bad('robots.txt has no `User-agent: *` group')
+  } else if (!rules.some((line) => /^Allow:\s*\/\s*$/i.test(line))) {
+    bad('robots.txt does not explicitly `Allow: /`')
+  } else {
+    ok('robots.txt: no crawl rules, Allow: / for every agent')
+  }
+
+  // The site icon, asserted from the same place a crawler looks at it. Google
+  // Search ignores SVG favicons outright and wants a raster of at least 48x48; a
+  // page declaring only 16 and 32px PNGs, or an .ico whose directory describes an
+  // image the payload is not, leaves it with nothing to draw and the result shows
+  // a generic globe instead of the logo. Each half has failed on its own.
+  const iconHtml = readFileSync(join(dist, 'index.html'), 'utf8')
+  const declaredIcons = [...iconHtml.matchAll(/<link[^>]*rel=["']icon["'][^>]*>/gi)].map((m) => m[0])
+  const rasterIcons = declaredIcons.filter((tag) => !/type=["']image\/svg\+xml["']/i.test(tag))
+  const hasLargeIcon = rasterIcons.some((tag) => {
+    const sizes = /sizes=["'](\d+)x(\d+)["']/i.exec(tag)
+    if (sizes) return Math.max(Number(sizes[1]), Number(sizes[2])) >= 48
+    return /href=["'][^"']*\.ico["']/i.test(tag)
+  })
+  if (rasterIcons.length === 0) bad('index.html declares no raster favicon')
+  else if (!hasLargeIcon) bad('index.html declares no favicon of 48px or more', rasterIcons.join(' '))
+  else ok('favicon: a raster of 48px or more is declared')
+
+  const icoPath = join(dist, 'favicon.ico')
+  if (!existsSync(icoPath)) bad('favicon.ico is missing from dist/')
+  else {
+    const buf = readFileSync(icoPath)
+    const count = buf.length > 6 ? buf.readUInt16LE(4) : 0
+    let largest = 0
+    const malformed = []
+    for (let i = 0; i < count; i += 1) {
+      const at = 6 + i * 16
+      const w = buf[at] || 256
+      const h = buf[at + 1] || 256
+      largest = Math.max(largest, Math.min(w, h))
+      // An ICO directory stores the height doubled for the AND mask, so a square
+      // entry reads as h === w (PNG payload) or h === 2w. Anything else is a
+      // directory that disagrees with its own payload.
+      if (h !== w && h !== 2 * w) malformed.push(`${w}x${h}`)
+    }
+    if (malformed.length > 0) bad('favicon.ico directory disagrees with its payload', malformed.join(', '))
+    else if (largest < 48) bad(`favicon.ico largest layer is ${largest}px, a crawler wants at least 48`)
+    else ok(`favicon.ico: ${count} layers, largest ${largest}px`)
+  }
 }
 
 if (!existsSync(join(dist, '404.html'))) bad('404.html is missing from dist/')

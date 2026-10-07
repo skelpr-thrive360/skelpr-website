@@ -69,7 +69,7 @@ function App() {
         <RealWorldSection />
         <IdentitySection open={isDetailed('product')} onToggle={() => toggleDetails('product')} />
         <ModesSection open={isDetailed('modes')} onToggle={() => toggleDetails('modes')} />
-        <WorkflowSection />
+        <WorkflowSection open={isDetailed('workflow')} onToggle={() => toggleDetails('workflow')} />
         <BenchmarkSection />
         {/* Private launch: section parked — see the import note above. */}
         {/* <ArchitectureSection open={isDetailed('architecture')} onToggle={() => toggleDetails('architecture')} /> */}

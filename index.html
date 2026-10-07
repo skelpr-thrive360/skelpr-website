@@ -26,6 +26,9 @@
          favicons and falls through to the ICO, then the PNGs. -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
+    <!-- The one a crawler can actually take: Google ignores SVG favicons and
+         skips anything under 48px, and the 16/32 PNGs below are both under it. -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/brand/icon-192.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/brand/favicon-16.png" />
     <link rel="apple-touch-icon" href="/brand/apple-touch-icon-180.png" />
