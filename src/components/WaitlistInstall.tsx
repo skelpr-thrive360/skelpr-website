@@ -32,7 +32,7 @@ export function InstallSection() {
         </div>
         <div className="install-note">
           <p><strong>Requirements:</strong> Python 3.10+, Docker Desktop running, and an embeddings endpoint — hosted or local, the section above has both. The agent side needs any MCP-capable client: <code>skelpr install-mcp</code> auto-detects common agents such as Claude Code, Cursor and Antigravity, and <code>skelpr register-agent</code> covers the rest.</p>
-          <p><strong>No account, no telemetry.</strong> Activation is a one-off token, not a sign-up, and it is verified offline — nothing is sent anywhere. Skelpr runs entirely against your local checkout; nothing leaves your machine except your agent's own model calls. <code>skelpr license</code> reports the state.</p>
+          <p><strong>No account, no telemetry.</strong> Activation is a one-off call — your token and a hash of this machine's id — and license verification is offline: a local signature check, nothing more. Skelpr runs against your local checkout; your code is never uploaded, and only query text ever reaches the optional hosted embeddings endpoint. <code>skelpr license</code> reports the state.</p>
         </div>
       </div>
     </section>
