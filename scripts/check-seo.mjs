@@ -14,6 +14,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { visibleText, normalizeText } from './lib/visible-text.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const dist = join(root, 'dist')
@@ -34,29 +35,9 @@ if (!existsSync(dist)) {
   process.exit(1)
 }
 
-/** Page text as a crawler sees it: tags stripped, whitespace collapsed. */
-function visibleText(html) {
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-/** The same normalisation applied to schema text, so the two are comparable. */
-function normalize(text) {
-  return String(text)
-    .replace(/`/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
+// Page text and schema normalisation live in ./lib/visible-text.mjs (a linear
+// scan, not tag-matching regexes — and the entity decode is single-pass).
+const normalize = normalizeText
 
 function meta(html, pattern) {
   const match = pattern.exec(html)
@@ -125,7 +106,9 @@ for (const page of pages) {
   if (!ogImage) bad(`${page.label}: no og:image`)
   else if (!ogImage.startsWith('https://')) bad(`${page.label}: og:image is not absolute https`, ogImage)
   else {
-    const asset = ogImage.replace(ORIGIN, '')
+    // Parse with URL rather than string-replacing the origin: a replace() only
+    // removes the first occurrence anywhere, which is sanitization by substring.
+    const asset = new URL(ogImage).pathname
     if (!existsSync(join(dist, asset))) bad(`${page.label}: og:image points at a missing file`, `${asset} is not in dist/`)
     else ok(`${page.label}: og:image ships (${asset})`)
   }

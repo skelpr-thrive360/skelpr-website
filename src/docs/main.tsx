@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
+import { Analytics } from '@vercel/analytics/react'
 // The same three families as the marketing page, loaded here so /docs is a page in
 // its own right rather than a redirect into a bundle that happens to be cached.
 import '@fontsource-variable/ibm-plex-sans/wght.css'
@@ -17,6 +18,7 @@ const container = document.getElementById('root')!
 const app = (
   <StrictMode>
     <DocsApp />
+    <Analytics />
   </StrictMode>
 )
 

@@ -3668,6 +3668,26 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
   color: var(--accent);
 }
 
+/* Social profiles: icon links under the footer nav, same column. */
+.footer-social {
+  grid-column: 2;
+  display: flex;
+  gap: var(--space-4);
+  justify-content: flex-end;
+  align-self: start;
+  color: var(--ink-2);
+}
+
+.footer-social a {
+  display: inline-flex;
+  color: inherit;
+  transition: color var(--dur-1) var(--ease-standard);
+}
+
+.footer-social a:hover {
+  color: var(--accent);
+}
+
 /* Baseline: licence and provenance sit under everything else. */
 .footer-baseline {
   display: flex;
@@ -3727,6 +3747,10 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
     gap: var(--space-5);
   }
   .footer-nav {
+    justify-content: flex-start;
+  }
+  .footer-social {
+    grid-column: 1;
     justify-content: flex-start;
   }
   .footer-baseline {
