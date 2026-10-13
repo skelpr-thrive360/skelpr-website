@@ -143,8 +143,11 @@ skelpr --version
 ```
 
 ```
-skelpr 0.1.4
+skelpr x.x.x
 ```
+
+`x.x.x` is whatever your install reports: this page does not pin a release number, which
+changes with every publish.
 
 ```bash
 skelpr --help
@@ -172,8 +175,11 @@ skelpr --help
 │ serve           Start the local FastAPI server.                             │
 │ watch           Re-embed changed files in the background.                   │
 │ setup           Build Docker sandbox and verify dependencies.               │
+│ doctor          Diagnose the install: index, backends, agent wiring (exit 1 │
+│                 on failure).                                                │
 │ install-mcp     Auto-configure MCP server for detected agents.              │
 │ uninstall-mcp   Remove Skelpr MCP config from detected agents.              │
+│ upgrade         Install a newer release, or report that one exists.         │
 │ register-agent  Register a custom MCP-compatible agent.                     │
 │ activate        Bind this machine to your token, or renew its lease.        │
 │ license         Show the license state of this machine (exit 3 when         │
@@ -286,8 +292,18 @@ skelpr watch --poll 5 --debounce 2
 
 It polls **git** rather than the filesystem, which is the point: an editor that writes a temporary
 file and renames it is one change, and a delete, a rename and a new file all arrive in the same
-place. It is off by default inside `serve` and the MCP server — background work should be opted
-into, not paid for silently — so switch it on there with either:
+place. `HEAD` is part of that fingerprint too, so a **clean branch switch** counts as a change —
+a checkout that leaves `git status` empty re-embeds — and returning to the commit you came from
+reproduces the earlier fingerprint, so flipping between two branches does not re-embed the same
+tree forever.
+
+It polls every **2 seconds** by default and waits for **1.5 seconds** of quiet before spending an
+embed; that quiet period is what keeps one save from becoming four reindexes, and `--poll` and
+`--debounce` change both for a single run. A failed pass retries with backoff — five seconds,
+doubling to a two-minute cap — so an endpoint that was merely not up yet recovers by itself.
+
+It is off by default inside `serve` and the MCP server — background work should be opted into,
+not paid for silently — so switch it on there with either:
 
 ```yaml
 indexing:
@@ -300,9 +316,12 @@ export SKELPR_AUTO_REINDEX=1     # for one shell, without a config edit
 ```
 
 The watcher is strict. If the endpoint is unreachable it abandons the run whole, leaves the
-previous index intact, and retries with backoff, rather than writing hashed vectors into a
+previous index intact, and retries with backoff rather than writing hashed vectors into a
 real-model index. A machine that never opts in has no watcher at all — queries still work, they
 just answer from the last index.
+
+What it cannot watch is what git does not report: paths you have gitignored stay out of scope by
+design, and a directory that is not a git repository gives it no change signal to poll at all.
 
 ## Check the license
 
@@ -382,6 +401,7 @@ wiping a machine, so the seat is not held by a laptop nobody uses.
 | `This build carries no activation key` | The build predates activation. Install the current release from the channel. |
 | `This lease was issued for a different machine` | A lease file was copied between machines. Run `skelpr activate` here. |
 | `skelpr index` runs, but answers cite almost nothing | The embedding endpoint is not reachable, so indexing fell back to keyword-only. Re-check the endpoint you configured — the port-1234 call above, or the hosted endpoint if your token carries it. |
+| Recall is thin even though the endpoint answers | The index may be partial rather than the endpoint at fault. `skelpr doctor` reports index health (it exits 1 on failure), and `skelpr index --full` rebuilds every vector instead of only what changed. |
 | It worked yesterday, not today | Run `skelpr license` first — it names an expired lease or a revocation before anything else guesses. |
 
 ## Uninstall
