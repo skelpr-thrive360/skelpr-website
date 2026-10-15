@@ -51,8 +51,10 @@ fails if any of them drifts — if the domain ever changes, update those four **
 The form in the waitlist section posts to the endpoint in `VITE_WAITLIST_ENDPOINT`
 (`.env`, see [`.env.example`](./.env.example)). **The variable must be set in the
 host's build environment too (Vercel → Settings → Environment Variables), or the build
-falls back to a local sessionStorage stub that stores nothing.** Joining twice shows a
-duplicate state with a withdraw option; withdrawing deletes the row server-side.
+falls back to a local stub that stores nothing.** Joining twice returns the same success
+response as joining once, so the public endpoint never reveals whether an email is listed. Withdrawals are not self-service: the script refuses the `withdraw`
+action because any POST could otherwise delete someone else's row; removals are done by
+hand in the Sheet.
 
 Backend: Google Apps Script bound to a Google Sheet —
 [`waitlist-apps-script.gs`](./waitlist-apps-script.gs), with the full deploy checklist
