@@ -278,6 +278,31 @@ Next: skelpr index
 The language, test, lint and typecheck lines are detected from *your* repository, so they differ
 from repo to repo.
 
+### Secrets in your code
+
+Two things happen before indexed text reaches a model or an agent:
+
+- **Credential files never enter the index.** `.env`, `.env.*`, `*.pem`, `*.key`, `*.p12`, `*.pfx`,
+  `*.jks`, `id_rsa*`, `id_ed25519*`, `id_ecdsa*`, `.npmrc`, `.netrc`, `.pgpass`, `.aws/**` and
+  `.skelpr.yaml` are ignored at any depth — `config/.env` and `.ssh/id_rsa` included. The templates
+  (`.env.example`, `.env.sample`, `.env.template`) are kept, because they document names, not values.
+- **Credential-shaped values are masked on the way out.** `API_KEY=sk-…` comes back as
+  `API_KEY=***REDACTED***`: vendor prefixes (`sk-ant-`, `sk-proj-`, `sk_live_`, `AKIA`, `AIza`,
+  `SG.`, `npm_`, `ghp_`, `glpat-`, `xox[baprs]-`), JWTs, PEM headers, URLs with an inline password and
+  keyword assignments are caught by rule, plus one entropy rule for long quoted strings that look
+  random. The mask is applied to retrieved chunks, the question, issue text and diff a command is
+  given, the prompts built from them, Langfuse traces, and every log line.
+
+Only the value is replaced, so the model still sees *which* credential was removed.
+`skelpr doctor` reports what the layer masked in this checkout (counts live in
+`.skelpr/redaction.json`, because the process that retrieves is not the one that reports).
+
+Two limits worth knowing. Rule-based detection has no ceiling: a value assembled at runtime
+(`password = vault.read("db")`) or a 16-character secret with no keyword and no vendor prefix is not
+visible to it. And the mask applies to what leaves Skelpr, not to what it stores — indexing and the
+embedding endpoint still see file text, which is why excluding credential files matters.
+`SKELPR_SECRET_REDACTION=off` turns the layer off for a checkout.
+
 ### Keeping the index fresh
 
 `skelpr index` is a snapshot. Edit a file and a later query still searches the shape it had when you

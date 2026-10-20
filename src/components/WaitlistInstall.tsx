@@ -22,7 +22,7 @@ import { WaitlistForm } from './Shared'
 
 export function WaitlistSection() {
   return (
-    <section className="waitlist-section act-wash content-section" id="waitlist"><div className="waitlist-panel"><div><span className="eyebrow">STAY IN THE LOOP</span><h2>Run it today.<br /><em>Help shape what ships.</em></h2><p>Install is open today; running is licensed per machine. Access is invite-only until 0.2.0 — the engine behind these benchmarks — ships. Join the list and we send a token for one machine, plus release notes, new runs and early enterprise access.</p></div><WaitlistForm /></div>
+    <section className="waitlist-section act-wash content-section" id="waitlist"><div className="waitlist-panel"><div><span className="eyebrow">STAY IN THE LOOP</span><h2>Run it today.<br /><em>Help shape what ships.</em></h2><p>Install is open today; running is licensed per machine. Access is invite-only for now — 0.3.0, the engine behind these benchmarks, is out and seats go out by hand. Join the list and we send a token for one machine, plus release notes, new runs and early enterprise access.</p></div><WaitlistForm /></div>
     </section>
   )
 }
@@ -49,8 +49,8 @@ export function InstallSection() {
           <div className="code-footer"><Check size={14} /> agent-agnostic · local-first · no telemetry</div>
         </div>
         <div className="install-note">
-          <p><strong>Requirements:</strong> Python 3.10+, Docker Desktop running, and an embeddings endpoint — hosted or local, the section above has both. The agent side needs any MCP-capable client: <code>skelpr install-mcp</code> auto-detects common agents such as Claude Code, Cursor and Antigravity, and <code>skelpr register-agent</code> covers the rest.</p>
-          <p><strong>No account, no telemetry.</strong> Activation is a one-off call — your token and a hash of this machine's id — and license verification is offline: a local signature check, nothing more. Skelpr runs against your local checkout; your code is never uploaded, and only query text ever reaches the optional hosted embeddings endpoint. <code>skelpr license</code> reports the state.</p>
+          <p><strong>Requirements:</strong> Python 3.10+, Docker Desktop running, and an embeddings endpoint — hosted or local, the section above has both. The agent side needs any MCP-capable client: <code>skelpr install-mcp</code> auto-detects Claude Code, Cursor, Windsurf, Cline, Claude Desktop and Antigravity, and <code>skelpr register-agent</code> covers the rest.</p>
+          <p><strong>No account, no telemetry, one honest exception.</strong> Activation binds this machine once; a managed lease then re-checks in on its interval, sending your token and a machine-id hash — no hostname, no paths, no code, no usage. Indexing, retrieval and review run against your local checkout, so your code is never uploaded — except at the optional hosted-embeddings endpoint, which receives the chunk text it is asked to embed. Credential-shaped values are masked before retrieved text reaches your agent, the model or the logs, and credential files like <code>.env</code>, <code>*.pem</code> and <code>id_rsa</code> never enter the index. <code>skelpr license</code> reports the state; <code>skelpr doctor</code> reports what was masked.</p>
         </div>
       </div>
     </section>

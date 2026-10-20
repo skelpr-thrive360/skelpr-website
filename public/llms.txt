@@ -5,10 +5,14 @@
 > token-efficient context package with precise file:line citations. It retrieves
 > and cites — the agent still does the reasoning.
 
-Install is open (`pip install skelpr`); running is licensed per machine through an
-offline-verified activation token. Retrieval, indexing and review run locally, and
-there is no telemetry. It speaks MCP, so agents such as Claude Code, Cursor and Antigravity
-call it as they are; the CLI covers the same retrieval path for review, diff and fix.
+Install is open (`pip install skelpr`); running is licensed per machine through a
+signed activation token — its signature is checked locally, and a managed seat then
+re-checks in with the activation service on its lease interval. Indexing, retrieval and
+review run locally, and there is no telemetry; credential-shaped values are masked before
+retrieved text reaches an agent, a model or a trace, and credential files such as `.env` and
+`*.pem` are excluded from the index. It speaks MCP, so agents such as Claude Code, Cursor,
+Windsurf, Cline and Antigravity call it as they are; the CLI covers the same retrieval path
+for review, diff and fix.
 
 ## Docs
 

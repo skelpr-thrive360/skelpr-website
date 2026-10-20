@@ -62,9 +62,11 @@ const faqs: Faq[] = [
     question: 'Does my code leave my machine?',
     answer: (
       <>
-        No. Retrieval, indexing and review run locally, and there is no telemetry. Activation sends
-        only your token and a hash of this machine’s id — no hostname, no file paths, no code, no
-        usage.
+        No. Indexing, retrieval and review run locally, and there is no telemetry. Activation sends
+        your token and a hash of this machine’s id — no hostname, no file paths, no code, no usage —
+        and a managed lease re-checks in on its interval, so it needs the network. Credential-shaped
+        values are masked before retrieved text reaches your agent, the model or a trace, and
+        credential files such as .env, .pem and id_rsa are left out of the index.
       </>
     ),
   },
