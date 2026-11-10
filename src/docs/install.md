@@ -1,62 +1,55 @@
 # Install & activate Skelpr
 
-Skelpr has two halves, and they are gated differently. **Installing is open** — `pip` finds the
-package and puts the commands on your `PATH` with no account at all. **Running is licensed** — the
-first command that does real work asks for a token, and every machine that activates takes one seat
-on it.
+Skelpr supplies cited repository evidence to coding agents through MCP, or uses your
+configured generation provider through the standalone CLI. Installing is public.
+Running requires activation, with one seat per machine.
 
-This page is the first hour, in full: what to have running, how to install, how to activate the
-machine, and the output to expect at each step.
+This guide describes the 0.3.6 source and installation changes. Check the installed
+version with `skelpr --version`. Earlier releases may require the `mcp`, `ast`,
+`postgres` and `vector` extras.
 
 ## Prerequisites
 
-Put these in place before you install anything. The first two are the ones that fail *quietly* when
-missing, which is why they lead.
+| Requirement | Needed for |
+|---|---|
+| Python 3.10 or newer | Installing and running Skelpr |
+| Git on PATH | Diff, review, patch and Git-aware indexing |
+| ripgrep on PATH | Explicit live-checkout text and path verification |
+| A running Docker daemon | Standard `skelpr setup` and isolated validation |
+| An embedding endpoint | Semantic indexing and vector retrieval |
+| A generation provider | Standalone `ask`, `chat`, `review` and `fix` |
 
-| Requirement | Needed for | Notes |
-|---|---|---|
-| **Python 3.10 or newer** | everything | `python3 --version`; on Windows, `py --version`. |
-| **`git` on your `PATH`** | `review`, `diff` and `fix` | indexing and `ask` still work without it. |
-| **`ripgrep`** | fast lexical search | optional — a pure-Python fallback is used when it is absent. |
-| **Docker Desktop, running** | `skelpr setup`, and sandboxed `validate` | start it and let it finish booting; `skelpr setup` checks the daemon and stops at step 1 if it is down. |
-| **An embeddings endpoint** | `skelpr index` and vector retrieval — in **both** modes | Skelpr's hosted endpoint if your token carries it, otherwise a local LM Studio serving `nomic-embed-text-v1.5` at `http://127.0.0.1:1234/v1`. |
-| **A generation model, or a provider key** | `ask`, `chat`, `review`, `fix` | not needed in MCP mode — your agent brings its own model. |
-
-> **Without Docker** the core still runs end to end on in-memory fallbacks. You lose the
-> production-grade stores and the sandbox that `validate` runs in — not the assistant.
+MCP uses your agent for generation. The agent chooses when to call Skelpr and may
+require tool approval. Installation guidance encourages use without guaranteeing it.
 
 ### Docker services
 
-`skelpr setup` starts two services and builds one image:
+`skelpr setup` checks Docker, starts the databases and builds the validation image.
+Docker Desktop works on Windows/macOS. Docker Engine also works on Linux.
 
-| Service | Address |
+| Component | Default |
 |---|---|
 | PostgreSQL 16 | `localhost:5434` |
-| Qdrant | `localhost:6333` and `localhost:6334` |
+| Qdrant | `localhost:6333`, gRPC `6334` |
 | Sandbox image | `skelpr-runner:latest` |
+
+Setup resumes stopped containers. Newly created database containers use named
+volumes `skelpr-postgres-data` and `skelpr-qdrant-data`. Existing container storage
+is reused. Removing a data volume removes its index data.
+
+You can configure external PostgreSQL and Qdrant services instead of Docker.
+In-memory fallbacks last only for the current process, so a separate `index`
+command cannot populate a later MCP process through memory alone. Host validation
+requires `sandbox.allow_local_fallback: true` and executes commands on your machine.
 
 ### The embedding model
 
-Indexing and retrieval both embed your query, so an embeddings endpoint matters in **both** modes —
-the MCP server has no language model of its own, but its search still has to turn text into vectors.
-There are two ways to give it one, and you only need the first.
+Indexing embeds source chunks. Vector search embeds questions. BM25 and symbol
+retrieval can continue when vector retrieval is unavailable, with reduced recall.
 
-**Hosted — nothing to run.** If your token carries the `hosted-embeddings` feature, point Skelpr at
-its own endpoint and every command authenticates itself:
-
-```bash
-export SKELPR_EMBEDDINGS_ENDPOINT=https://embeddings.skelpr.com   # your install's URL
-skelpr index
-```
-
-No model to download, no server to keep open, and nothing to copy into a config — the credential is
-minted for the command that needs it.
-
-**Local — your own endpoint.** Otherwise, run the model yourself:
-
-1. In LM Studio, download and load **`nomic-ai/nomic-embed-text-v1.5`** — GGUF, `Q8_0`, about 146 MB.
-2. Start the local server on port **1234**.
-3. Check it answers *before* you index:
+The default local endpoint is `http://127.0.0.1:1234/v1`, with model
+`text-embedding-nomic-embed-text-v1.5@q8_0`. Load the model in an OpenAI-compatible
+server, then match the model ID in `.skelpr.yaml`.
 
 ```bash
 curl -s http://127.0.0.1:1234/v1/embeddings \
@@ -64,245 +57,175 @@ curl -s http://127.0.0.1:1234/v1/embeddings \
   -d '{"input":["hi"],"model":"text-embedding-nomic-embed-text-v1.5@q8_0"}'
 ```
 
-> A local server need not be on this machine: point `embeddings.endpoint` at a GPU box, a vLLM or an
-> Ollama host and the rest is identical.
->
-> Leave it down and indexing still runs — over a deterministic hashing embedder. That is why the
-> symptom is quietly worse recall rather than an error message, and why it is worth the check. It
-> does not cover everything: an endpoint with a credential configured, and the background watcher
-> below, both refuse the fallback outright, because a hashed vector in a real-model index is
-> corruption rather than a degradation.
+Hosted providers require their endpoint, model and credentials. An eligible lease
+can obtain a credential for the configured Skelpr hosted embedding endpoint.
+Simply activating a token does not select that endpoint.
+
+Keyless non-strict initialization can fall back to deterministic hashing.
+Strict indexing, credentialed endpoints and the watcher refuse this substitution.
+Changing embedding models requires rebuilding the vector index, even when their
+dimensions match. Configure the intended provider before indexing.
 
 ## Get a token
 
-Request access at **[skelpr.com](/#waitlist)**. You are issued a personal
-**token** that looks like this:
-
-```
-LDX1.<payload>.<signature>
-```
-
-It records your name, your email, the features you may use, an expiry date, and a **seat count**.
-A seat counts a **machine** — not a person, not a repository — so the number on the token is how far
-it can travel.
+Request access at [skelpr.com](/#waitlist). Your personal bearer token has the form
+`LDX1.<payload>.<signature>` and includes identity, features, expiry and seat terms.
+Keep it private.
 
 ## Install
 
-### 1. Install the package
-
-Skelpr ships a wheel to PyPI, so there is nothing to configure first — `pip install skelpr` resolves
-on any machine.
+From 0.3.6, the default package includes the CLI, MCP SDK, PostgreSQL/Qdrant clients
+and local AST grammars. The optional HTTP API uses the `server` extra.
 
 ```bash
-python3 -m pip install skelpr
-```
-
-Optional extras, when you want the production backends or the MCP server:
-
-```bash
-pip install "skelpr[postgres,vector,ast,server]"   # production stores and the HTTP API
-pip install "skelpr[mcp]"                          # MCP server for coding agents
-pip install "skelpr[all]"                          # everything
-```
-
-### Install on Linux or macOS
-
-```bash
-python3 -m pip install skelpr
+python -m pip install --upgrade skelpr
 skelpr --version
-```
-
-If `python3` is not the interpreter you meant, `python3 -m pip` installs for the one it resolves to,
-which is the same one the `skelpr` command will then use.
-
-### Install on Windows
-
-In **PowerShell**:
-
-```powershell
-py -m pip install skelpr
-skelpr --version
-```
-
-If `skelpr` is not recognised, the `Scripts` folder inside your Python installation is not on
-`PATH`. Add it, then open a **new** terminal — an already-open one keeps the old environment.
-
-### Install without an index
-
-On a machine that cannot reach the index — air-gapped, or behind a proxy that will not allow it —
-install the wheel the vendor sent you instead:
-
-```bash
-pip install ./skelpr-<version>-py3-none-any.whl
-```
-
-### 2. Check it installed
-
-```bash
-skelpr --version
-```
-
-```
-skelpr 0.1.4
-```
-
-```bash
 skelpr --help
 ```
 
-```
- Usage: skelpr [OPTIONS] COMMAND [ARGS]...
+Use `python3` on Linux/macOS or `py` on Windows if that selects your intended Python.
+A virtual environment keeps the installation isolated. If the `skelpr` command is
+missing, activate that environment or add its scripts directory to PATH.
 
- Skelpr -- Fully local AI dev assistant (PR review, fix, patch, test, index).
-
-┌─ Options ───────────────────────────────────────────────────────────────────┐
-│ --verbose  -v        Verbose logs.                                          │
-│ --version  -V        Show the installed version and exit.                   │
-│ --help               Show this message and exit.                            │
-└─────────────────────────────────────────────────────────────────────────────┘
-┌─ Commands ──────────────────────────────────────────────────────────────────┐
-│ init            Create .skelpr.yaml and detect the stack.                   │
-│ index           Build/refresh the hybrid knowledge base.                    │
-│ ask             Ask a grounded question about the repo.                     │
-│ chat            Interactive loop for ask/fix - no shell quoting needed.     │
-│ context         Export token-optimized context chunks to stdout.            │
-│ review          Review a git diff and emit structured findings.             │
-│ fix             Diagnose an issue and generate a minimal patch.             │
-│ validate        Run configured test/lint/typecheck in the sandbox.          │
-│ serve           Start the local FastAPI server.                             │
-│ watch           Re-embed changed files in the background.                   │
-│ setup           Build Docker sandbox and verify dependencies.               │
-│ install-mcp     Auto-configure MCP server for detected agents.              │
-│ uninstall-mcp   Remove Skelpr MCP config from detected agents.              │
-│ register-agent  Register a custom MCP-compatible agent.                     │
-│ activate        Bind this machine to your token, or renew its lease.        │
-│ license         Show the license state of this machine (exit 3 when         │
-│                 unlicensed).                                                │
-│ deactivate      Release this machine's seat at the license service.         │
-│ github          GitHub integration commands (opt-in).                       │
-└─────────────────────────────────────────────────────────────────────────────┘
+```bash
+python -m pip install "skelpr[server]"   # optional HTTP API
 ```
 
-**`--version` and `--help` are never gated.** They work before a token exists, on purpose: help that
-refuses to be read is no help at all.
+AST grammars cover Python, JavaScript, TypeScript, Go, Rust, Java, Ruby, C, C++ and
+C#. Parser loading is lazy and uses installed grammars. Unsupported syntax can
+fall back to regex extraction and line chunks, with less structural precision.
+BM25 operates over indexed text independently of language.
+
+### Install without an index
+
+A vendor-supplied wheel can be installed directly. Offline installation also needs
+local copies of its dependencies for your Python version and operating system.
+
+```bash
+python -m pip install --no-index --find-links ./wheelhouse skelpr
+```
+
+`--version` and `--help` work before activation.
 
 ## Activate
 
-Activation is one command and the only step that needs the network. Paste the token from your email:
-
 ```bash
-skelpr activate <the token from your email>
+skelpr activate <token>
+skelpr license
 ```
 
-Or read it from a file you saved it in, or pipe it in:
+To keep the token out of shell command history, read it from a private file.
 
 ```bash
 skelpr activate --file token.txt
-cat token.txt | skelpr activate
 ```
 
-A successful activation prints:
-
-```
-Activating for Acme Corp …
-Activated.
-  issued to : dev@acme.example
-  seat      : machine 1 of 3
-  lease     : managed: re-authorizes every 10 minutes, and cannot run at all without reaching it
-  stored at : ~/.skelpr/lease.key
-```
-
-On Windows the last line is `%USERPROFILE%\.skelpr\lease.key`.
-
-The token's signature is verified **offline first**, so a mistyped, expired or revoked token fails
-while the email is still open — before anything is stored. Only then does the machine ask the
-service for a **seat**, and receive back a **lease**: a small signed document that binds the token to
-*this* machine and expires on its own.
+Activation verifies the token, requests a seat from the service and stores the
+returned machine-bound lease. Local state defaults to `~/.skelpr`, or
+`%USERPROFILE%\.skelpr` on Windows. `SKELPR_HOME` relocates it. `SKELPR_LICENSE`
+and `SKELPR_LEASE` override stored credentials, which can explain why a newly
+saved activation is not the one being used.
 
 ### What activation sends
 
-The token, and a hash of a machine id. No hostname, no file paths, no code, no usage. Retrieval,
-indexing and review all run locally; a machine on an `offline` token never calls again after this.
+Activation and check-in send the token and a machine-id hash to the license
+service. Managed leases check in automatically during use, about every ten
+minutes. A due check-in that cannot reach the service prevents licensed work.
+Offline-tier leases renew near expiry when online renewal is allowed.
+
+Other connections depend on configuration.
+
+| Connection | Data that may leave the machine |
+|---|---|
+| Hosted embedding provider | Indexed source text and search queries |
+| Standalone generation provider | Prompts, selected source, diffs and task context |
+| Optional Langfuse tracing | Inputs, outputs, source, citations and operational metadata |
+| Hosted embedding credential service | Credential request and usage counters |
+| Release check | Request for the published package version |
+| Coding agent | Whatever its own model and tool policies allow |
+
+Local endpoints keep those provider requests local. Langfuse requires its SDK and
+credentials. Secret screening reduces exposure but does not guarantee removal of
+all sensitive content. `SKELPR_OFFLINE=1` blocks licensing and release checks, not
+separately configured model, database or telemetry connections.
 
 ### Seats
 
-A **seat is a machine**:
-
-- a second machine takes a second seat, up to the count on the token;
-- activating twice on one machine takes one seat — reinstalling is not a second machine;
-- `skelpr deactivate` hands the seat back at the service and clears the local lease, so a retired
-  laptop does not hold one hostage. Do it before wiping a machine;
-- a machine that comes back after deactivating gets its same seat number.
-
-`skelpr activate` says so when the last seat is taken. Out of seats, ask for one to be freed or for a
-token with a bigger count — nothing else about the install changes.
+- Each activated machine occupies one seat. Re-activating the same machine reuses it.
+- `skelpr deactivate` requests seat release and removes the local lease.
+- If the service is unreachable during deactivation, ask the issuer to release the seat.
+- Deactivate before retiring a machine or deleting its Skelpr state.
 
 ## First run
 
+Start the embedding endpoint and Docker first. For an agent installation, skip
+standalone generation setup.
+
 ```bash
 cd <your-repo>
-
-skelpr setup        # start Postgres, Qdrant and the sandbox — Docker must be running
-skelpr init         # write .skelpr.yaml and detect the stack
-skelpr index        # build the hybrid knowledge base
-skelpr ask "how does authentication token refresh work?"
+skelpr setup --no-configure
+skelpr init
+skelpr index
+skelpr install-mcp
 ```
 
-Rather than run a model locally, hand `init` a provider key:
+Reconnect the agent and confirm it lists `skelpr_search`. To target one client,
+use `skelpr install-mcp --agent codex`, `--agent claude-code` or `--agent cursor`.
+`--yes` configures all detected clients. `--print` emits a manual JSON entry.
+Some clients use their own CLI configuration writer. Codex uses user scope.
+
+For standalone CLI, run `skelpr setup` interactively to verify and save generation
+and embedding settings, then `skelpr init` and `skelpr index`.
 
 ```bash
-skelpr init --gemini YOUR_KEY      # Google Gemini
-skelpr init --openai sk-proj-...   # OpenAI
-skelpr init --anthropic sk-ant-... # Anthropic
-skelpr init --openrouter YOUR_KEY  # OpenRouter
-skelpr init --groq gsk_...         # Groq
-skelpr init --local                # a model server on your own machine (the default)
+skelpr ask "how does authentication token refresh work?"
+skelpr chat
+skelpr doctor --verbose
 ```
 
-`skelpr init` writes `.skelpr.yaml` and reports what it found:
+`init` detects language and validation commands. Review `.skelpr.yaml` before
+running validation because those commands execute code from the checkout.
 
-```
-Wrote <your-repo>/.skelpr.yaml
-Detected language: typescript
-Provider: local (qwen2.5-14b-instruct)
-Test: npm test  Lint: npx eslint .  Typecheck: npx tsc --noEmit
-Next: skelpr index
-```
+### MCP tool use
 
-The language, test, lint and typecheck lines are detected from *your* repository, so they differ
-from repo to repo.
+Pass the complete question as `{"query": "your question"}` to `skelpr_search`.
+`question` is an accepted alias, although clients can require canonical `query`
+before sending. Leave budgets unset for automatic selection, or provide a limit.
+Budgets and dependency traversal are bounded and cannot guarantee full coverage.
+
+Cite returned file ranges or original `N|` source-line labels. Ask for missing
+evidence with `skelpr_get_context`, using `missing_evidence` and `exclude_span_ids`
+to avoid repeating evidence. Live `verification` requests check explicit paths or
+literal terms and report scan limits. A bounded search cannot prove absence.
+
+`skelpr_validate` runs configured checks in Docker by default. Host fallback is
+explicitly enabled. Unknown check names or no configured checks produce a
+configuration error. Inspect skipped checks as well as the overall result.
 
 ### Keeping the index fresh
 
-`skelpr index` is a snapshot. Edit a file and a later query still searches the shape it had when you
-last indexed, so a long session slowly drifts away from the working tree. `skelpr watch` indexes
-once and then re-embeds what changed, in the background:
-
 ```bash
-skelpr watch              # index, then keep both stores fresh
-skelpr watch --full       # force a full re-index first
-skelpr watch --poll 5 --debounce 2
+skelpr watch
+skelpr watch --poll 1 --debounce 1.5
 ```
 
-It polls **git** rather than the filesystem, which is the point: an editor that writes a temporary
-file and renames it is one change, and a delete, a rename and a new file all arrive in the same
-place. It is off by default inside `serve` and the MCP server — background work should be opted
-into, not paid for silently — so switch it on there with either:
+Watch indexes once and then detects added, changed and removed files and HEAD
+changes. It polls repository state with a filesystem fallback outside Git.
+Detection is followed by a quiet debounce interval and indexing time, so it is
+not instantaneous. It is opt-in inside MCP and `serve`.
 
 ```yaml
 indexing:
   watch:
     enabled: true
+    poll_seconds: 1.0
+    debounce_seconds: 1.5
 ```
 
-```bash
-export SKELPR_AUTO_REINDEX=1     # for one shell, without a config edit
-```
-
-The watcher is strict. If the endpoint is unreachable it abandons the run whole, leaves the
-previous index intact, and retries with backoff, rather than writing hashed vectors into a
-real-model index. A machine that never opts in has no watcher at all — queries still work, they
-just answer from the last index.
+`SKELPR_AUTO_REINDEX=1` enables it for the process. Strict embedding failures trigger
+backoff. PostgreSQL and Qdrant updates are not one cross-store transaction, so a
+failure partway through indexing can leave partial updates. Inspect diagnostics
+and complete a successful indexing pass after recovery.
 
 ## Check the license
 
@@ -310,102 +233,62 @@ just answer from the last index.
 skelpr license
 ```
 
-An activated machine reports:
-
-```
-Skelpr license
-  status   : active
-  licensed : Acme Corp
-  email    : dev@acme.example
-  seat     : machine 1 of 3
-  machine  : <a hash of this machine>
-  lease    : managed: re-authorizes every 10 minutes, and cannot run at all without reaching it
-  edition  : standard
-  features : core
-  token    : expires 2027-09-30 (365 days remaining)
-  source   : ~/.skelpr/lease.key
-```
-
-`skelpr license` also works as a scriptable predicate:
-
-| Exit code | Meaning |
-|---|---|
-| `0` | this machine is activated |
-| `3` | this machine is not activated |
-
-So `skelpr license >/dev/null \|\| echo "not activated"` is a usable check.
+The output identifies credential sources, license and lease terms, seat and status.
+Exit `0` means active or explicit development mode. Exit `3` means unavailable.
+`activate` exits `1` when activation fails. The signed terms and issuer policy
+determine expiry and renewal behavior.
 
 ## What refuses without activation
 
-| Surface | Behaviour |
+| Surface | Behavior |
 |---|---|
-| CLI | every command that does work — `init`, `index`, `ask`, `review`, `fix`, `validate`, `serve`, `setup`, `install-mcp` — exits **3** with the reason and the route in |
-| MCP server | refuses to start: exit **3**, with the reason on stderr |
-| HTTP API | every route answers **403**; `/health` keeps answering |
-| Token unusable | the token handed to `activate` could not be used, or the service refused it — exit **1** |
+| CLI work commands | Refuse with exit `3` |
+| MCP startup | Missing or invalid activation can refuse with exit `3` |
+| MCP with a lease due for check-in | Handshake proceeds, first gated call checks in |
+| MCP tools | Refusal content explains the license issue |
+| HTTP API | Gated routes refuse, `/health` stays available |
 
-An unactivated machine explains itself rather than failing silently:
-
-```
-$ skelpr index
-error: license required: this machine is not activated (lease lapsed 3 minutes ago —
-this machine has not checked in) — run `skelpr activate` to bind it (the token's
-seats are counted when you do)
-Skelpr runs on an activated machine, and each machine takes one seat on your token.
-Request access at https://skelpr.com/#waitlist; you will be issued a personal token.
-    skelpr activate <token>     # binds this machine (needs network; one call)
-    skelpr license              # state, seats used, and the lease's expiry
-Activation sends only the token and a hash of this machine's id.
-```
-
-Always available, activated or not: `skelpr --version`, `--help`, `skelpr activate`,
-`skelpr deactivate` and `skelpr license`.
+Help, version, activation, deactivation and license inspection remain accessible.
+`SKELPR_DEV=1` is an explicit development bypass. The Python client is not tamper-proof.
 
 ## Moving to another machine
 
-```bash
-skelpr deactivate
-```
-
-That releases the seat at the service and clears the lease locally — run it before retiring or
-wiping a machine, so the seat is not held by a laptop nobody uses.
+Run `skelpr deactivate` on the old machine, then install and activate on the new
+one. A lease copied between machines does not authorize the destination.
 
 ## Troubleshooting
 
-| Symptom | What it means |
+| Symptom | Action |
 |---|---|
-| `skelpr: command not found` | pip's script directory is not on your `PATH`. Add it and open a new terminal. |
-| `No matches found` from pip, or no distribution found | Check the version exists (`pip index versions skelpr`), or you are on a Python older than 3.10. |
-| `error: license required: this machine is not activated` | The token is installed but `activate` has not run on *this* machine. A token alone does not open the gate. |
-| `That token cannot be used` | Expired, revoked, or signed by another key. Send it back to the vendor. |
-| `No seats left` | Every seat is in use. `skelpr deactivate` on a machine you no longer use, or ask for a bigger count. |
-| `This build carries no activation key` | The build predates activation. Install the current release from the channel. |
-| `This lease was issued for a different machine` | A lease file was copied between machines. Run `skelpr activate` here. |
-| `skelpr index` runs, but answers cite almost nothing | The embedding endpoint is not reachable, so indexing fell back to keyword-only. Re-check the endpoint you configured — the port-1234 call above, or the hosted endpoint if your token carries it. |
-| It worked yesterday, not today | Run `skelpr license` first — it names an expired lease or a revocation before anything else guesses. |
+| Command missing | Activate the intended environment and check PATH |
+| MCP missing after upgrade | Restart the agent and verify its configured executable |
+| Agent never calls a tool | Check tool discovery, approval settings and project instructions |
+| License refusal | Run `skelpr license` and follow its specific reason |
+| Due check-in fails | Restore access to the license service and retry |
+| No seats left | Release an old machine or contact the issuer |
+| Little or stale evidence | Run `skelpr doctor --verbose`, verify repository identity and index freshness |
+| Memory backend reported | Configure persistent metadata and vector services, then index |
+| Embedding failure | Check endpoint, model and credential references |
+| Verification inconclusive | Inspect reported exclusions, bounds and ripgrep availability |
+
+## Benchmark scope
+
+The historical Sock Shop report claimed 59% fewer agent tokens across seven tasks.
+Some retained artifacts do not reproduce its aggregate or architecture row, so the
+report is historical evidence with known reconciliation gaps.
+
+The separate 2026-11-09 Django case study retained ten Codex comparisons with
+37.27% fewer total tokens, native search/read calls falling from 28 to 9, and
+combined rubric scores rising from 89/96 to 91/96. Summed wall time fell 2.46%.
+These were successive builds informed by the questions, with seeded defects in
+two isolated edit tasks and uncontrolled provider caching. They are not a frozen
+release evaluation or a guarantee for other repositories.
 
 ## Uninstall
 
-Three things to undo, in order:
+1. Run `skelpr uninstall-mcp` while the installation is still available.
+2. Run `skelpr deactivate` to request release of this machine's seat.
+3. Run `python -m pip uninstall skelpr` in the environment that owns it.
+4. Remove local state only after checking whether other Skelpr installations use it.
 
-1. **Remove the agent configuration**, if you registered Skelpr with an agent:
-
-   ```bash
-   skelpr uninstall-mcp
-   ```
-
-2. **Uninstall the package**:
-
-   ```bash
-   pip uninstall skelpr
-   ```
-
-3. **Remove the local state** — the token, the lease and the machine id:
-
-   | Platform | Directory |
-   |---|---|
-   | Linux / macOS | `~/.skelpr` |
-   | Windows | `%USERPROFILE%\.skelpr` |
-
-   If you are giving up the machine, run `skelpr deactivate` **before** deleting the directory, so
-   the seat is released rather than left dangling.
+Database volumes and repository indexes are separate from the Python package.

@@ -23,7 +23,7 @@ export function ArchitectureSection({ open, onToggle }: { open: boolean; onToggl
   return (
     <section className="architecture-section content-section" id="architecture">
       <div className="section-kicker">Technical architecture</div>
-      <div className="two-column-heading"><h2>Deterministic first.<br /><em>Semantic second.</em></h2><p>Every integration shares one retrieval path. Explore the real components and the graceful fallback hierarchy behind it.</p></div>
+      <div className="two-column-heading"><h2>Deterministic first.<br /><em>Semantic second.</em></h2><p>Integrations share retrieval components with distinct query, review and formatting paths. Explore their storage and fallback boundaries.</p></div>
       <DetailButton open={open} onClick={onToggle} />
       <div className="architecture-layout">
         <div className="architecture-map" ref={mapRef}>

@@ -62,7 +62,7 @@ export function BenchmarkSection() {
   return (
     <section className="benchmark-section act-wash content-section" id="benchmark">
       <div className="section-kicker">Benchmark evidence</div>
-      <div className="two-column-heading"><h2>Does it actually<br /><em>work better?</em></h2><p>In the repository’s self-reported MCP Agent A/B, an Antigravity agent answered seven Sock Shop tasks with native tools only, then with skelpr MCP available (WITHOUT arms 2026-09-09/10; WITH arms re-run 2026-09-24 on the current engine). Below it, the same seven questions answer the like-for-like CLI comparison. Pick any agent-A/B task to read the exact prompt and both verbatim answers.</p></div>
+      <div className="two-column-heading"><h2>Does it actually<br /><em>work better?</em></h2><p>In the repository’s self-reported MCP Agent A/B, an Antigravity agent answered seven Sock Shop tasks with native tools only, then with skelpr MCP available (WITHOUT arms 2026-09-09/10; WITH arms re-run 2026-09-24 on that historical engine). Below it, the same seven questions answer the like-for-like CLI comparison. Pick any agent-A/B task to read the exact prompt and both verbatim answers.</p></div>
       <div className="benchmark-meta"><span><strong>7 × 2</strong> tasks × arms</span><span><strong>Antigravity</strong> Gemini 3.6 Flash Medium</span><span><strong>Sock Shop</strong> microservices demo</span><span><strong>2026-09-24</strong> WITH re-run</span></div>
 
       {/* Bars are the table's own encoding at card scale, on one shared scale (each
@@ -114,7 +114,7 @@ export function BenchmarkSection() {
         </div>
       </div>
 
-      <div className="caveat"><ShieldCheck size={17} /><div><strong>Read the accuracy number with care.</strong><p>Parity is the headline: all seven tasks score within the ±5 tolerance, and the run-1 gaps (Helm/ingress, the healthcheck step, 3-of-5 image sites) are closed. Two single checklist facts traded the other way (session-db ↔ Makefile; kube-state-metrics), and both arms miss the negative task’s absence phrase (60/60). Token and file-read savings are unaffected.</p></div></div>
+      <div className="caveat"><ShieldCheck size={17} /><div><strong>Historical figures with known reconciliation gaps.</strong><p>Some retained task artifacts do not reproduce the published aggregate or the architecture row. These figures are preserved as historical reporting and do not establish current-build performance. Accuracy parity was the reported headline: all seven tasks score within the ±5 tolerance, and the run-1 gaps (Helm/ingress, the healthcheck step, 3-of-5 image sites) are closed. Two single checklist facts traded the other way (session-db ↔ Makefile; kube-state-metrics), and both arms miss the negative task’s absence phrase (60/60). These accuracy explanations describe the historical answers.</p></div></div>
       <button className="methodology-toggle" onClick={() => setMethodologyOpen(!methodologyOpen)} aria-expanded={methodologyOpen}><span>Technical methodology & limitations</span><ChevronDown size={17} className={methodologyOpen ? 'rotate' : ''} /></button>{methodologyOpen && <div className="methodology"><div><strong>WITHOUT</strong><p>Skelpr removed from MCP config. Native browse/read/glob/grep tools only.</p></div><div><strong>WITH</strong><p>Native tools plus skelpr MCP, with search-first guidance and 1–3 targeted searches.</p></div><div><strong>Evaluation</strong><p>Accuracy uses task-specific keyword/checklist evaluators (each fact 5–8 points; |Δ| ≤ 5 scores “Same”). No LLM judge. Raw prompts and verbatim outputs are saved in the benchmark artifacts.</p></div></div>}
 
       {/* The CLI comparison is a first-class result, not a footnote: it is what a CLI or
@@ -130,8 +130,8 @@ export function BenchmarkSection() {
           the one place between the hero and the waitlist where the reader can act. */}
       <div className="benchmark-exit">
         <div>
-          <strong>Those numbers came from one agent, one repo, one afternoon.</strong>
-          <p>Your repository, your agent, your next task — the setup is two prerequisites and four commands.</p>
+          <strong>These are historical results from one agent and one repository.</strong>
+          <p>Results depend on the task, model, cache state and indexed checkout. Measure your own workflow.</p>
         </div>
         <a className="button primary" href="#install">Run it on your repo <ArrowRight size={15} /></a>
       </div>

@@ -15,68 +15,28 @@ type Faq = { question: string; answer: ReactNode }
 
 const faqs: Faq[] = [
   {
-    question: 'What is Skelpr?',
-    answer: (
-      <>
-        Skelpr is surgical code retrieval for AI agents, PR reviews, and fixes. It finds the parts
-        of a repository that matter, ranks them, and hands your agent a small context package with
-        precise <code>file:line</code> citations. Skelpr retrieves and cites — your agent still does
-        the reasoning.
-      </>
-    ),
+    question: "What is Skelpr?",
+    answer: "Skelpr supplies budgeted repository evidence for coding agents, PR reviews and fixes. It combines search results with source ranges. In MCP mode your agent owns reasoning and decides when to call the tools.",
   },
   {
-    question: 'How is it different from grep or an embedding search?',
-    answer: (
-      <>
-        Search finds matches; Skelpr assembles evidence. It combines symbolic, lexical and graph
-        signals over an indexed repository and returns a ranked, token-efficient package — the
-        benchmarked runs opened 76% fewer files and spent 59% fewer agent tokens.
-      </>
-    ),
+    question: "How is it different from grep or an embedding search?",
+    answer: "Skelpr combines BM25, symbol and available vector candidates through reciprocal rank fusion, then selects related source evidence within a budget. The historical Sock Shop report claimed 59% fewer tokens, but retained artifacts do not fully reproduce that aggregate. Savings depend on the task and model.",
   },
   {
-    question: 'Which agents can call it?',
-    answer: (
-      <>
-        Anything that speaks MCP. <code>skelpr install-mcp</code> auto-detects common agents such as
-        Claude Code, Cursor and Antigravity, and <code>skelpr register-agent</code> covers the rest.
-        The CLI takes the same retrieval path for review, diff and fix without an agent in the
-        loop.
-      </>
-    ),
+    question: "Which agents can call it?",
+    answer: "MCP-compatible clients can call Skelpr. skelpr install-mcp detects supported clients, including Codex, Claude Code and Cursor. Manual configuration covers missed clients. Reconnect after installation and approve the tools as required by your client. The agent chooses whether to use them.",
   },
   {
-    question: 'What do I need to run it?',
-    answer: (
-      <>
-        Python 3.10 or newer, Docker Desktop running, and an embeddings endpoint — the hosted one
-        if your token carries it, otherwise a local model such as LM Studio serving
-        <code>nomic-embed-text-v1.5</code> on port 1234. Without Docker the core still runs on
-        in-memory fallbacks; you lose sandboxed validation and the production stores, not the
-        assistant.
-      </>
-    ),
+    question: "What do I need to run it?",
+    answer: "Use Python 3.10 or newer and activate the machine. The standard setup needs a running Docker daemon for PostgreSQL, Qdrant and isolated validation. External database services can replace Docker. In-memory state lasts only for that process. Configure an embedding endpoint for semantic search and a generation provider for standalone ask, chat, review or fix.",
   },
   {
-    question: 'Does my code leave my machine?',
-    answer: (
-      <>
-        No. Retrieval, indexing and review run locally, and there is no telemetry. Activation sends
-        only your token and a hash of this machine’s id — no hostname, no file paths, no code, no
-        usage.
-      </>
-    ),
+    question: "Does my code leave my machine?",
+    answer: "That depends on your configuration. Hosted embeddings receive indexed text and queries. Standalone generation receives prompts and selected source context. Optional Langfuse tracing can include inputs, outputs and source. Activation sends the token and a machine-id hash, and managed leases check in during use. Your coding agent has its own data policy.",
   },
   {
-    question: 'How do I get access?',
-    answer: (
-      <>
-        <code>pip install skelpr</code> is open to anyone; running is licensed per machine. Join the
-        waitlist and we send a token that activates one seat — a seat is a machine, not a person or
-        a repository.
-      </>
-    ),
+    question: "How do I get access?",
+    answer: "pip install skelpr is publicly available. Running requires a personal activation token. Request access, then run skelpr activate with your token. Each activated machine occupies one seat. skelpr license reports the current state.",
   },
 ]
 
