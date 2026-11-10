@@ -1,8 +1,15 @@
 import { lazy, Suspense, useRef, useState } from 'react'
 import { djangoMetricsUrl, djangoTasks, djangoTotals, formatCount, reduction } from '../data/djangoCaseStudy'
 import { Metric, scrollToElement } from './Shared'
+import { TaskTokenChart } from './TaskTokenChart'
 
 const DjangoAnswers = lazy(() => import('./DjangoAnswers'))
+
+const djangoTokenTasks = djangoTasks.map(({ id, task, tokens }) => ({
+  id,
+  label: `${id} · ${task}`,
+  tokens,
+}))
 
 export function DjangoCaseStudy({ active }: { active: boolean }) {
   const [selectedTask, setTask] = useState('Q1')
@@ -38,7 +45,15 @@ export function DjangoCaseStudy({ active }: { active: boolean }) {
           <p>One retained comparison per question across successive Skelpr builds. These questions informed retrieval tuning. This is not an unseen-task evaluation of one frozen release.</p>
         </div>
       </div>
-      <div className="benchmark-table-wrap">
+      <TaskTokenChart
+        tasks={djangoTokenTasks}
+        title="Total tokens by task"
+        selectedTask={selectedTask}
+        onSelect={openTask}
+        formatTokens={formatCount}
+      />
+      <details className="benchmark-table-wrap">
+        <summary className="benchmark-details-summary">View exact values, scores and wall time</summary>
         <div className="table-heading">
           <div><span className="eyebrow">TEN TASKS</span><h3>Select a task to compare the answers</h3></div>
           <span className="table-key">Native Codex → Codex + Skelpr<span className="scroll-cue">Scroll for all columns →</span></span>
@@ -61,7 +76,7 @@ export function DjangoCaseStudy({ active }: { active: boolean }) {
             <tfoot><tr><th scope="row">Overall</th><td>{formatCount(djangoTotals.tokens[0])} → {formatCount(djangoTotals.tokens[1])}</td><td>{reduction(djangoTotals.tokens)}%</td><td>{djangoTotals.score[0]}/{djangoTotals.maximumScore} → {djangoTotals.score[1]}/{djangoTotals.maximumScore}</td><td>{djangoTotals.seconds[0].toFixed(2)} → {djangoTotals.seconds[1].toFixed(2)}</td></tr></tfoot>
           </table>
         </div>
-      </div>
+      </details>
       <div className="benchmark-qa" id="django-answers" ref={answersRef} role="region" aria-label="Django answer comparison" tabIndex={-1}>
         {active && <Suspense fallback={<p role="status">Loading retained answers…</p>}><DjangoAnswers task={selectedTask} key={selectedTask} /></Suspense>}
       </div>

@@ -18,14 +18,15 @@ export const sockShopTotals = {
   tokenReduction: '59.3%',
 } as const
 
+// Task token totals retain the precision of the historical report.
 export const benchmarkTasks = [
-  ['service_architecture', 'retrieval', 95, 95, '79.8k → 62.0k'],
-  ['request_flow', 'retrieval', 100, 100, '140.5k → 59.4k'],
-  ['monitoring_stack', 'retrieval', 88, 82, '158.9k → 41.2k'],
-  ['dependency_impact', 'dependency', 92, 92, '176.1k → 52.6k'],
-  ['fix_catalogue_image', 'fix', 84, 92, '72.9k → 46.2k'],
-  ['negative_missing_service', 'negative', 60, 60, '88.7k → 26.1k'],
-  ['exact_file_catalogue', 'exact_file', 100, 100, '49.4k → 24.7k'],
+  ['service_architecture', 'retrieval', 95, 95, [79_800, 62_000]],
+  ['request_flow', 'retrieval', 100, 100, [140_500, 59_400]],
+  ['monitoring_stack', 'retrieval', 88, 82, [158_900, 41_200]],
+  ['dependency_impact', 'dependency', 92, 92, [176_100, 52_600]],
+  ['fix_catalogue_image', 'fix', 84, 92, [72_900, 46_200]],
+  ['negative_missing_service', 'negative', 60, 60, [88_700, 26_100]],
+  ['exact_file_catalogue', 'exact_file', 100, 100, [49_400, 24_700]],
 ] as const
 
 export type QaVerdict = 'better' | 'same' | 'weaker'

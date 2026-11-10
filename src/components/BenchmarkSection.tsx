@@ -6,6 +6,7 @@ import { formatCount } from '../data/djangoCaseStudy'
 import { Metric, scrollToElement } from './Shared'
 import QaColumns from './QaColumns'
 import { DjangoCaseStudy } from './DjangoCaseStudy'
+import { TaskTokenChart } from './TaskTokenChart'
 import { ScrollTrigger } from '../lib/anim'
 
 // The verbatim panes pull in react-markdown, remark-gfm, micromark and the whole
@@ -21,6 +22,13 @@ const verdictMeta: Record<QaVerdict, { label: string; Icon: typeof Equal }> = {
   same: { label: 'Same', Icon: Equal },
   weaker: { label: 'Weaker', Icon: TrendingDown },
 }
+
+const formatReportedTokens = (tokens: number) => `${(tokens / 1000).toFixed(1)}k`
+const sockShopTokenTasks = benchmarkTasks.map(([id, , , , tokens]) => ({
+  id,
+  label: id.replace(/_/g, ' '),
+  tokens,
+}))
 
 export function BenchmarkSection() {
   const [study, setStudy] = useState<'sock-shop' | 'django'>('sock-shop')
@@ -64,13 +72,16 @@ export function BenchmarkSection() {
       setSelectedTask(task)
       setAnswersExpanded(false)
     }
-    if (qaRef.current) scrollToElement(qaRef.current)
+    if (qaRef.current) {
+      scrollToElement(qaRef.current)
+      qaRef.current.focus({ preventScroll: true })
+    }
   }
 
   return (
     <section className="benchmark-section content-section" id="benchmark">
       <div className="section-kicker">Benchmark evidence</div>
-      <div className="two-column-heading"><h2>Compare the case studies</h2><p>Start with Sock Shop on Gemini and Antigravity, then compare the Django study on Codex. Each study compares its own native-tools baseline with Skelpr MCP. These are separate case studies, not a head-to-head model comparison.</p></div>
+      <div className="two-column-heading"><h2>Compare the case studies</h2><p>See how token use changed on Sock Shop and Django. Each study compares Skelpr MCP against its own native-tools baseline.</p></div>
       <div className="case-study-switcher" role="tablist" aria-label="Benchmark case study">
         {(['sock-shop', 'django'] as const).map((value, index) => (
           <button type="button" key={value} id={`study-tab-${value}`} role="tab" aria-selected={study === value} aria-controls={`study-panel-${value}`} tabIndex={study === value ? 0 : -1} onClick={() => setStudy(value)} onKeyDown={(event) => {
@@ -89,9 +100,18 @@ export function BenchmarkSection() {
 
       <div className="metric-grid"><Metric label="Reported total tokens" simple="Historical aggregate; not fully reproduced" without={formatCount(sockShopTotals.tokens[0])} withValue={formatCount(sockShopTotals.tokens[1])} change={`−${sockShopTotals.tokenReduction}`} withoutPct={100} withPct={Math.round(sockShopTotals.tokens[1] / sockShopTotals.tokens[0] * 100)} /><Metric label="Files opened" simple="Reported files inspected" without={String(sockShopTotals.filesOpened[0])} withValue={String(sockShopTotals.filesOpened[1])} change="−76.1%" withoutPct={100} withPct={Math.round(sockShopTotals.filesOpened[1] / sockShopTotals.filesOpened[0] * 100)} /><Metric label="Tool calls" simple="Reported invocations across seven tasks" without="136 native" withValue="21 skelpr + 31 native" change="−61.8%" withoutPct={100} withPct={Math.round((52 / 136) * 100)} /><Metric label="Rubric score" simple="Reported checklist points" without="619" withValue="621" change="+2 / 700 points" /></div>
 
-      <div className="benchmark-table-wrap">
+      <div className="caveat"><ShieldCheck size={17} /><div><strong>Historical figures with known reconciliation gaps.</strong><p>Retained artifacts do not fully reproduce the published aggregate or architecture row. The reported totals and assessments are preserved for reference. They do not establish current-build performance or accuracy parity on every task.</p></div></div>
+      <TaskTokenChart
+        tasks={sockShopTokenTasks}
+        title="Reported tokens by task"
+        selectedTask={selectedTask}
+        onSelect={openTask}
+        formatTokens={formatReportedTokens}
+      />
+      <details className="benchmark-table-wrap">
+        <summary className="benchmark-details-summary">View the reported values and scores</summary>
         <div className="table-heading"><div><span className="eyebrow">SEVEN HISTORICAL TASKS</span><h3>Prompts, scores, and answers</h3></div><span className="table-key"><i className="without-key" /> WITHOUT <i className="with-key" /> WITH · <em>select a row to read the answers</em><span className="scroll-cue">scroll for all columns →</span></span></div>
-        <div className="benchmark-table" role="table">
+        <div className="benchmark-table" role="table" aria-label="Reported Sock Shop task results" tabIndex={0}>
           <div className="table-row table-header" role="row"><span role="columnheader">Task</span><span role="columnheader">Category</span><span role="columnheader">Accuracy</span><span role="columnheader">Tokens W/O → W</span><span role="columnheader" /></div>
           {benchmarkTasks.map(([task, category, without, withValue, tokens]) => {
             const entry = benchmarkQa.find((qaEntry) => qaEntry.task === task)
@@ -101,15 +121,15 @@ export function BenchmarkSection() {
                 <span className="task-name" role="cell">{task}</span>
                 <span role="cell"><em className={`category ${category}`}>{category}</em></span>
                 <span className="accuracy-bars" role="cell"><b>{without}</b><span className="bar"><i style={{ width: `${without}%` }} /><i className="with-bar" style={{ width: `${withValue}%` }} /></span><strong>{withValue}</strong>{verdict === 'better' && <TrendingUp size={12} className="row-verdict better" />}{verdict === 'weaker' && <TrendingDown size={12} className="row-verdict weaker" />}</span>
-                <span className="token-change" role="cell">{tokens}</span>
+                <span className="token-change" role="cell">{tokens.map(formatReportedTokens).join(' → ')}</span>
                 <span className="row-open" role="cell"><ChevronRight size={13} className={selectedTask === task ? 'rotate' : ''} /></span>
               </div>
             )
           })}
         </div>
-      </div>
+      </details>
 
-      <div className="benchmark-qa" ref={qaRef} id="benchmark-qa">
+      <div className="benchmark-qa" ref={qaRef} id="benchmark-qa" tabIndex={-1} role="region" aria-label="Sock Shop answer comparison">
         <div className="qa-detail">
           <div className="qa-task-line"><span className="eyebrow">TASK {benchmarkTasks.findIndex(([task]) => task === qa.task) + 1} OF {benchmarkTasks.length}</span><h3>{qa.task}</h3></div>
           <div className="qa-question"><span>PROMPT — IDENTICAL FOR BOTH ARMS</span><p>{qa.question}</p></div>
@@ -131,10 +151,9 @@ export function BenchmarkSection() {
         </div>
       </div>
 
-      <div className="caveat"><ShieldCheck size={17} /><div><strong>Historical figures with known reconciliation gaps.</strong><p>Retained artifacts do not fully reproduce the published aggregate or architecture row. The reported totals and assessments are preserved for reference. They do not establish current-build performance or accuracy parity on every task.</p></div></div>
       <button className="methodology-toggle" onClick={() => setMethodologyOpen(!methodologyOpen)} aria-expanded={methodologyOpen}><span>Technical methodology & limitations</span><ChevronDown size={17} className={methodologyOpen ? 'rotate' : ''} /></button>{methodologyOpen && <div className="methodology"><div><strong>WITHOUT</strong><p>Skelpr removed from MCP config. Native browse/read/glob/grep tools only.</p></div><div><strong>WITH</strong><p>Native tools plus skelpr MCP, with search-first guidance and 1–3 targeted searches.</p></div><div><strong>Evaluation</strong><p>Scores use task-specific keyword/checklist evaluators, without an LLM judge. Verdict labels retain the historical assessments; consult the numeric scores for differences. Prompts and verbatim outputs are preserved.</p></div></div>}
 
-      <div className="mode-one-benchmark"><div><span className="eyebrow">HISTORICAL CLI COMPARISON</span><h3>The same seven questions in CLI mode</h3><p>Both arms used <code>openai/gpt-oss-120b</code> on Groq, the same checkout, and the same checklist. The reference used two model calls per task; Skelpr used one.</p><p className="cli-latency-note">Latency includes Groq free-tier rate-limit waits. Skelpr ran second. On the unthrottled task, it took 1.56s versus 3.55s. Four tasks tied on score; the reference led the other three by 5–10 points.</p></div><div className="mode-one-table"><div><span>Mode</span><span>Avg. latency</span><span>Avg. total tokens</span><span>Cost / query</span><span>Rubric score</span></div><div><strong>Multi-turn reference</strong><span>24.39s</span><span>7,573</span><span>$0.00200</span><span>88.4 / 100</span></div><div className="highlight-row"><strong>Skelpr CLI</strong><span>28.90s</span><span>3,925 (−48%)</span><span>$0.00099 (−50%)</span><span>85.1 / 100</span></div></div></div>
+      <div className="mode-one-benchmark"><div><span className="eyebrow">HISTORICAL CLI COMPARISON</span><h3>The same seven questions in CLI mode</h3><p>Both arms used <code>openai/gpt-oss-120b</code> on Groq, the same checkout, and the same checklist. The reference used two model calls per task; Skelpr used one.</p><p className="cli-latency-note">Latency includes Groq free-tier rate-limit waits. Skelpr ran second. On the unthrottled task, it took 1.56s versus 3.55s. Four tasks tied on score; the reference led the other three by 5–10 points.</p></div><div className="mode-one-table" role="region" aria-label="Historical CLI comparison values" tabIndex={0}><div><span>Mode</span><span>Avg. latency</span><span>Avg. total tokens</span><span>Cost / query</span><span>Rubric score</span></div><div><strong>Multi-turn reference</strong><span>24.39s</span><span>7,573</span><span>$0.00200</span><span>88.4 / 100</span></div><div className="highlight-row"><strong>Skelpr CLI</strong><span>28.90s</span><span>3,925 (−48%)</span><span>$0.00099 (−50%)</span><span>85.1 / 100</span></div></div></div>
       </div>
       <div id="study-panel-django" role="tabpanel" aria-labelledby="study-tab-django" hidden={study !== 'django'} tabIndex={0}>
         <DjangoCaseStudy active={study === 'django'} />
