@@ -3,9 +3,9 @@ import { DetailButton, SectionDetail } from './Shared'
 export function IdentitySection({ open, onToggle }: { open: boolean; onToggle: () => void }) {
   return (
     <section className="identity-section content-section" id="product">
-      <div className="section-kicker">What Skelpr returns</div>
       <div className="identity-layout">
         <div>
+          <div className="section-kicker">What Skelpr returns</div>
           <h2>Code you can trace to its source</h2>
           <p>Skelpr indexes your repository and returns evidence for code questions, reviews and edits. Your agent can use those excerpts without reading each file in full.</p>
           <div className="inline-callout"><span className="callout-line" /><span>Check each citation against the source.</span></div>

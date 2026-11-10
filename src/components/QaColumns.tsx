@@ -4,8 +4,8 @@ import type { BenchmarkQaMetric } from '../data/siteData'
 type PaneKey = 'without' | 'with'
 
 const panes: { key: PaneKey; label: string; value: (metric: BenchmarkQaMetric) => string }[] = [
-  { key: 'without', label: 'WITHOUT — native tools only', value: (metric) => metric.without },
-  { key: 'with', label: 'WITH — skelpr MCP available', value: (metric) => metric.withValue },
+  { key: 'without', label: 'Native tools only', value: (metric) => metric.without },
+  { key: 'with', label: 'With Skelpr MCP', value: (metric) => metric.withValue },
 ]
 
 /**

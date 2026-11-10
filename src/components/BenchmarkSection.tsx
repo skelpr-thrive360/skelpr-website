@@ -81,8 +81,13 @@ export function BenchmarkSection() {
 
   return (
     <section className="benchmark-section content-section" id="benchmark">
-      <div className="section-kicker">Benchmark evidence</div>
-      <div className="two-column-heading"><h2>Compare the case studies</h2><p>See how token use changed on Sock Shop and Django. Each study compares Skelpr MCP against its own native-tools baseline.</p></div>
+      <div className="two-column-heading">
+        <div>
+          <div className="section-kicker">Benchmark evidence</div>
+          <h2>Compare the case studies</h2>
+        </div>
+        <p>Each study compares an agent using native tools alone with the same agent using native tools and Skelpr MCP.</p>
+      </div>
       <div className="case-study-switcher" role="tablist" aria-label="Benchmark case study">
         {(['sock-shop', 'django'] as const).map((value, index) => (
           <button type="button" key={value} id={`study-tab-${value}`} role="tab" aria-selected={study === value} aria-controls={`study-panel-${value}`} tabIndex={study === value ? 0 : -1} onClick={() => selectStudy(value)} onKeyDown={(event) => {
@@ -91,13 +96,13 @@ export function BenchmarkSection() {
             const next = event.key === 'Home' ? 'sock-shop' : event.key === 'End' ? 'django' : value === 'sock-shop' ? 'django' : 'sock-shop'
             selectStudy(next)
             document.getElementById(`study-tab-${next}`)?.focus()
-          }}><span>0{index + 1} · {value === 'sock-shop' ? 'Sock Shop' : 'Django'}</span><small>{value === 'sock-shop' ? 'Gemini · Antigravity · 7 tasks' : 'GPT-6 Astra · Codex · 10 tasks'}</small></button>
+          }}><span>0{index + 1} · {value === 'sock-shop' ? 'Sock Shop' : 'Django'}</span><small>{value === 'sock-shop' ? 'Gemini 3.6 Flash · Antigravity · 7 tasks' : 'GPT-6 Astra · Codex · 10 tasks'}</small></button>
         ))}
       </div>
 
       <div id="study-panel-sock-shop" role="tabpanel" aria-labelledby="study-tab-sock-shop" hidden={study !== 'sock-shop'} tabIndex={0}>
-      <div className="two-column-heading"><h3>Sock Shop · September 2026</h3><p>Seven tasks with Antigravity: native tools alone, then native tools with Skelpr MCP. Native runs were recorded September 9–10; Skelpr runs on September 24. Figures below are retained historical reports with known reconciliation gaps.</p></div>
-      <div className="benchmark-meta"><span><strong>7 × 2</strong> tasks × arms</span><span><strong>Antigravity</strong> Gemini 3.6 Flash Medium</span><span><strong>Sock Shop</strong> microservices demo</span><span><strong>2026-09-24</strong> WITH re-run</span></div>
+      <div className="two-column-heading"><h3>Sock Shop · {sockShopTotals.tokenReduction} fewer tokens</h3><p>Seven tasks on the Sock Shop microservices demo, with native runs on September 9–10 and Skelpr runs on September 24. Savings use the historical report’s totals.</p></div>
+      <div className="benchmark-meta"><span><strong>7</strong> task pairs</span><span><strong>Antigravity</strong> Gemini 3.6 Flash · medium reasoning</span><span>Microservices demo</span><time dateTime="2026-09">September 2026</time></div>
 
       <div className="metric-grid"><Metric label="Reported total tokens" simple="Historical aggregate; not fully reproduced" without={formatCount(sockShopTotals.tokens[0])} withValue={formatCount(sockShopTotals.tokens[1])} change={`−${sockShopTotals.tokenReduction}`} withoutPct={100} withPct={Math.round(sockShopTotals.tokens[1] / sockShopTotals.tokens[0] * 100)} /><Metric label="Files opened" simple="Reported files inspected" without={String(sockShopTotals.filesOpened[0])} withValue={String(sockShopTotals.filesOpened[1])} change="−76.1%" withoutPct={100} withPct={Math.round(sockShopTotals.filesOpened[1] / sockShopTotals.filesOpened[0] * 100)} /><Metric label="Tool calls" simple="Reported invocations across seven tasks" without="136 native" withValue="21 skelpr + 31 native" change="−61.8%" withoutPct={100} withPct={Math.round((52 / 136) * 100)} /><Metric label="Rubric score" simple="Reported checklist points" without="619" withValue="621" change="+2 / 700 points" /></div>
 
@@ -111,9 +116,9 @@ export function BenchmarkSection() {
       />
       <details className="benchmark-table-wrap">
         <summary className="benchmark-details-summary">View the reported values and scores</summary>
-        <div className="table-heading"><div><span className="eyebrow">SEVEN HISTORICAL TASKS</span><h3>Prompts, scores, and answers</h3></div><span className="table-key"><i className="without-key" /> WITHOUT <i className="with-key" /> WITH · <em>select a row to read the answers</em><span className="scroll-cue">scroll for all columns →</span></span></div>
+        <div className="table-heading"><div><span className="eyebrow">SEVEN HISTORICAL TASKS</span><h3>Select a task to compare the answers</h3></div><span className="table-key">Native tools → With Skelpr MCP<span className="scroll-cue">Scroll for all columns →</span></span></div>
         <div className="benchmark-table" role="table" aria-label="Reported Sock Shop task results" tabIndex={0}>
-          <div className="table-row table-header" role="row"><span role="columnheader">Task</span><span role="columnheader">Category</span><span role="columnheader">Accuracy</span><span role="columnheader">Tokens W/O → W</span><span role="columnheader" /></div>
+          <div className="table-row table-header" role="row"><span role="columnheader">Task</span><span role="columnheader">Category</span><span role="columnheader">Rubric score</span><span role="columnheader">Reported tokens</span><span role="columnheader" /></div>
           {benchmarkTasks.map(([task, category, without, withValue, tokens]) => {
             const entry = benchmarkQa.find((qaEntry) => qaEntry.task === task)
             const verdict = entry?.verdict
@@ -133,15 +138,15 @@ export function BenchmarkSection() {
       <div className="benchmark-qa" ref={qaRef} id="benchmark-qa" tabIndex={-1} role="region" aria-label="Sock Shop answer comparison">
         <div className="qa-detail">
           <div className="qa-task-line"><span className="eyebrow">TASK {benchmarkTasks.findIndex(([task]) => task === qa.task) + 1} OF {benchmarkTasks.length}</span><h3>{qa.task}</h3></div>
-          <div className="qa-question"><span>PROMPT — IDENTICAL FOR BOTH ARMS</span><p>{qa.question}</p></div>
+          <div className="qa-question"><span>SAME PROMPT IN BOTH RUNS</span><p>{qa.question}</p></div>
           <div className={`qa-verdict ${qa.verdict}`}>
             <strong>{(() => { const { Icon } = verdictMeta[qa.verdict]; return <Icon size={14} /> })()} {verdictMeta[qa.verdict].label}</strong>
-            <span>{qa.delta} accuracy, WITHOUT → WITH</span>
+            <span>Rubric score {qa.delta}</span>
             <p>{qa.why}</p>
           </div>
           <div className="qa-answers-head">
             <strong>The answers, verbatim</strong>
-            <button className="qa-expand" onClick={() => setAnswersExpanded(!answersExpanded)}>{answersExpanded ? <><Shrink size={13} /> Collapse</> : <><Expand size={13} /> Read full answers</>}</button>
+            <button type="button" className="qa-expand" aria-expanded={answersExpanded} onClick={() => setAnswersExpanded(!answersExpanded)}>{answersExpanded ? <><Shrink size={13} /> Collapse</> : <><Expand size={13} /> Read full answers</>}</button>
           </div>
           <Suspense fallback={<QaColumns metrics={qa.metrics} expanded={answersExpanded} />}>
             {answersReady ? <VerbatimAnswers task={qa.task} expanded={answersExpanded} metrics={qa.metrics} /> : <QaColumns metrics={qa.metrics} expanded={answersExpanded} />}
@@ -168,7 +173,7 @@ export function BenchmarkSection() {
       <div className="benchmark-exit">
         <div>
           <strong>Measure your own tasks.</strong>
-          <p>Results depend on the task, model, cache state and indexed checkout. Measure your own workflow.</p>
+          <p>Results depend on the task, model, cache state and indexed checkout.</p>
         </div>
         <a className="button primary" href="#install">Run it on your repo <ArrowRight size={15} /></a>
       </div>

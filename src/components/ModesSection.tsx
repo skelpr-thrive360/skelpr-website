@@ -8,8 +8,13 @@ export function ModesSection({ open, onToggle }: { open: boolean; onToggle: () =
   const current = modeOptions.find((option) => option.value === mode) ?? modeOptions[0]
   return (
     <section className="modes-section content-section" id="modes">
-      <div className="section-kicker">Two integration modes</div>
-      <div className="two-column-heading"><h2>Connect your agent or use the CLI</h2><p>Both modes use the indexed repository. MCP supplies evidence to your coding agent. The CLI uses a generation model you configure.</p></div>
+      <div className="two-column-heading">
+        <div>
+          <div className="section-kicker">Two integration modes</div>
+          <h2>Connect your agent or use the CLI</h2>
+        </div>
+        <p>Both modes use the indexed repository. MCP supplies evidence to your coding agent. The CLI uses a generation model you configure.</p>
+      </div>
       <div className="mode-switcher" role="tablist" aria-label="skelpr integration modes">
         {modeOptions.map((option, index) => (
           <button key={option.value} id={`mode-tab-${option.value}`} className={mode === option.value ? 'active' : ''} onClick={() => setMode(option.value)} role="tab" aria-selected={mode === option.value} aria-controls="mode-panel" tabIndex={mode === option.value ? 0 : -1} onKeyDown={(event) => {

@@ -25,13 +25,13 @@ export function DjangoCaseStudy({ active }: { active: boolean }) {
     <div className="django-case-study">
       <div className="two-column-heading">
         <h3>Django · {reduction(djangoTotals.tokens)}% fewer tokens</h3>
-        <p>From a microservices demo to the Django framework: ten lookups, execution flows, architecture questions and code fixes. Codex ran GPT-6 Astra with high reasoning, with and without Skelpr MCP. Native tools remained available in both arms.</p>
+        <p>Ten tasks on the Django framework, including code lookups, execution flows, architecture questions and fixes.</p>
       </div>
       <div className="benchmark-meta">
-        <span><strong>10</strong> matched task pairs</span>
-        <span><strong>Codex CLI</strong> GPT-6 Astra · high reasoning</span>
-        <span><strong>Django</strong> public framework repository</span>
-        <span><strong>2026-11-09</strong> case study</span>
+        <span><strong>10</strong> task pairs</span>
+        <span><strong>Codex</strong> GPT-6 Astra · high reasoning</span>
+        <span>Web framework</span>
+        <time dateTime="2026-11">November 2026</time>
       </div>
       <div className="metric-grid">
         <Metric label="Total tokens" simple="Input + output, including cached input" without={formatCount(djangoTotals.tokens[0])} withValue={formatCount(djangoTotals.tokens[1])} change={`−${reduction(djangoTotals.tokens)}%`} withoutPct={100} withPct={djangoTotals.tokens[1] / djangoTotals.tokens[0] * 100} />
@@ -41,8 +41,8 @@ export function DjangoCaseStudy({ active }: { active: boolean }) {
       </div>
       <div className="caveat">
         <div>
-          <strong>A case study, not a performance guarantee.</strong>
-          <p>One retained comparison per question across successive Skelpr builds. These questions informed retrieval tuning. This is not an unseen-task evaluation of one frozen release.</p>
+          <strong>Comparisons span multiple Skelpr builds.</strong>
+          <p>Each question has one retained comparison and helped guide retrieval tuning. The results describe these tasks and builds.</p>
         </div>
       </div>
       <TaskTokenChart
@@ -56,12 +56,12 @@ export function DjangoCaseStudy({ active }: { active: boolean }) {
         <summary className="benchmark-details-summary">View exact values, scores and wall time</summary>
         <div className="table-heading">
           <div><span className="eyebrow">TEN TASKS</span><h3>Select a task to compare the answers</h3></div>
-          <span className="table-key">Native Codex → Codex + Skelpr<span className="scroll-cue">Scroll for all columns →</span></span>
+          <span className="table-key">Native tools → With Skelpr MCP<span className="scroll-cue">Scroll for all columns →</span></span>
         </div>
         <div className="benchmark-table" tabIndex={0} role="region" aria-label="Django task comparison, horizontally scrollable">
           <table className="django-results">
             <caption>Matched Django comparisons. Wall time includes startup and shutdown.</caption>
-            <thead><tr><th scope="col">Task</th><th scope="col">Total tokens</th><th scope="col">Token reduction</th><th scope="col">Rubric points</th><th scope="col">Wall time (s)</th></tr></thead>
+            <thead><tr><th scope="col">Task</th><th scope="col">Total tokens</th><th scope="col">Token reduction</th><th scope="col">Rubric score</th><th scope="col">Wall time (s)</th></tr></thead>
             <tbody>
               {djangoTasks.map((task) => (
                 <tr key={task.id} className={selectedTask === task.id ? 'selected' : undefined}>

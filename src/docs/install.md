@@ -66,7 +66,8 @@ dimensions match. Configure the intended provider before indexing.
 
 ## Get a token
 
-Request an activation token at [skelpr.com](/#waitlist). Keep it private.
+Open the [access section](/#waitlist) and choose **Request a token** to email Skelpr. The
+waitlist is for release updates. Keep your activation token private.
 
 ## Install
 
@@ -95,9 +96,6 @@ support varies by language and syntax.
 
 A vendor-supplied wheel can be installed directly. Offline installation also needs
 local copies of its dependencies for your Python version and operating system.
-
-`x.x.x` is whatever your install reports: this page does not pin a release number, which
-changes with every publish.
 
 ```bash
 python -m pip install --no-index --find-links ./wheelhouse skelpr
@@ -135,7 +133,9 @@ Other connections depend on configuration.
 | Connection | Data that may leave the machine |
 |---|---|
 | Hosted embedding provider | Indexed source text and search queries |
-| Standalone generation provider | Prompts, selected source, diffs and task context |
+| Hosted generation provider | Prompts, selected source, diffs and task context |
+| Remote index storage | File paths, symbols, source excerpts and vectors |
+| Repository integration | Review findings, comments and source locations |
 | Optional Langfuse tracing | Inputs, outputs, source, citations and operational metadata |
 | Hosted embedding credential service | Credential request and usage counters |
 | Release check | Request for the published package version |
@@ -287,14 +287,14 @@ one. A lease copied between machines does not authorize the destination.
 
 The [benchmark section](/#benchmark) includes two separate case studies:
 
-- **Sock Shop:** the historical report claimed 59% fewer agent tokens across seven
+- **Sock Shop (September 2026):** the historical report shows 59.3% fewer tokens across seven
   tasks. Some retained artifacts do not reproduce its aggregate or architecture
   row. It remains published with those limitations.
-- **Django:** ten retained Codex comparisons from 2026-11-09:
+- **Django (November 2026):** ten retained Codex comparisons:
 
 | Django metric | Native tools | With Skelpr MCP |
 |---|---:|---:|
-| Total tokens, including cached input | 437,997 | 274,749 (37.27% fewer) |
+| Total tokens (all input, including cached input, plus output) | 437,997 | 274,749 (37.27% fewer) |
 | Native search/read calls, excluding tests | 28 | 9 |
 | Combined rubric score | 89/96 | 91/96 |
 | Summed wall time | 534.40 s | 521.25 s |

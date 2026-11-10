@@ -57,7 +57,7 @@ function App() {
                 <span className="hero-study-name">Sock Shop</span>
                 <span className="hero-study-metric"><strong>{sockShopTotals.tokenReduction}</strong> fewer reported tokens</span>
                 <span className="hero-study-detail">{sockShopTotals.filesOpened.join(' → ')} files opened</span>
-                <span className="hero-study-detail">Gemini · Antigravity · 7 tasks</span>
+                <span className="hero-study-detail">Gemini 3.6 Flash · Antigravity · 7 tasks</span>
               </li>
               <li>
                 <span className="hero-study-name">Django</span>

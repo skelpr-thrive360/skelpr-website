@@ -391,10 +391,7 @@ pre code {
 }
 
 .section-kicker {
-  display: flex;
-  gap: var(--space-4);
-  align-items: center;
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-2);
   color: var(--ink-3);
   letter-spacing: 0.02em;
   text-transform: none;
@@ -1034,26 +1031,20 @@ html[data-theme="dark"] .brand-mark {
   white-space: nowrap;
 }
 
-/* Background for the access section. */
-.act-wash {
-  isolation: isolate;
-}
-
-.act-wash::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: var(--act-color, var(--surface-sunken));
-  pointer-events: none;
-}
-
 .two-column-heading,
 .workflow-heading {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 0.72fr);
   gap: min(8vw, 96px);
   align-items: end;
+}
+
+.content-section > :is(.two-column-heading, .workflow-heading) {
+  align-items: start;
+}
+
+:is(.real-world-grid, .install-layout, .waitlist-panel) > :first-child {
+  align-self: start;
 }
 
 .two-column-heading p,
@@ -1219,7 +1210,6 @@ html[data-theme="dark"] .brand-mark {
   display: grid;
   grid-template-columns: minmax(0, 0.95fr) minmax(0, 1fr);
   gap: min(10vw, 128px);
-  margin-top: var(--space-7);
 }
 
 .identity-layout h2 {
@@ -3214,11 +3204,10 @@ html[data-theme="dark"] .brand-mark {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: min(6vw, 72px);
   align-items: center;
-  margin-top: var(--space-6);
 }
 
 .install-copy h2 {
-  margin: var(--space-5) 0 var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .install-copy p {
@@ -3634,11 +3623,10 @@ html[data-theme="dark"] .brand-mark {
   border: 1px solid var(--rule-strong);
   border-top: 2px solid var(--accent);
   border-radius: var(--radius-panel);
-  background: var(--surface-raised);
 }
 
 .waitlist-panel h2 {
-  margin: var(--space-4) 0 var(--space-4);
+  margin-bottom: var(--space-4);
   font-size: var(--text-xl);
 }
 
@@ -4175,7 +4163,6 @@ html[data-theme="dark"] .brand-mark {
   .identity-layout {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-6);
-    margin-top: var(--space-6);
   }
   .mode-switcher {
     margin-top: var(--space-6);

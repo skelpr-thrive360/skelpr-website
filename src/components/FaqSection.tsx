@@ -16,11 +16,11 @@ const faqs = [
   },
   {
     question: "What do I need to run it?",
-    answer: "Use Python 3.10 or newer and an activated license. Standard setup uses Docker for PostgreSQL, Qdrant and isolated validation. Configure an embedding endpoint for semantic search. Standalone ask, chat, review and fix also need a generation provider. External database services are supported; host validation requires explicit opt-in.",
+    answer: "Use Python 3.10 or newer, Git and an activation token. Standard setup uses Docker for PostgreSQL, Qdrant and isolated validation. Configure an embedding endpoint for semantic search. Standalone ask, chat, review and fix also need a generation provider. External database services are supported. Host validation requires explicit opt-in.",
   },
   {
     question: "Does my code leave my machine?",
-    answer: "That depends on your configuration. Hosted embeddings receive indexed text and queries. Standalone generation receives prompts and selected source context. Optional Langfuse tracing can include inputs, outputs and source. Activation sends the token and a machine-id hash, and managed leases check in during use. Your coding agent has its own data policy.",
+    answer: "That depends on your configuration. Hosted embeddings receive indexed text and queries. Hosted generation can receive prompts and selected source context. Remote storage and optional Langfuse tracing can also receive source. Activation sends licensing data, and managed leases check in during use. Your coding agent has its own data policy.",
   },
   {
     question: "How do I get access?",

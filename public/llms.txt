@@ -6,27 +6,28 @@
 
 ## Setup and data handling
 
-- Python 3.10+. Standard setup uses Docker for PostgreSQL, Qdrant and isolated
+- Python 3.10+ and Git. Standard setup uses Docker for PostgreSQL, Qdrant and isolated
   validation. External database services are supported.
 - Configure an embedding endpoint for semantic search. Standalone generation
   needs a separate model provider. From 0.3.6, plain pip install skelpr includes
   CLI and MCP support.
 - Running requires activation. Each activated machine uses one license seat;
   managed leases check in during use.
-- Hosted embeddings receive indexed text and queries. Standalone generation
-  receives prompts and selected source context. Optional Langfuse tracing can
-  include source and outputs. The coding agent has its own data policy.
+- Hosted embeddings receive indexed text and queries. Hosted generation can
+  receive prompts and selected source context. Remote storage and optional
+  Langfuse tracing can receive source. The coding agent has its own data policy.
+- Request an activation token by email. The website waitlist is for release updates.
 - Context limits can exclude relevant evidence. Check reported gaps and request
   more context when needed. Empty search results do not prove absence.
 
 ## Case studies
 
-- Sock Shop: the historical report claimed 59% fewer tokens and 76% fewer file
-  reads. Retained artifacts do not fully reconcile with the published aggregate.
-- Django, ten Codex tasks: total tokens 437,997 to 274,749 (37.27% fewer), native
+- Sock Shop (September 2026): the historical report shows 59.3% fewer tokens and
+  113 to 27 files opened. Retained artifacts do not fully reproduce the published aggregate.
+- Django (November 2026), ten Codex tasks: total tokens 437,997 to 274,749 (37.27% fewer), native
   search/read calls 28 to 9, combined rubric score 89/96 to 91/96. Total wall time
   was 534.40 to 521.25 seconds; four tasks were slower with Skelpr.
-- Django totals include cached input and output tokens. These are retained
+- Django totals count all input, including cached input, plus output. These are retained
   matched comparisons across successive builds; the questions informed tuning.
   Q8 and Q10 used seeded defects. Neither study establishes general performance
   or results for one frozen release.
@@ -37,4 +38,5 @@
 - [Install and activate](https://www.skelpr.com/docs): prerequisites, providers,
   MCP setup, CLI commands, troubleshooting and uninstall.
 - [Home](https://www.skelpr.com/): product, integration modes and requirements.
+- [Privacy notice](https://www.skelpr.com/privacy/): waitlist, site analytics and data requests.
 - Contact: theskelpr@gmail.com

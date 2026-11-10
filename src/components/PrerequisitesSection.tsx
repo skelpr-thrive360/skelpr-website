@@ -47,9 +47,11 @@ const prerequisites: Prerequisite[] = [
 export function PrerequisitesSection() {
   return (
     <section className="prereq-section content-section" id="prerequisites">
-      <div className="section-kicker">Before you start</div>
       <div className="two-column-heading">
-        <h2>What you need to run Skelpr</h2>
+        <div>
+          <div className="section-kicker">Before you start</div>
+          <h2>What you need to run Skelpr</h2>
+        </div>
         <p>Use Python 3.10+, Git and an activated license. Standard setup also needs Docker and an embedding endpoint. Configure generation only for standalone CLI workflows.</p>
       </div>
       <div className="prereq-list">

@@ -11,7 +11,7 @@ Use Node 24, matching CI.
 
 ```bash
 npm ci
-npm run dev        # home page and /docs/
+npm run dev        # home page, /docs/ and /privacy/
 npm run build      # typecheck, client build, SSR build, prerender
 npm run preview    # serve dist/
 ```
@@ -20,8 +20,9 @@ The site uses React, TypeScript and Vite, with plain CSS. Runtime dependencies
 include Lucide icons, React Markdown with remark-gfm, and bundled fonts.
 Scrolling uses the browser. `package.json` lists all dependencies.
 
-`dist/` is static output. Both pages contain rendered text before JavaScript runs;
-the browser hydrates that markup. Keep browser APIs out of component render paths.
+`dist/` is static output. The homepage and install guide are prerendered, then
+hydrated in the browser. The privacy notice is plain HTML. Keep browser APIs out
+of component render paths.
 For Lighthouse, audit the production preview after building. Use the same
 viewport and throttling settings for comparisons.
 
@@ -38,9 +39,10 @@ viewport and throttling settings for comparisons.
 | Docs layout and navigation | `src/docs/DocsApp.tsx`, `src/docs/docs.css` |
 | Layout, color and typography | `src/styles.css` |
 | Metadata and structured data | `index.html`, `docs/index.html` |
+| Website privacy notice | `privacy/index.html` |
 | Indexing hints | `public/robots.txt`, `public/sitemap.xml`, `public/llms.txt` |
 | Static rendering | `src/entry-server.tsx`, `scripts/prerender.mjs` |
-| Access request form | `src/lib/waitlist.ts`, `waitlist-apps-script.gs` |
+| Release-updates waitlist | `src/lib/waitlist.ts`, `waitlist-apps-script.gs` |
 
 ## Checks
 
@@ -68,7 +70,7 @@ when renaming them. Shell comments in fenced code are excluded from the contents
 When changing product copy, check these surfaces together:
 
 - Visible sections and FAQ answers.
-- Title, description, social tags and JSON-LD in both HTML entries.
+- Titles, descriptions, social tags and JSON-LD where applicable.
 - `public/llms.txt` and documentation.
 
 `check:seo` checks prerendering, title/description lengths, canonical URLs, social
@@ -78,7 +80,7 @@ assets and FAQ text against structured data. `check:links` checks in-page links.
 
 The configured origin is `https://www.skelpr.com`. If it changes, update:
 
-- Canonical and social URLs in `index.html` and `docs/index.html`.
+- Canonical URLs in `index.html`, `docs/index.html` and `privacy/index.html`, plus the social URLs.
 - `public/sitemap.xml`, the sitemap URL in `public/robots.txt`, and `public/llms.txt`.
 - `ORIGIN` in `scripts/check-seo.mjs`.
 
@@ -127,7 +129,7 @@ remain available in a disclosure. Answers can be expanded without changing the
 retained text. The six-step workflow explains the agent/MCP contract without engine
 algorithms.
 
-| Metric | Native | Skelpr MCP |
+| Metric | Native tools | With Skelpr MCP |
 |---|---:|---:|
 | Total tokens | 437,997 | 274,749 (37.27% fewer) |
 | Native search/read calls | 28 | 9 |
@@ -135,7 +137,8 @@ algorithms.
 | Model requests | 41 | 31 |
 | Summed wall time | 534.40 s | 521.25 s |
 
-Total tokens include cached input and output. Native read counts exclude tests.
+Total tokens count all input, including cached input, plus output. Native search
+and read counts exclude tests.
 Six tasks finished faster; four were slower. This is one retained comparison per
 question across successive builds; questions informed tuning, two edit tasks used
 seeded defects, and provider caching was uncontrolled. It is a case study, not an
@@ -176,12 +179,15 @@ python scripts/build-brand-assets.py
 The social-card template owns its text. If product claims change, inspect the card
 as well as HTML metadata; the generator replaces the artwork, not the typography.
 
-## Access request backend
+## Release-updates waitlist
+
+The waitlist is for release updates. Users request activation tokens separately
+by email. The form links to the [privacy notice](./privacy/index.html).
 
 `VITE_WAITLIST_ENDPOINT` is read at build time; see [`.env.example`](./.env.example).
 Set it in the hosting provider's build environment as well as local development,
-then rebuild. Without it, the development stub sends and stores nothing; it cannot
-register an access request. Configure the real endpoint before publishing the form.
+then rebuild. Without an endpoint, the form reports that signups are unavailable
+and sends or stores no address.
 
 ### Google Apps Script setup
 
@@ -192,7 +198,7 @@ register an access request. Configure the real endpoint before publishing the fo
 4. Copy the `/exec` URL to `VITE_WAITLIST_ENDPOINT` and rebuild the site.
 5. Open the endpoint signed out. Confirm a JSON response with `ok: true` and
    `schema: "progress-v4"`, without a sign-in redirect.
-6. Submit a test request and confirm its row in the Sheet. Repeat it: there should
+6. Submit a test signup and confirm its row in the Sheet. Repeat it: there should
    be one row and the same success response. Confirm withdrawal requests are refused.
 
 For updates, use **Deploy → Manage deployments → Edit → New version → Deploy**

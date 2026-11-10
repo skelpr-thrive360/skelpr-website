@@ -43,9 +43,11 @@ export function WorkflowMap() {
 
   return (
     <section className="content-section" id="architecture">
-      <div className="section-kicker">Interactive diagram</div>
       <div className="two-column-heading">
-        <h2>Explore the workflow map</h2>
+        <div>
+          <div className="section-kicker">Interactive diagram</div>
+          <h2>Explore the workflow map</h2>
+        </div>
         <p>Drag the cards to rearrange the map. Select a step to see what happens there.</p>
       </div>
       <div className="architecture-layout">

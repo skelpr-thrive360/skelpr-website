@@ -145,7 +145,7 @@
               "name": "What do I need to run it?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Use Python 3.10 or newer and an activated license. Standard setup uses Docker for PostgreSQL, Qdrant and isolated validation. Configure an embedding endpoint for semantic search. Standalone ask, chat, review and fix also need a generation provider. External database services are supported; host validation requires explicit opt-in."
+                "text": "Use Python 3.10 or newer, Git and an activation token. Standard setup uses Docker for PostgreSQL, Qdrant and isolated validation. Configure an embedding endpoint for semantic search. Standalone ask, chat, review and fix also need a generation provider. External database services are supported. Host validation requires explicit opt-in."
               }
             },
             {
@@ -153,7 +153,7 @@
               "name": "Does my code leave my machine?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "That depends on your configuration. Hosted embeddings receive indexed text and queries. Standalone generation receives prompts and selected source context. Optional Langfuse tracing can include inputs, outputs and source. Activation sends the token and a machine-id hash, and managed leases check in during use. Your coding agent has its own data policy."
+                "text": "That depends on your configuration. Hosted embeddings receive indexed text and queries. Hosted generation can receive prompts and selected source context. Remote storage and optional Langfuse tracing can also receive source. Activation sends licensing data, and managed leases check in during use. Your coding agent has its own data policy."
               }
             },
             {
