@@ -70,29 +70,16 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       waitlistEndpointGuard(env.VITE_WAITLIST_ENDPOINT),
-      pageRedirects({ '/docs': '/docs/' }),
+      pageRedirects({ '/docs': '/docs/', '/privacy': '/privacy/' }),
     ],
-    // Not an SPA: two real pages live at two real paths, and neither is the other's
-    // fallback. Under the default 'spa' behaviour an unknown path was answered with
-    // /index.html, so the marketing homepage stood in for anything that did not
-    // resolve — a 404 wearing a 200. 'mpa' turns that off, so what does not exist
-    // says so.
+    // Serve each document at its own path and return 404 for unknown paths.
     appType: 'mpa',
     build: {
       rollupOptions: {
-        // Two pages, two entries. The marketing page is one document that scrolls
-        // through every section; /docs is a second, standalone page with its own
-        // URL, its own title and meta, and no scroll choreography. Vite's default
-        // single-entry build would emit only index.html, so the docs page has to
-        // be named here or it simply would not be built.
-        //
-        // Paths are relative to the project root rather than resolved with
-        // `node:path`, because the config is typechecked by tsconfig.node.json,
-        // which carries no Node types — and one more devDependency to spell the
-        // root is a poor trade for two literals.
         input: {
           main: 'index.html',
           docs: 'docs/index.html',
+          privacy: 'privacy/index.html',
         },
       },
     },

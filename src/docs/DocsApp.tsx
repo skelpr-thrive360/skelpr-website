@@ -310,6 +310,7 @@ export function DocsApp() {
             <span>skelpr</span>
           </a>
           <p>Setup, MCP connections and troubleshooting.</p>
+          <a href="/privacy/">Privacy</a>
           <span className="docs-footer-note">MCP and CLI · licensed per machine</span>
         </div>
       </footer>

@@ -127,14 +127,19 @@ export function WaitlistForm() {
   }
 
   return (
-    <form className="waitlist-form" onSubmit={handleSubmit} noValidate>
-      <div className="waitlist-input-wrap">
-        <label htmlFor="waitlist-email">Email address</label>
-        <input id="waitlist-email" type="email" value={email} onChange={(event) => { setEmail(event.target.value); setError('') }} placeholder="you@company.com" aria-invalid={Boolean(error)} aria-describedby={error ? 'waitlist-email-error' : undefined} />
-        {error && <span className="waitlist-error" id="waitlist-email-error">{error}</span>}
-      </div>
-      <button className="button waitlist-button" type="submit" disabled={pending}>{pending ? 'Joining…' : 'Join the waitlist'} <ArrowRight size={14} /></button>
-      <input className="waitlist-hp" type="text" name="company_website" value={trap} onChange={(event) => setTrap(event.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" />
-    </form>
+    <div>
+      <p className="waitlist-privacy" id="waitlist-privacy">
+        We’ll use your email for release updates. <a href="/privacy/">Privacy notice</a>
+      </p>
+      <form className="waitlist-form" onSubmit={handleSubmit} noValidate>
+        <div className="waitlist-input-wrap">
+          <label htmlFor="waitlist-email">Email address</label>
+          <input id="waitlist-email" type="email" value={email} onChange={(event) => { setEmail(event.target.value); setError('') }} placeholder="you@company.com" aria-invalid={Boolean(error)} aria-describedby={error ? 'waitlist-privacy waitlist-email-error' : 'waitlist-privacy'} />
+          {error && <span className="waitlist-error" id="waitlist-email-error">{error}</span>}
+        </div>
+        <button className="button waitlist-button" type="submit" disabled={pending}>{pending ? 'Joining…' : 'Join the waitlist'} <ArrowRight size={14} /></button>
+        <input className="waitlist-hp" type="text" name="company_website" value={trap} onChange={(event) => setTrap(event.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" />
+      </form>
+    </div>
   )
 }

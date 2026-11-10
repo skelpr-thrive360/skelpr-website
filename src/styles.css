@@ -3657,7 +3657,16 @@ html[data-theme="dark"] .brand-mark {
   display: flex;
   gap: var(--space-3);
   align-items: end;
+  margin-top: var(--space-3);
+}
+
+.waitlist-privacy {
   margin-top: var(--space-6);
+  font-size: var(--text-sm);
+}
+
+.waitlist-privacy a {
+  text-decoration: underline;
 }
 
 .waitlist-input-wrap {

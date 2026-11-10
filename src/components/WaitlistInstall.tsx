@@ -59,6 +59,6 @@ export function InstallSection() {
 
 export function Footer() {
   return (
-    <footer className="site-footer"><div className="footer-brand"><a className="brand" href="#top"><BrandMark /><span>skelpr</span></a><p>Budgeted repository evidence for MCP and CLI.</p></div><nav className="footer-nav" aria-label="Footer"><a href="#workflow">How it works</a><a href="#modes">Integration modes</a><a href="#benchmark">Benchmark</a><a href="#prerequisites">Requirements</a><a href="#install">Get started</a><a href="/docs#troubleshooting">Support</a><a href="/docs#check-the-license">License</a><a href="mailto:theskelpr@gmail.com">Contact</a></nav><div className="footer-baseline"><span>Proprietary · licensed per machine · local-first</span><span>© 2026 skelpr</span></div></footer>
+    <footer className="site-footer"><div className="footer-brand"><a className="brand" href="#top"><BrandMark /><span>skelpr</span></a><p>Budgeted repository evidence for MCP and CLI.</p></div><nav className="footer-nav" aria-label="Footer"><a href="#workflow">How it works</a><a href="#modes">Integration modes</a><a href="#benchmark">Benchmark</a><a href="#prerequisites">Requirements</a><a href="#install">Get started</a><a href="/docs#troubleshooting">Support</a><a href="/docs#check-the-license">Licensing</a><a href="/privacy/">Privacy</a><a href="mailto:theskelpr@gmail.com">Contact</a></nav><div className="footer-baseline"><span>Proprietary · licensed per machine · local-first</span><span>© 2026 skelpr</span></div></footer>
   )
 }
