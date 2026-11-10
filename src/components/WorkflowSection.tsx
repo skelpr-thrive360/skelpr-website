@@ -1,47 +1,28 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowRight, Circle, Pause, Play, RotateCcw } from 'lucide-react'
 import { workflowSteps } from '../data/siteData'
-import { DetailButton, SectionDetail } from './Shared'
 
-export function WorkflowSection({ open, onToggle }: { open: boolean; onToggle: () => void }) {
-  const [activeWorkflow, setActiveWorkflow] = useState(0)
-  // Visitor-driven, like the hero walkthrough: the steps only move when the
-  // visitor plays them. Autoplaying under someone who is reading the
-  // explanation is the one thing this page should not do.
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [inView, setInView] = useState(false)
-  const sectionRef = useRef<HTMLElement>(null)
-
-  // Autoplay only while the walkthrough is actually on screen.
-  useEffect(() => {
-    const node = sectionRef.current
-    if (!node) return
-    const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.25 })
-    observer.observe(node)
-    return () => observer.disconnect()
-  }, [])
-
-  useEffect(() => {
-    if (!isPlaying || !inView) return
-    const timer = window.setInterval(() => {
-      setActiveWorkflow((current) => (current + 1) % workflowSteps.length)
-    }, 3400)
-    return () => window.clearInterval(timer)
-  }, [isPlaying, inView])
-
-  const currentWorkflow = workflowSteps[activeWorkflow]
-  // Unitless fraction: the bar scales instead of animating its width.
-  const workflowProgress = useMemo(() => String((activeWorkflow + 1) / workflowSteps.length), [activeWorkflow])
-
+/**
+ * The MCP Agent pipeline, as a static strip.
+ *
+ * Deliberately not interactive any more. This is the least load-bearing section on
+ * the page, and the autoplaying walkthrough it used to be — an IntersectionObserver,
+ * a timer, a tablist, a terminal trace and a detail toggle — cost more to keep
+ * honest than it earned. The step labels still come from the shared `workflowSteps`
+ * data, so the pipeline tracks the code; only the presentation was cut back.
+ *
+ * `id="workflow"` has to stay: the hero's primary call to action and the primary
+ * navigation both point at it.
+ */
+export function WorkflowSection() {
   return (
-    <section className="workflow-section content-section" id="workflow" ref={sectionRef}>
-      <div className="section-kicker">MCP Agent deep dive</div>
+    <section className="workflow-section content-section" id="workflow">
+      <div className="section-kicker">How it works</div>
       <div className="workflow-heading">
         <div><h2>A live path from <em>question</em><br />to cited context.</h2></div>
-        <div>
-          <p>The MCP Agent integration is not a search box. It is a boundary between an agent’s reasoning and a repository’s evidence.</p>
-          <div className="ownership-legend"><span><i className="legend-agent" /> External agent owns</span><span><i className="legend-skelpr" /> skelpr owns</span></div>
-        </div>
+        <p>The MCP Agent integration is a boundary between an agent’s reasoning and a repository’s evidence. Your agent asks; skelpr retrieves, ranks and cites, and hands back a small package with <code>file:line</code> locations. It never does the reasoning.</p>
+      </div>
+      <div className="tool-row">
+        <span>Pipeline</span>
+        {workflowSteps.map((step) => <code key={step.id}>{step.label}</code>)}
       </div>
       <div className="workflow-shell">
         <div className="workflow-progress" style={{ '--progress': workflowProgress } as React.CSSProperties} />

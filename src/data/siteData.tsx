@@ -36,8 +36,8 @@ export const workflowSteps: WorkflowStep[] = [
     label: 'Retrieve',
     owner: 'skelpr',
     simple: 'Several kinds of evidence are combined: exact matches, symbols, relationships, and meaning.',
-    technical: 'HybridRetriever runs lexical, keyword, filename, symbol, graph, and vector retrieval in a deterministic-first order.',
-    code: 'lexical → symbol → graph → vector',
+    technical: 'HybridRetriever fuses BM25, symbol, file and available vector candidates with reciprocal rank fusion. Indexed relationships guide bounded evidence selection.',
+    code: 'BM25 + symbols + vectors → RRF',
     accent: 'blue',
   },
   {
@@ -45,7 +45,7 @@ export const workflowSteps: WorkflowStep[] = [
     label: 'Rank + cite',
     owner: 'skelpr',
     simple: 'The strongest snippets are ranked, de-duplicated, and labeled with exact file locations.',
-    technical: 'Fusion Ranker applies source priority, overlap merging, file-level deduplication, and source hydration.',
+    technical: 'RRF preserves independent source ranks. Selection retains distinct relevant functions in the same file and fits cited source evidence to a bounded budget.',
     code: '[LEXICAL] deploy/kubernetes/...:1-23',
     accent: 'green',
   },
@@ -62,8 +62,8 @@ export const workflowSteps: WorkflowStep[] = [
     id: 'verify',
     label: 'Verify',
     owner: 'skelpr',
-    simple: 'When code changes, validation can run in an isolated sandbox or local fallback.',
-    technical: 'skelpr_validate runs configured test, lint, and typecheck commands through ValidationRunner.',
+    simple: 'Validation runs configured commands in Docker, or on the host when local fallback is explicitly enabled.',
+    technical: 'skelpr_validate runs configured test, lint, and typecheck commands through DockerRunner. Host execution requires sandbox.allow_local_fallback.',
     code: 'skelpr_validate(["test", "lint"])',
     accent: 'red',
   },
@@ -235,7 +235,7 @@ export const heroIcons = { agent: Sparkles, mcp: Network, retrieval: Search, res
 export const heroStages: { id: keyof typeof heroIcons; label: string; detail: string; code: string; className: string }[] = [
   { id: 'agent', label: 'You ask', detail: 'A question about the codebase', code: '“does a recommendations service exist?”', className: 'node-agent' },
   { id: 'mcp', label: 'skelpr MCP', detail: 'The agent calls a focused tool instead of reading files', code: 'skelpr_search(query, top_k=5)', className: 'node-mcp' },
-  { id: 'retrieval', label: 'Hybrid retrieval', detail: 'Lexical, symbol, graph, and vector evidence fused', code: 'lexical → symbol → graph → vector', className: 'node-retrieval' },
+  { id: 'retrieval', label: 'Hybrid retrieval', detail: 'BM25, symbol and vector candidates fused', code: 'BM25 + symbols + vectors → RRF', className: 'node-retrieval' },
   { id: 'result', label: 'Cited answer', detail: 'Evidence with exact file:line locations', code: '[SYMBOL] skelpr/engine.py:354-379', className: 'node-result' },
 ]
 
@@ -246,9 +246,9 @@ export const architectureNodes = [
   { id: 'chunk', label: 'Symbol chunker', meta: 'line fallback', group: 'Ingestion' },
   { id: 'store', label: 'PostgreSQL', meta: 'metadata + RLS', group: 'Data stores' },
   { id: 'vector', label: 'Qdrant', meta: 'vectors + state', group: 'Data stores' },
-  { id: 'lexical', label: 'Lexical', meta: 'ripgrep / Python', group: 'Retrieval core' },
+  { id: 'lexical', label: 'BM25', meta: 'postings + term cache', group: 'Retrieval core' },
   { id: 'symbol', label: 'Symbol', meta: 'definitions + refs', group: 'Retrieval core' },
-  { id: 'graph', label: 'Graph', meta: 'import relationships', group: 'Retrieval core' },
+  { id: 'graph', label: 'Relationships', meta: 'bounded source tracing', group: 'Retrieval core' },
   { id: 'hybrid', label: 'Hybrid retriever', meta: 'fusion + citations', group: 'Retrieval core' },
   { id: 'mcp', label: 'MCP server', meta: 'agent integration', group: 'MCP Agent' },
 ]
@@ -275,7 +275,7 @@ export const architectureMobileLayout: { id: string; x: number; y: number }[] = 
 
 export const architectureEdges = [
   ['repo', 'scan'], ['scan', 'ast'], ['ast', 'chunk'], ['chunk', 'store'], ['chunk', 'vector'],
-  ['store', 'symbol'], ['store', 'graph'], ['vector', 'hybrid'], ['lexical', 'hybrid'],
+  ['store', 'lexical'], ['store', 'symbol'], ['store', 'graph'], ['vector', 'hybrid'], ['lexical', 'hybrid'],
   ['symbol', 'hybrid'], ['graph', 'hybrid'], ['hybrid', 'mcp'],
 ]
 
@@ -285,19 +285,19 @@ export const modeOptions = [
   { value: 'standalone' as Mode, chip: 'CLI', title: 'Standalone Package', sub: 'CLI + Own LLM', heading: 'Standalone Package (CLI + Own LLM)', panelChip: 'FULL PIPELINE', bestFor: 'Self-contained workflow', llm: 'Your endpoint', reasoning: 'skelpr model router', body: 'You run skelpr commands directly. Skelpr handles retrieval, context building, LLM calls, patching, and validation end to end through your configured endpoint.' },
 ]
 
-export const modesDetail = 'The MCP Agent integration uses an external agent through MCP/CLI/HTTP. Headless / Enterprise deployments route application or CI traffic through the skelpr API, retrieval, and LLM gateway.'
+export const modesDetail = 'MCP exposes retrieval and validation to the host agent. Standalone CLI generation uses your configured model provider. The optional HTTP API exposes authenticated routes for application and CI integration.'
 
 export const architectureCopy = (id: string, detailMode: 'simple' | 'technical') => {
   const simple: Record<string, string> = {
-    repo: 'The repository is the source of truth. Skelpr starts from its tracked text files.',
+    repo: 'The repository is the source of truth. Skelpr scans eligible tracked and non-ignored untracked text files.',
     scan: 'The scanner walks the repository, respects ignore rules, and classifies files.',
     ast: 'Code structure is extracted when possible. A regex fallback keeps indexing functional.',
     chunk: 'Code is split around symbols such as functions, classes, and methods.',
     store: 'Metadata, hashes, files, chunks, and symbols are stored here with tenant isolation.',
     vector: 'Embeddings support semantic search, with an in-memory fallback when needed.',
     lexical: 'Exact terms and filenames surface concrete matches first.',
-    symbol: 'Definitions, references, and implementations add structural context.',
-    graph: 'Import relationships provide architecture-level context.',
+    symbol: 'Indexed definitions and bounded text/import references add structural context.',
+    graph: 'Indexed imports and source references help select related evidence. Runtime dispatch may remain unresolved.',
     hybrid: 'The orchestrator combines retrieval sources, then reranks and cites the best evidence.',
     mcp: 'The MCP server gives an external agent a compact, standard integration surface.',
   }
@@ -308,10 +308,10 @@ export const architectureCopy = (id: string, detailMode: 'simple' | 'technical')
     chunk: 'chunk_by_symbols() aligns chunks to outermost symbol spans and falls back to overlapping line windows.',
     store: 'PostgreSQL stores file/chunk/symbol/import records and index state under tenant-aware metadata access.',
     vector: 'VectorStore uses Qdrant when reachable; otherwise an in-memory cosine index tracks degraded state.',
-    lexical: 'LexicalRetriever prefers ripgrep and falls back to a Python scanner with IDF-weighted coverage.',
-    symbol: 'SymbolIndex uses SCIP when available in the environment; otherwise it uses the AST-backed symbol table.',
-    graph: 'GraphifyAdapter currently reports static-import-graph and persists nodes, edges, and summary.txt.',
-    hybrid: 'HybridRetriever executes lexical → symbol → graph → vector, dedups by path/line, reranks, and hydrates source.',
+    lexical: 'LexicalRetriever uses BM25 postings across metadata backends. A disposable SQLite term cache speeds persistent-index startup. Ripgrep serves explicit live-checkout verification.',
+    symbol: 'SymbolIndex reads extracted definitions. SCIP binary detection exists, but SCIP index decoding is not implemented.',
+    graph: 'Import/reference relationships guide query evidence selection. Diff review can use graph neighbors and a static graph summary, which is excluded from query RRF fusion.',
+    hybrid: 'HybridRetriever fuses independent candidate ranks with RRF, selects distinct spans and related execution evidence, and hydrates current source within bounded context.',
     mcp: 'mcp_server registers skelpr_search, get_context, find_symbol, dependencies, validate, health, and AST patching.',
   }
   return detailMode === 'simple' ? simple[id] : technical[id]
@@ -320,7 +320,7 @@ export const architectureCopy = (id: string, detailMode: 'simple' | 'technical')
 export const architectureBackend = (id: string) => {
   const backends: Record<string, string> = {
     repo: 'tracked files / filesystem', scan: 'git ls-files → os.walk', ast: 'tree-sitter → regex-fallback', chunk: 'symbol spans → line windows',
-    store: 'PostgreSQL → in-memory store', vector: 'Qdrant → memory cosine', lexical: 'ripgrep → Python scanner', symbol: 'SCIP → ast-fallback', graph: 'static-import-graph', hybrid: 'source-priority fusion', mcp: 'stdio MCP protocol',
+    store: 'PostgreSQL → in-memory store', vector: 'Qdrant → memory cosine', lexical: 'BM25 + persistent term cache', symbol: 'AST / regex definitions', graph: 'imports + references', hybrid: 'RRF + budgeted evidence selection', mcp: 'stdio MCP protocol',
   }
   return backends[id]
 }

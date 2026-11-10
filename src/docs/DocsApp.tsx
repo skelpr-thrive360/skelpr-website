@@ -294,7 +294,7 @@ export function DocsApp() {
             <span>skelpr</span>
           </a>
           <p>Install and activate — the first two steps, in full.</p>
-          <span className="docs-footer-note">local-first · no telemetry</span>
+          <span className="docs-footer-note">local-first · configurable providers</span>
         </div>
       </footer>
     </div>
