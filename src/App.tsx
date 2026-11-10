@@ -6,6 +6,7 @@ import { ProblemSection } from './components/ProblemSection'
 import { IdentitySection } from './components/IdentitySection'
 import { ModesSection } from './components/ModesSection'
 import { WorkflowSection } from './components/WorkflowSection'
+import { WorkflowMap } from './components/WorkflowMap'
 import { BenchmarkSection } from './components/BenchmarkSection'
 import { RealWorldSection } from './components/RealWorldSection'
 import { PrerequisitesSection } from './components/PrerequisitesSection'
@@ -77,6 +78,7 @@ function App() {
         <WorkflowSection />
         <BenchmarkSection />
         <RealWorldSection />
+        <WorkflowMap />
         <PrerequisitesSection />
         <InstallSection />
         {/* Directly before the ask: what is still open, at the moment of deciding. */}

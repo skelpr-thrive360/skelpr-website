@@ -1,14 +1,23 @@
 import { useState } from 'react'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { workflowSteps } from '../data/siteData'
-import { ScrollTrigger } from '../lib/anim'
 
 export function WorkflowSection() {
   const [step, setStep] = useState(0)
   const current = workflowSteps[step]
   const choose = (index: number) => {
     setStep(index)
-    requestAnimationFrame(() => ScrollTrigger.refresh())
+    const tab = document.getElementById(`workflow-tab-${workflowSteps[index].id}`)
+    const strip = tab?.parentElement
+    if (tab && strip && strip.scrollWidth > strip.clientWidth) {
+      const tabBounds = tab.getBoundingClientRect()
+      const stripBounds = strip.getBoundingClientRect()
+      if (tabBounds.left < stripBounds.left) {
+        strip.scrollLeft += tabBounds.left - stripBounds.left
+      } else if (tabBounds.right > stripBounds.right) {
+        strip.scrollLeft += tabBounds.right - stripBounds.right
+      }
+    }
   }
   return (
     <section className="workflow-section content-section" id="workflow">
@@ -26,7 +35,7 @@ export function WorkflowSection() {
               event.preventDefault()
               const next = event.key === 'Home' ? 0 : event.key === 'End' ? workflowSteps.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + workflowSteps.length) % workflowSteps.length
               choose(next)
-              document.getElementById(`workflow-tab-${workflowSteps[next].id}`)?.focus()
+              document.getElementById(`workflow-tab-${workflowSteps[next].id}`)?.focus({ preventScroll: true })
             }}><span className="step-index">0{index + 1} · {item.owner === 'agent' ? 'Agent' : 'Skelpr'}</span><strong>{item.label}</strong></button>
           ))}
         </div>

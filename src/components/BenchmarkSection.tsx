@@ -7,7 +7,6 @@ import { Metric, scrollToElement } from './Shared'
 import QaColumns from './QaColumns'
 import { DjangoCaseStudy } from './DjangoCaseStudy'
 import { TaskTokenChart } from './TaskTokenChart'
-import { ScrollTrigger } from '../lib/anim'
 
 // The verbatim panes pull in react-markdown, remark-gfm, micromark and the whole
 // generated answers table (~97 kB of text on its own). They belong in their own
@@ -32,15 +31,17 @@ const sockShopTokenTasks = benchmarkTasks.map(([id, , , , tokens]) => ({
 
 export function BenchmarkSection() {
   const [study, setStudy] = useState<'sock-shop' | 'django'>('sock-shop')
+  const [openedDjango, setOpenedDjango] = useState(false)
   const [selectedTask, setSelectedTask] = useState<string>(benchmarkQa[0].task)
   const [answersExpanded, setAnswersExpanded] = useState(false)
   const [methodologyOpen, setMethodologyOpen] = useState(false)
   const [answersReady, setAnswersReady] = useState(false)
   const qaRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    ScrollTrigger.refresh()
-  }, [study, methodologyOpen, answersExpanded, selectedTask, answersReady])
+  const selectStudy = (value: typeof study) => {
+    if (value === 'django') setOpenedDjango(true)
+    setStudy(value)
+  }
 
   // Root margin, not the viewport edge: the chunk arrives while the block is
   // still below the fold, so the swap is never visible.
@@ -84,11 +85,11 @@ export function BenchmarkSection() {
       <div className="two-column-heading"><h2>Compare the case studies</h2><p>See how token use changed on Sock Shop and Django. Each study compares Skelpr MCP against its own native-tools baseline.</p></div>
       <div className="case-study-switcher" role="tablist" aria-label="Benchmark case study">
         {(['sock-shop', 'django'] as const).map((value, index) => (
-          <button type="button" key={value} id={`study-tab-${value}`} role="tab" aria-selected={study === value} aria-controls={`study-panel-${value}`} tabIndex={study === value ? 0 : -1} onClick={() => setStudy(value)} onKeyDown={(event) => {
+          <button type="button" key={value} id={`study-tab-${value}`} role="tab" aria-selected={study === value} aria-controls={`study-panel-${value}`} tabIndex={study === value ? 0 : -1} onClick={() => selectStudy(value)} onKeyDown={(event) => {
             if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
             event.preventDefault()
             const next = event.key === 'Home' ? 'sock-shop' : event.key === 'End' ? 'django' : value === 'sock-shop' ? 'django' : 'sock-shop'
-            setStudy(next)
+            selectStudy(next)
             document.getElementById(`study-tab-${next}`)?.focus()
           }}><span>0{index + 1} · {value === 'sock-shop' ? 'Sock Shop' : 'Django'}</span><small>{value === 'sock-shop' ? 'Gemini · Antigravity · 7 tasks' : 'GPT-6 Astra · Codex · 10 tasks'}</small></button>
         ))}
@@ -156,7 +157,7 @@ export function BenchmarkSection() {
       <div className="mode-one-benchmark"><div><span className="eyebrow">HISTORICAL CLI COMPARISON</span><h3>The same seven questions in CLI mode</h3><p>Both arms used <code>openai/gpt-oss-120b</code> on Groq, the same checkout, and the same checklist. The reference used two model calls per task; Skelpr used one.</p><p className="cli-latency-note">Latency includes Groq free-tier rate-limit waits. Skelpr ran second. On the unthrottled task, it took 1.56s versus 3.55s. Four tasks tied on score; the reference led the other three by 5–10 points.</p></div><div className="mode-one-table" role="region" aria-label="Historical CLI comparison values" tabIndex={0}><div><span>Mode</span><span>Avg. latency</span><span>Avg. total tokens</span><span>Cost / query</span><span>Rubric score</span></div><div><strong>Multi-turn reference</strong><span>24.39s</span><span>7,573</span><span>$0.00200</span><span>88.4 / 100</span></div><div className="highlight-row"><strong>Skelpr CLI</strong><span>28.90s</span><span>3,925 (−48%)</span><span>$0.00099 (−50%)</span><span>85.1 / 100</span></div></div></div>
       </div>
       <div id="study-panel-django" role="tabpanel" aria-labelledby="study-tab-django" hidden={study !== 'django'} tabIndex={0}>
-        <DjangoCaseStudy active={study === 'django'} />
+        {openedDjango && <DjangoCaseStudy active={study === 'django'} />}
       </div>
 
       {/* The exit. The page spends three sections proving the claim; the reader who is

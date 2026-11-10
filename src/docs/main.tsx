@@ -1,13 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
-import { Analytics } from '@vercel/analytics/react'
-// The same three families as the marketing page, loaded here so /docs is a page in
-// its own right rather than a redirect into a bundle that happens to be cached.
-import '@fontsource-variable/ibm-plex-sans/wght.css'
-import '@fontsource-variable/source-serif-4/wght.css'
-import '@fontsource-variable/source-serif-4/wght-italic.css'
-import '@fontsource/ibm-plex-mono/latin-400.css'
-import '@fontsource/ibm-plex-mono/latin-500.css'
+import { startAnalytics } from '../lib/analytics'
+import '../fonts.css'
 import '../styles.css'
 import './docs.css'
 import { DocsApp } from './DocsApp'
@@ -18,9 +12,10 @@ const container = document.getElementById('root')!
 const app = (
   <StrictMode>
     <DocsApp />
-    <Analytics />
   </StrictMode>
 )
 
 if (container.hasChildNodes()) hydrateRoot(container, app)
 else createRoot(container).render(app)
+
+startAnalytics()

@@ -106,9 +106,9 @@
   border-left-color: var(--accent);
 }
 
-/* The rail follows the reader: full ink and the accent rule on the active one. */
-.docs-toc-list a.is-active {
+.docs-toc-list a[aria-current="location"] {
   color: var(--ink-1);
+  font-weight: 700;
   border-left-color: var(--accent);
 }
 
@@ -189,7 +189,7 @@
    `scroll-margin-top` is *added* to the scroll padding, never clamped against it:
    reserving the header in both places put a followed link ~100px below the line
    the rail measures against, and the rail then lit the heading before the one
-   that was clicked. `useTocSpy.ts` reads the scroll padding as its reading line.
+   that was clicked. The contents tracker uses the scroll padding as its reference.
    The rule out-specifies the global `[id]` margin in styles.css. */
 .docs-prose h2,
 .docs-prose h3 {

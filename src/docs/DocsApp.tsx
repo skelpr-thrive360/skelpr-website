@@ -8,7 +8,7 @@ import { useScrolled } from '../hooks/useScrolled'
 import { useThemeEffect } from '../lib/theme'
 import { navItems } from '../lib/navItems'
 import install from './install.md?raw'
-import { useTocSpy } from './useTocSpy'
+import { useActiveTocHeading, useTrackToc } from './useTocSpy'
 
 /**
  * The /docs page: one markdown document, rendered, with a table of contents built
@@ -172,17 +172,31 @@ function CodeBlock({ children }: { children?: ReactNode }) {
   )
 }
 
-function Contents({ entries, ids }: { entries: TocEntry[]; ids: string[] }) {
-  // The spy lives here, not in the shell: crossing a heading re-renders this
-  // list and nothing above it.
-  const active = useTocSpy(ids)
+function Contents({ entries }: { entries: TocEntry[] }) {
+  const active = useActiveTocHeading()
+  const list = useRef<HTMLUListElement>(null)
+
+  useEffect(() => {
+    const rail = list.current?.closest<HTMLElement>('.docs-aside')
+    const link = list.current?.querySelector<HTMLElement>('[aria-current="location"]')
+    if (!rail || !link || !rail.clientHeight) return
+
+    const railBounds = rail.getBoundingClientRect()
+    const linkBounds = link.getBoundingClientRect()
+    // Scroll the rail only. The article stays at the reader's position.
+    if (linkBounds.top < railBounds.top) {
+      rail.scrollTop += linkBounds.top - railBounds.top
+    } else if (linkBounds.bottom > railBounds.bottom) {
+      rail.scrollTop += linkBounds.bottom - railBounds.bottom
+    }
+  }, [active])
+
   return (
-    <ul className="docs-toc-list">
+    <ul className="docs-toc-list" ref={list}>
       {entries.map((entry) => (
         <li key={entry.id} className={entry.level === 3 ? 'docs-toc-sub' : undefined}>
           <a
             href={`#${entry.id}`}
-            className={entry.id === active ? 'is-active' : undefined}
             aria-current={entry.id === active ? 'location' : undefined}
           >
             {entry.text}
@@ -208,6 +222,7 @@ export function DocsApp() {
   const entries = useMemo(() => tocOf(install), [])
   // Stable across renders, so the spy's listener is attached once, not per highlight.
   const entryIds = useMemo(() => entries.map((entry) => entry.id), [entries])
+  useTrackToc(entryIds)
 
   return (
     <div className="docs-shell">
@@ -243,14 +258,14 @@ export function DocsApp() {
         <aside className="docs-aside">
           <nav className="docs-toc" aria-label="On this page">
             <p className="docs-toc-label">On this page</p>
-            <Contents entries={entries} ids={entryIds} />
+            <Contents entries={entries} />
           </nav>
         </aside>
 
         <main className="docs-main" id="docs-content" tabIndex={-1}>
           <details className="docs-toc-mobile">
             <summary>On this page</summary>
-            <Contents entries={entries} ids={entryIds} />
+            <Contents entries={entries} />
           </details>
 
           <article className="docs-prose">

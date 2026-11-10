@@ -23,59 +23,55 @@ function publish(id: string) {
   for (const listener of listeners) listener()
 }
 
-/**
- * The line the reader is measured against, in document coordinates: where a
- * heading lands when its link in the rail is followed.
- *
- * `html` reserves the sticky header with `scroll-padding-top`, and a heading's
- * own `scroll-margin-top` is *added* to it rather than clamped against it — so
- * reserving the header in both places dropped a clicked heading ~100px below the
- * line the spy watched, and the rail lit the heading *before* the one that was
- * asked for. The docs headings keep their `scroll-margin-top` at 0 and let the
- * scroll padding place them, so reading that same padding here makes the jump
- * and the highlight agree by construction. The extra pixel keeps a heading that
- * lands exactly on the line counted as being at it.
- */
-function readingLine(): number {
-  const padding = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)
-  return window.scrollY + (Number.isFinite(padding) ? padding : 0) + 1
-}
-
-function headingUnderHeader(ids: string[]): string {
-  const line = readingLine()
-  let current = ''
-  for (const id of ids) {
-    const element = document.getElementById(id)
-    if (element && element.getBoundingClientRect().top + window.scrollY <= line) current = id
+/** Activate headings as they enter the reading area just below the sticky header. */
+function headingInView(headings: HTMLElement[]): string {
+  const { scrollHeight } = document.documentElement
+  if (window.scrollY + window.innerHeight >= scrollHeight - 2) {
+    return headings[headings.length - 1]?.id ?? ''
   }
-  // The footer is taller than the window, so the last heading never reaches the
-  // line — page-at-the-end reads as the last one.
-  if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2) {
-    return ids[ids.length - 1] ?? current
+
+  const padding = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)
+  const readingLine = (Number.isFinite(padding) ? padding : 0) + 24
+  let current = ''
+  for (const heading of headings) {
+    if (heading.getBoundingClientRect().top > readingLine) break
+    current = heading.id
   }
   return current
 }
 
-/** Listens while mounted; `ids` is the contents list in document order. */
-export function useTocSpy(ids: string[]): string {
+/** Track the article once for both the desktop rail and the mobile contents. */
+export function useTrackToc(ids: string[]) {
   useEffect(() => {
     let frame = 0
     const sync = () => {
       frame = 0
-      publish(headingUnderHeader(ids))
+      // React can replace the heading nodes while keeping their IDs.
+      const headings = ids
+        .map((id) => document.getElementById(id))
+        .filter((heading): heading is HTMLElement => heading !== null)
+      publish(headingInView(headings))
     }
     const schedule = () => {
       if (!frame) frame = requestAnimationFrame(sync)
     }
+    const article = document.querySelector('.docs-prose')
+    const observer = article && typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(schedule)
+      : null
+    if (article) observer?.observe(article)
     schedule()
     window.addEventListener('scroll', schedule, { passive: true })
     window.addEventListener('resize', schedule)
     return () => {
       if (frame) cancelAnimationFrame(frame)
+      observer?.disconnect()
       window.removeEventListener('scroll', schedule)
       window.removeEventListener('resize', schedule)
     }
   }, [ids])
+}
 
+export function useActiveTocHeading(): string {
   return useSyncExternalStore(subscribe, () => activeId, () => '')
 }

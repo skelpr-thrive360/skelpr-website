@@ -1,11 +1,10 @@
-import { useLayoutEffect, useState } from 'react'
+import { useState } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Expand, Shrink } from 'lucide-react'
 import answers from '../data/djangoAnswers.json'
 import { formatCount } from '../data/djangoCaseStudy'
 import QaColumns from './QaColumns'
-import { ScrollTrigger } from '../lib/anim'
 
 // Render retained answers without making source paths or remote images actionable.
 const markdownComponents = {
@@ -15,9 +14,6 @@ const markdownComponents = {
 
 export default function DjangoAnswers({ task }: { task: string }) {
   const [expanded, setExpanded] = useState(false)
-  useLayoutEffect(() => {
-    ScrollTrigger.refresh()
-  }, [expanded, task])
   const row = answers.rows.find((entry) => entry.id === task)
   if (!row) return <p>No retained answer is available for this task.</p>
   const native = row.native.metrics

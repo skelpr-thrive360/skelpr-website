@@ -17,11 +17,13 @@ npm run preview    # serve dist/
 ```
 
 The site uses React, TypeScript and Vite, with plain CSS. Runtime dependencies
-include GSAP for detail-panel transitions, Lucide icons, React Markdown and
-remark-gfm, and bundled fonts. Scrolling uses the browser. `package.json` is the complete dependency list.
+include Lucide icons, React Markdown with remark-gfm, and bundled fonts.
+Scrolling uses the browser. `package.json` lists all dependencies.
 
 `dist/` is static output. Both pages contain rendered text before JavaScript runs;
 the browser hydrates that markup. Keep browser APIs out of component render paths.
+For Lighthouse, audit the production preview after building. Use the same
+viewport and throttling settings for comparisons.
 
 ## File map
 

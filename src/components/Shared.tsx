@@ -1,6 +1,5 @@
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { ArrowRight, Check, ChevronDown } from 'lucide-react'
-import { gsap, ScrollTrigger } from '../lib/anim'
 
 /** Document-space position, independent of transforms. */
 export function documentTop(element: HTMLElement) {
@@ -58,58 +57,8 @@ export function DetailButton({ open, onClick }: { open: boolean; onClick: () => 
   return <button className="detail-button" onClick={onClick} aria-expanded={open}><span>{open ? 'Hide technical details' : 'View technical details'}</span><ChevronDown size={14} className={open ? 'rotate' : ''} /></button>
 }
 
-/** Animate user-opened details; remove closed content from navigation. */
 export function SectionDetail({ open, children }: { open: boolean; children: ReactNode }) {
-  const shell = useRef<HTMLDivElement>(null)
-
-  useLayoutEffect(() => {
-    const el = shell.current
-    if (!el) return
-    const settle = () => {
-      gsap.set(el, { height: 'auto' })
-      ScrollTrigger.refresh()
-    }
-
-    // Reduced motion gets the block, not the motion — including the first render,
-    // where `open` is false and the block must simply not be there.
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      el.style.height = open ? 'auto' : '0px'
-      el.style.display = open ? 'block' : 'none'
-      return
-    }
-
-    if (open) {
-      el.style.display = 'block'
-      const tween = gsap.fromTo(
-        el,
-        { height: 0, opacity: 0 },
-        { height: el.scrollHeight, opacity: 1, duration: 0.42, ease: 'power2.out', onComplete: settle },
-      )
-      return () => {
-        tween.kill()
-      }
-    }
-
-    const tween = gsap.to(el, {
-      height: 0,
-      opacity: 0,
-      duration: 0.3,
-      ease: 'power2.in',
-      onComplete: () => {
-        gsap.set(el, { height: 'auto', display: 'none' })
-        ScrollTrigger.refresh()
-      },
-    })
-    return () => {
-      tween.kill()
-    }
-  }, [open])
-
-  return (
-    <div className="detail-reveal" ref={shell} inert={!open} style={{ display: open ? undefined : 'none' }}>
-      {children}
-    </div>
-  )
+  return <div className="detail-motion" hidden={!open} inert={!open}>{children}</div>
 }
 
 // `withoutPct`/`withPct` optionally draw the paired bars from the benchmark table

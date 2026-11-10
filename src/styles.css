@@ -100,9 +100,6 @@
   --dur-2: 220ms;
   --dur-3: 380ms;
   --dur-4: 620ms;
-  /* One dash period per cycle — see `hero-flow`. Raising this slows the
-     connectors; the loop stays seamless at any value. */
-  --dur-flow: 900ms;
   --ease-standard: cubic-bezier(0.22, 0.61, 0.36, 1);
   --ease-emphasis: cubic-bezier(0.65, 0, 0.35, 1);
   --reveal-shift: 12px;
@@ -478,33 +475,22 @@ pre code {
   letter-spacing: -0.01em;
 }
 
-/* The vendor logo, two rasters deep. Which shows follows the theme the way the
-   palette does: the pinned choice wins, otherwise the media query decides. */
 .brand-mark {
-  /* The drawing is 1.77:1; height leads, width follows — 18px is the box the
-     old geometric mark occupied, keeping the header's rhythm. */
+  width: 32px;
   height: 18px;
-  width: auto;
-  user-select: none;
-}
-
-.brand-mark-light {
-  display: block;
-}
-
-.brand-mark-dark {
-  display: none;
+  flex: 0 0 32px;
+  background: url("/brand/logo-mark.webp") center / contain no-repeat;
 }
 
 @media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .brand-mark-light { display: none; }
-  html:not([data-theme="light"]) .brand-mark-dark { display: block; }
+  html:not([data-theme="light"]) .brand-mark {
+    background-image: url("/brand/logo-mark-dark.webp");
+  }
 }
 
-html[data-theme="light"] .brand-mark-light { display: block; }
-html[data-theme="light"] .brand-mark-dark { display: none; }
-html[data-theme="dark"] .brand-mark-light { display: none; }
-html[data-theme="dark"] .brand-mark-dark { display: block; }
+html[data-theme="dark"] .brand-mark {
+  background-image: url("/brand/logo-mark-dark.webp");
+}
 
 .main-nav {
   display: flex;
@@ -809,39 +795,13 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
   height: 100%;
 }
 
-/* Connectors draw on mount, then keep flowing: the dash pattern travels
-   exactly one period (10px) per cycle, so the wrap is seamless and the line
-   reads as carrying something rather than sitting still. The active (4 6) and
-   muted (2 8) patterns are both 10px periods, so one keyframe drives both. */
-@keyframes hero-flow {
-  from {
-    stroke-dashoffset: 0;
-  }
-  to {
-    stroke-dashoffset: -10;
-  }
-}
-
 .hero-lines path {
   fill: none;
   stroke: var(--fig-ink-2);
   stroke-width: 1;
   stroke-dasharray: 4 6;
-  stroke-dashoffset: 26px;
-  opacity: 0;
   vector-effect: non-scaling-stroke;
-  transition: opacity var(--dur-4) var(--ease-standard),
-    stroke-dashoffset var(--dur-4) var(--ease-standard),
-    stroke var(--dur-2) var(--ease-standard);
-}
-
-/* The draw settles first — the animation waits exactly as long as the
-   dash-offset transition takes — then the flow picks the same property up
-   from where it landed, at 0, so the handover is invisible. */
-.hero-lines.is-drawn path {
-  opacity: 1;
-  stroke-dashoffset: 0;
-  animation: hero-flow var(--dur-flow) linear var(--dur-4) infinite;
+  transition: stroke var(--dur-2) var(--ease-standard);
 }
 
 .muted-path {
@@ -861,11 +821,6 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
   color: var(--fg-2);
   text-align: left;
   user-select: none;
-  /* `translate`, not `transform`: the entrance tween writes the inline
-     transform, so anything this element animates through `transform` would
-     either be cancelled by that inline style or double-animated by this
-     transition (GSAP writes it every frame). The independent property
-     composes instead of competing. */
   transition: border-color var(--dur-2) var(--ease-standard),
     translate var(--dur-2) var(--ease-standard);
 }
@@ -878,8 +833,6 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
   z-index: 2;
   border-color: var(--fg-accent);
   color: var(--fg-1);
-  /* The 2px lift lives here, outside `transform`, so the entrance's inline
-     transform cannot cancel it once the cards have landed. */
   translate: 0 -2px;
 }
 
@@ -927,26 +880,27 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
   color: var(--fg-accent);
 }
 
-/* Diamond layout (desktop): 1 left → 2 top → 3 right → 4 bottom.
-   Percentages = SVG coords (x/6, y/4) so nodes stay glued to the connectors;
-   the TSX sets the same values inline, these are the readable source of truth.
-   Three rows (top / middle / bottom) with equal gaps and equal outer margins. */
+/* Keep these centers in sync with the connector coordinates in HeroVisual. */
 .node-agent {
+  --arrival-delay: 300ms;
   top: 50%;
   left: 16.5%;
 }
 
 .node-mcp {
+  --arrival-delay: 380ms;
   top: 19.75%;
   left: 50%;
 }
 
 .node-retrieval {
+  --arrival-delay: 460ms;
   top: 50%;
   left: 83.5%;
 }
 
 .node-result {
+  --arrival-delay: 540ms;
   top: 80.25%;
   left: 50%;
 }
@@ -1145,14 +1099,6 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
   padding: var(--space-4) var(--space-5);
   border-left: 2px solid var(--rule-strong);
   background: var(--ink-wash);
-}
-
-/* Shell for a `.section-detail` block: it owns the height that the accordion
-   animates, and clips the block while it moves. `overflow: hidden` also stops
-   the block's top margin collapsing out of a shell that is 0px tall — without
-   it the gap is added back at the end of the open, as a visible pop. */
-.detail-reveal {
-  overflow: hidden;
 }
 
 .detail-label {
@@ -1407,6 +1353,7 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
 
 .mode-panel-heading > div {
   display: flex;
+  align-items: baseline;
   gap: var(--space-4);
 }
 
@@ -1463,7 +1410,8 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
 
 .ownership-legend {
   display: flex;
-  gap: var(--space-5);
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
   margin-top: var(--space-5);
   color: var(--ink-3);
   font-size: var(--text-xs);
@@ -1481,6 +1429,7 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
 .legend-skelpr {
   width: 10px;
   height: 2px;
+  flex: none;
 }
 
 .legend-agent {
@@ -1550,7 +1499,8 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
 
 .workflow-steps {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(120px, 1fr));
+  overflow-x: auto;
   border-bottom: 1px solid var(--rule);
 }
 
@@ -1570,6 +1520,14 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
   text-align: left;
   transition: color var(--dur-2) var(--ease-standard),
     background var(--dur-2) var(--ease-standard);
+}
+
+.workflow-step:last-child {
+  border-right: 0;
+}
+
+.workflow-step:focus-visible {
+  outline-offset: -2px;
 }
 
 .workflow-step:hover {
@@ -1592,6 +1550,7 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
   color: var(--ink-3);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
+  white-space: nowrap;
 }
 
 .workflow-step.active .step-index {
@@ -1599,9 +1558,12 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
 }
 
 .workflow-detail {
+  --workflow-inset: var(--space-6);
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: var(--workflow-inset);
   min-height: 250px;
+  padding: var(--workflow-inset);
 }
 
 /* Dark figure: the workflow trace panel. */
@@ -1614,7 +1576,9 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
   --fg-accent: var(--fig-accent);
   --fg-positive: var(--fig-positive);
 
-  margin: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
   border: 1px solid var(--fg-rule);
   border-radius: var(--radius);
   background: var(--fig-bg);
@@ -1624,6 +1588,7 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
 .terminal-top {
   display: flex;
   justify-content: space-between;
+  gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--fg-rule);
   color: var(--fg-3);
@@ -1639,10 +1604,10 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
 
 .terminal-body {
   display: flex;
-  gap: var(--space-3);
+  flex: 1;
   align-items: center;
   min-height: 112px;
-  padding: var(--space-5);
+  padding: var(--space-5) var(--space-4);
   color: var(--fg-accent);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
@@ -1658,11 +1623,10 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
   width: 7px;
   height: 16px;
   background: currentcolor;
-  animation: cursor 1.2s var(--ease-standard) infinite;
 }
 
 .terminal-source {
-  padding: var(--space-3) var(--space-5);
+  padding: var(--space-3) var(--space-4);
   border-top: 1px solid var(--fg-rule);
   color: var(--fg-3);
   font-family: var(--font-mono);
@@ -1670,7 +1634,10 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
 }
 
 .workflow-explanation {
-  padding: var(--space-6) var(--space-6) var(--space-6) 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
 }
 
 .owner-tag {
@@ -1701,11 +1668,17 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
 
 .workflow-nav {
   display: flex;
+  align-items: center;
   gap: var(--space-5);
-  margin-top: var(--space-6);
+  margin-top: auto;
+  padding-top: var(--space-4);
 }
 
 .workflow-nav button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
   white-space: nowrap;
   padding: 0;
   border: 0;
@@ -2248,6 +2221,10 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
   color: var(--warn);
 }
 
+.caveat > svg {
+  flex: none;
+}
+
 .caveat strong {
   display: block;
   font-size: var(--text-sm);
@@ -2530,6 +2507,7 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
 /* Verbatim answers: side-by-side scrollable panes with an expand toggle. */
 .qa-answers-head {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-3);
   align-items: center;
   justify-content: space-between;
@@ -2540,6 +2518,7 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
   display: inline-flex;
   gap: 6px;
   align-items: center;
+  white-space: nowrap;
   padding: 6px 10px;
   border: 1px solid var(--rule-strong);
   border-radius: var(--radius);
@@ -2846,7 +2825,8 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
 
 .architecture-map {
   position: relative;
-  min-height: 500px;
+  min-height: 440px;
+  contain: layout paint;
   overflow: hidden;
   border: 1px solid var(--rule);
   border-radius: var(--radius-panel);
@@ -2868,7 +2848,6 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
   background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
   /* Centred in each tile — and the drag snaps to those centres (see useNodeDrag),
      so a released card sits on a dot instead of beside one. */
-  background-position: calc(var(--grid-pitch) / 2) calc(var(--grid-pitch) / 2);
   background-size: var(--grid-pitch) var(--grid-pitch);
   -webkit-mask-image: radial-gradient(115% 100% at 50% 42%, #000 52%, transparent 100%);
   mask-image: radial-gradient(115% 100% at 50% 42%, #000 52%, transparent 100%);
@@ -2877,6 +2856,7 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
 
 .map-label {
   display: flex;
+  gap: var(--space-2);
   position: absolute;
   top: var(--space-4);
   right: var(--space-5);
@@ -2887,7 +2867,7 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
 }
 
 .map-reset {
-  margin-left: var(--space-3);
+  margin-left: var(--space-1);
   white-space: nowrap;
   padding: 4px 8px;
   border: 1px solid var(--rule-strong);
@@ -2920,6 +2900,7 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
 
 .architecture-map svg {
   position: absolute;
+  pointer-events: none;
   inset: 0;
   width: 100%;
   height: 100%;
@@ -2927,13 +2908,13 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
 
 .architecture-map line {
   stroke: var(--rule-strong);
-  stroke-width: 0.25;
+  stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
 
 .architecture-map line.active-edge {
   stroke: var(--accent);
-  stroke-width: 0.7;
+  stroke-width: 1.5;
 }
 
 .architecture-node {
@@ -2965,6 +2946,10 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
   color: var(--ink-1);
   box-shadow: var(--lift);
   transform: translate(-50%, -50%) scale(1.03);
+}
+
+.architecture-node:focus-visible {
+  outline-offset: -3px;
 }
 
 .architecture-node.dragging {
@@ -3042,6 +3027,7 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
 
 .inspector-detail code {
   padding: 0;
+  overflow-wrap: anywhere;
   background: none;
   color: var(--ink-1);
   font-size: var(--text-sm);
@@ -3888,17 +3874,6 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
    Motion
    ========================================================================= */
 
-@keyframes cursor {
-  0%,
-  45% {
-    opacity: 1;
-  }
-  55%,
-  100% {
-    opacity: 0.15;
-  }
-}
-
 @keyframes success-in {
   from {
     opacity: 0;
@@ -4028,9 +4003,6 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
   .qa-columns {
     grid-template-columns: minmax(0, 1fr);
   }
-  .workflow-explanation {
-    padding: var(--space-2) var(--space-6) var(--space-6);
-  }
 }
 
 @media (max-width: 700px) {
@@ -4076,6 +4048,22 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
   .hero-node {
     width: 128px;
   }
+  .node-agent,
+  .node-mcp {
+    top: 25%;
+  }
+  .node-retrieval,
+  .node-result {
+    top: 75%;
+  }
+  .node-agent,
+  .node-retrieval {
+    left: 25%;
+  }
+  .node-mcp,
+  .node-result {
+    left: 75%;
+  }
   .hero-console {
     position: static;
     width: auto;
@@ -4098,15 +4086,10 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
      fine under a mouse, fiddly under a thumb. Padding, not font size, so the text
      keeps its position and only the target grows. */
   .detail-button,
-  .workflow-nav button,
   .footer-nav a {
     align-items: center;
     min-height: var(--touch);
     padding: var(--space-2) 0;
-  }
-  .workflow-nav button,
-  .workflow-controls button {
-    display: inline-flex;
   }
   /* These carry their own padding, so they only needed the floor raised. */
   .workflow-controls button {
@@ -4219,11 +4202,9 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
     width: 100%;
   }
   .workflow-steps {
-    display: flex;
-    overflow-x: auto;
+    grid-template-columns: repeat(6, minmax(112px, 1fr));
   }
   .workflow-step {
-    flex: 0 0 104px;
     min-height: 78px;
     padding: var(--space-4) var(--space-3);
   }
@@ -4231,10 +4212,8 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
     display: none;
   }
   .workflow-detail {
+    --workflow-inset: var(--space-4);
     grid-template-columns: minmax(0, 1fr);
-  }
-  .workflow-terminal {
-    margin: var(--space-4);
   }
   .tool-row {
     line-height: 1.6;
@@ -4273,15 +4252,15 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
   .caveat {
     padding: var(--space-4);
   }
+  .qa-expand {
+    min-height: var(--touch);
+  }
   .methodology {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-3);
   }
-  /* Six rows at a 14.5% pitch need ~110px each: a card whose meta line wraps
-     to two lines is 84px tall and the drag solver keeps 26px clear. At 470px
-     the pitch was 68px, which is why eight pairs of cards overlapped. */
   .architecture-map {
-    min-height: 780px;
+    min-height: 400px;
   }
   .architecture-node {
     width: 104px;
@@ -4365,6 +4344,143 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
   max-width: 76ch;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .hero-visual[data-arrived] {
+    --hero-fade: hero-fade-in 550ms cubic-bezier(0.215, 0.61, 0.355, 1) 100ms backwards;
+    --hero-ease-out: cubic-bezier(0.165, 0.84, 0.44, 1);
+    animation: var(--hero-fade);
+  }
+
+  @supports (animation-timeline: view()) and (animation-range: exit-crossing) {
+    .hero {
+      view-timeline-name: --hero-exit;
+    }
+
+    .hero-visual[data-arrived] {
+      animation: var(--hero-fade), hero-drift linear both;
+      animation-timeline: auto, --hero-exit;
+      animation-range: normal, exit-crossing;
+    }
+  }
+
+  .hero-visual[data-arrived] .visual-label {
+    animation: hero-label-arrival 600ms var(--hero-ease-out) 250ms backwards;
+  }
+
+  .hero-visual[data-arrived] .hero-node {
+    transform-origin: 50% 60%;
+    animation: hero-card-arrival 700ms var(--hero-ease-out) var(--arrival-delay) backwards;
+  }
+
+  .hero-visual[data-arrived] .hero-console {
+    animation: hero-trace-arrival 750ms var(--hero-ease-out) 650ms backwards;
+  }
+
+  .hero-visual[data-arrived] .hero-lines path {
+    --wire-delay: 1250ms;
+    animation:
+      hero-wire-arrival var(--dur-4) var(--ease-standard) var(--wire-delay) backwards,
+      hero-flow 900ms linear calc(var(--wire-delay) + var(--dur-4)) infinite;
+    animation-play-state: paused;
+  }
+
+  .hero-visual[data-arrived] .hero-lines path:nth-child(2) {
+    --wire-delay: 1370ms;
+  }
+
+  .hero-visual[data-arrived] .hero-lines path:nth-child(3) {
+    --wire-delay: 1490ms;
+  }
+
+  .hero-visual[data-motion] .hero-lines path {
+    animation-play-state: running;
+  }
+
+  .comparison-visual[data-arrived],
+  .workflow-shell[data-arrived],
+  .architecture-layout[data-arrived] {
+    animation: figure-arrival 380ms var(--ease-standard) both;
+  }
+
+  .hero-visual[data-motion] .terminal-cursor {
+    animation: terminal-blink 1.2s steps(1) infinite;
+  }
+
+  .detail-motion {
+    transition: opacity var(--dur-1) var(--ease-standard),
+      transform var(--dur-1) var(--ease-standard),
+      display var(--dur-1) allow-discrete;
+  }
+
+  .detail-motion[hidden] {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  @starting-style {
+    .detail-motion:not([hidden]) {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+}
+
+@keyframes hero-fade-in {
+  from { opacity: 0; }
+}
+
+@keyframes hero-drift {
+  from { translate: 0 0; }
+  to { translate: 0 -6%; }
+}
+
+@keyframes hero-label-arrival {
+  from {
+    translate: -24px 0;
+    opacity: 0;
+  }
+}
+
+@keyframes hero-card-arrival {
+  from {
+    transform: translate(
+      calc(-50% + clamp(-260px, -160%, -140px)),
+      calc(-50% + clamp(-240px, -260%, -110px))
+    ) rotate(-3deg) scale(0.94);
+    opacity: 0;
+  }
+}
+
+@keyframes hero-trace-arrival {
+  from {
+    translate: -70px 28px;
+    opacity: 0;
+  }
+}
+
+@keyframes hero-wire-arrival {
+  from {
+    stroke-dashoffset: 26px;
+    opacity: 0;
+  }
+}
+
+@keyframes hero-flow {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -10px; }
+}
+
+@keyframes figure-arrival {
+  from {
+    translate: 0 12px;
+    opacity: 0.75;
+  }
+}
+
+@keyframes terminal-blink {
+  50% { opacity: 0.15; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -4374,21 +4490,7 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .hero-lines path,
-  .hero::after,
-  .signal-strip::after,
-  .content-section::after {
-    opacity: 1;
-    transform: none;
-  }
-  .hero-lines path {
-    stroke-dashoffset: 0;
-  }
-  /* Same specificity as the flowing rule, and later in the file: no dashes
-     marching on a page someone asked to hold still. */
-  .hero-lines.is-drawn path {
-    animation: none;
-  }
+
 }
 
 /* Two-column metrics need room for both numeric values. */

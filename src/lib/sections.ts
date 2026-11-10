@@ -13,6 +13,7 @@ export const sectionIds = [
   'workflow',
   'benchmark',
   'example',
+  'architecture',
   'prerequisites',
   'install',
   'faq',

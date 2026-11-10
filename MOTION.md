@@ -6,14 +6,20 @@ on first render and stays visible when scrolling back up.
 ## Current behavior
 
 - Wheel and touch scrolling use the browser. No scroll interceptor runs.
-- No scroll-triggered fades, parallax, card fly-ins or animated section backgrounds.
+- The hero frame fades in. Four step cards slide in from the upper left,
+  followed by the trace panel and the dashed connectors. Browsers with
+  scroll-driven animation support drift the frame upward as it leaves view.
+- The comparison, workflow, and map figures make one short entrance when visible.
+- Dragging a map card moves nearby cards aside. Pointer updates are batched
+  to one per frame, with geometry measured before the drag.
 - The header reading indicator follows the document's scroll position without a
   tween. A passive listener schedules at most one update per animation frame.
-- The hero diagram highlights steps on hover, focus or click. Its connectors
-  animate unless reduced motion is enabled.
+- The hero diagram highlights steps on hover, focus or click. CSS animates the
+  connector dashes and trace cursor while the diagram is visible. Reduced
+  motion shows the assembled panel without animations.
 - Tabs, previous/next controls and answer expansion respond to user input.
-- Shared detail panels use a short height transition. With reduced motion enabled,
-  they open and close immediately.
+- Shared detail panels fade and slide on toggle in browsers that support
+  display transitions. Reduced motion opens and closes them immediately.
 - Anchor links clear the sticky header. Reduced-motion visitors jump directly;
   other visitors use the browser's smooth anchor scrolling.
 
@@ -21,9 +27,9 @@ on first render and stays visible when scrolling back up.
 
 | File | Responsibility |
 |---|---|
-| `src/hooks/useScrollChoreography.ts` | Reading indicator; recalculates after viewport or content size changes |
-| `src/lib/anim.ts` | GSAP registration for user-triggered controls |
-| `src/components/Shared.tsx` | Anchor positioning and detail-panel transitions |
+| `src/hooks/useScrollChoreography.ts` | Reading indicator and figure entrances |
+| `src/hooks/useNodeDrag.ts` | Snap, spacing, and pointer tracking for the workflow map |
+| `src/components/Shared.tsx` | Anchor positioning and detail panels |
 | `src/styles.css` | Hover, focus and reduced-motion rules |
 
 The reading indicator removes its listeners and observer on unmount. It does not
