@@ -1,7 +1,8 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { ArrowRight, ChevronDown, ChevronRight, Equal, Expand, Shrink, ShieldCheck, TrendingDown, TrendingUp } from 'lucide-react'
-import { benchmarkQa, benchmarkTasks } from '../data/siteData'
+import { benchmarkQa, benchmarkTasks, sockShopTotals } from '../data/siteData'
 import type { QaVerdict } from '../data/siteData'
+import { formatCount } from '../data/djangoCaseStudy'
 import { Metric, scrollToElement } from './Shared'
 import QaColumns from './QaColumns'
 import { DjangoCaseStudy } from './DjangoCaseStudy'
@@ -67,7 +68,7 @@ export function BenchmarkSection() {
   }
 
   return (
-    <section className="benchmark-section act-wash content-section" id="benchmark">
+    <section className="benchmark-section content-section" id="benchmark">
       <div className="section-kicker">Benchmark evidence</div>
       <div className="two-column-heading"><h2>Compare the case studies</h2><p>Start with Sock Shop on Gemini and Antigravity, then compare the Django study on Codex. Each study compares its own native-tools baseline with Skelpr MCP. These are separate case studies, not a head-to-head model comparison.</p></div>
       <div className="case-study-switcher" role="tablist" aria-label="Benchmark case study">
@@ -86,7 +87,7 @@ export function BenchmarkSection() {
       <div className="two-column-heading"><h3>Sock Shop · September 2026</h3><p>Seven tasks with Antigravity: native tools alone, then native tools with Skelpr MCP. Native runs were recorded September 9–10; Skelpr runs on September 24. Figures below are retained historical reports with known reconciliation gaps.</p></div>
       <div className="benchmark-meta"><span><strong>7 × 2</strong> tasks × arms</span><span><strong>Antigravity</strong> Gemini 3.6 Flash Medium</span><span><strong>Sock Shop</strong> microservices demo</span><span><strong>2026-09-24</strong> WITH re-run</span></div>
 
-      <div className="metric-grid"><Metric label="Reported total tokens" simple="Historical aggregate; not fully reproduced" without="766,393" withValue="312,056" change="−59.3%" withoutPct={100} withPct={Math.round((312056 / 766393) * 100)} /><Metric label="Files opened" simple="Reported files inspected" without="113" withValue="27" change="−76.1%" withoutPct={100} withPct={Math.round((27 / 113) * 100)} /><Metric label="Tool calls" simple="Reported invocations across seven tasks" without="136 native" withValue="21 skelpr + 31 native" change="−61.8%" withoutPct={100} withPct={Math.round((52 / 136) * 100)} /><Metric label="Rubric score" simple="Reported checklist points" without="619" withValue="621" change="+2 / 700 points" /></div>
+      <div className="metric-grid"><Metric label="Reported total tokens" simple="Historical aggregate; not fully reproduced" without={formatCount(sockShopTotals.tokens[0])} withValue={formatCount(sockShopTotals.tokens[1])} change={`−${sockShopTotals.tokenReduction}`} withoutPct={100} withPct={Math.round(sockShopTotals.tokens[1] / sockShopTotals.tokens[0] * 100)} /><Metric label="Files opened" simple="Reported files inspected" without={String(sockShopTotals.filesOpened[0])} withValue={String(sockShopTotals.filesOpened[1])} change="−76.1%" withoutPct={100} withPct={Math.round(sockShopTotals.filesOpened[1] / sockShopTotals.filesOpened[0] * 100)} /><Metric label="Tool calls" simple="Reported invocations across seven tasks" without="136 native" withValue="21 skelpr + 31 native" change="−61.8%" withoutPct={100} withPct={Math.round((52 / 136) * 100)} /><Metric label="Rubric score" simple="Reported checklist points" without="619" withValue="621" change="+2 / 700 points" /></div>
 
       <div className="benchmark-table-wrap">
         <div className="table-heading"><div><span className="eyebrow">SEVEN HISTORICAL TASKS</span><h3>Prompts, scores, and answers</h3></div><span className="table-key"><i className="without-key" /> WITHOUT <i className="with-key" /> WITH · <em>select a row to read the answers</em><span className="scroll-cue">scroll for all columns →</span></span></div>

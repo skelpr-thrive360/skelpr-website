@@ -12,6 +12,12 @@ export const workflowSteps = [
   { id: 'verify', label: 'Validate', owner: 'skelpr', title: 'Run configured checks', description: 'When requested, skelpr_validate runs configured test, lint or typecheck commands. Validation uses Docker by default; host execution requires explicit opt-in.', example: 'skelpr_validate({only: ["test", "lint"]})', note: 'Review the commands and results before accepting a change.' },
 ]
 
+export const sockShopTotals = {
+  tokens: [766_393, 312_056],
+  filesOpened: [113, 27],
+  tokenReduction: '59.3%',
+} as const
+
 export const benchmarkTasks = [
   ['service_architecture', 'retrieval', 95, 95, '79.8k → 62.0k'],
   ['request_flow', 'retrieval', 100, 100, '140.5k → 59.4k'],

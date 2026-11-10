@@ -1,19 +1,7 @@
-/**
- * Six questions asked before anyone installs, as a click-to-expand accordion:
- * one open at a time, the answer under its own question, no rules between items.
- *
- * Grounded in the repo's own docs (install guide, `skelpr setup`, the benchmark
- * above). The FAQPage JSON-LD in index.html repeats these answers and
- * `npm run check:seo` fails the build if they drift — it reads the markup, not
- * the screen, so a collapsed answer still has to be in the document.
- */
-import { useState, type ReactNode } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { SectionDetail } from './Shared'
 
-type Faq = { question: string; answer: ReactNode }
-
-const faqs: Faq[] = [
+// Keep these questions and answers in sync with FAQPage in index.html.
+const faqs = [
   {
     question: "What is Skelpr?",
     answer: "Skelpr returns repository evidence with file:line citations within a context budget. Connect it to a coding agent over MCP or use the CLI with your own generation provider. In MCP mode, the agent does the reasoning.",
@@ -41,44 +29,22 @@ const faqs: Faq[] = [
 ]
 
 export function FaqSection() {
-  // One open at a time: an accordion that allows every panel open is a list.
-  const [open, setOpen] = useState<number | null>(null)
-
   return (
-    <section className="faq-section content-section" id="faq">
-      <div className="section-kicker">FAQ</div>
-      <div className="two-column-heading">
-        <h2>Requirements, access<br />and <em>data handling.</em></h2>
-        <p>Check client support, setup requirements and provider traffic before installing. The install guide includes the commands.</p>
+    <section className="faq-section content-section" id="faq" aria-labelledby="faq-title">
+      <div className="faq-intro">
+        <h2 id="faq-title">Frequently asked questions</h2>
+        <p>For installation and client setup, see the <a href="/docs">setup guide</a>.</p>
       </div>
       <div className="faq-list">
-        {faqs.map((item, index) => {
-          const isOpen = open === index
-          return (
-            <article className="faq-item" key={item.question}>
-              <h3>
-                <button
-                  type="button"
-                  className="faq-question"
-                  aria-expanded={isOpen}
-                  aria-controls={`faq-answer-${index}`}
-                  onClick={() => setOpen(isOpen ? null : index)}
-                >
-                  <span className="faq-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-                  <span className="faq-title">{item.question}</span>
-                  <ChevronDown size={16} className={isOpen ? 'rotate' : ''} />
-                </button>
-              </h3>
-              {/* The site's own expand: a GSAP height tween that refreshes
-                  ScrollTrigger when it settles. The answer stays in the DOM. */}
-              <SectionDetail open={isOpen}>
-                <div className="faq-answer" id={`faq-answer-${index}`}>
-                  <p>{item.answer}</p>
-                </div>
-              </SectionDetail>
-            </article>
-          )
-        })}
+        {faqs.map(({ question, answer }) => (
+          <details className="faq-item" name="skelpr-faq" key={question}>
+            <summary className="faq-question">
+              <span>{question}</span>
+              <ChevronDown size={16} aria-hidden="true" />
+            </summary>
+            <p className="faq-answer">{answer}</p>
+          </details>
+        ))}
       </div>
     </section>
   )

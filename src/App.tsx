@@ -15,6 +15,8 @@ import { useScrollChoreography } from './hooks/useScrollChoreography'
 import { useHashScroll } from './hooks/useHashScroll'
 import { useSectionSpy } from './hooks/useSectionSpy'
 import { useThemeEffect } from './lib/theme'
+import { djangoTotals, reduction } from './data/djangoCaseStudy'
+import { sockShopTotals } from './data/siteData'
 
 function App() {
   useScrollChoreography()
@@ -49,12 +51,21 @@ function App() {
               <a className="button primary" href="/docs">Install and connect <ArrowRight size={16} /></a>
               <a className="button text-button" href="#benchmark">Compare case studies <ArrowRight size={16} /></a>
             </div>
-            <div className="hero-proof">
-              <span><strong>37.27%</strong> fewer tokens on Django</span>
-              <span><strong>28 → 9</strong> native search/read calls</span>
-              <span><strong>89 → 91 / 96</strong> combined rubric score</span>
-            </div>
-            <p className="hero-boundary">Ten Django tasks with Codex, across successive builds tuned using those tasks. Observed results, not a general performance guarantee.</p>
+            <ul className="hero-proof" aria-label="Benchmark highlights">
+              <li>
+                <span className="hero-study-name">Sock Shop</span>
+                <span className="hero-study-metric"><strong>{sockShopTotals.tokenReduction}</strong> fewer reported tokens</span>
+                <span className="hero-study-detail">{sockShopTotals.filesOpened.join(' → ')} files opened</span>
+                <span className="hero-study-detail">Gemini · Antigravity · 7 tasks</span>
+              </li>
+              <li>
+                <span className="hero-study-name">Django</span>
+                <span className="hero-study-metric"><strong>{reduction(djangoTotals.tokens)}%</strong> fewer total tokens</span>
+                <span className="hero-study-detail">{djangoTotals.nativeReads.join(' → ')} native search/read calls</span>
+                <span className="hero-study-detail">GPT-6 Astra · Codex · 10 tasks</span>
+              </li>
+            </ul>
+            <p className="hero-boundary">Retained Sock Shop artifacts only partly reproduce the reported totals. Django results span builds tuned on those tasks.</p>
             <p className="hero-boundary">Works with MCP clients such as Codex, Claude Code and Cursor. Your agent chooses when to call Skelpr and remains responsible for its answer.</p>
           </div>
           <HeroVisual />

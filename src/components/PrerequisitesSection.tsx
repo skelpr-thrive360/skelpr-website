@@ -46,7 +46,7 @@ const prerequisites: Prerequisite[] = [
 
 export function PrerequisitesSection() {
   return (
-    <section className="prereq-section act-wash content-section" id="prerequisites">
+    <section className="prereq-section content-section" id="prerequisites">
       <div className="section-kicker">Before you start</div>
       <div className="two-column-heading">
         <h2>What you need to run Skelpr</h2>
