@@ -83,7 +83,7 @@
             {
               "@type": "HowToStep",
               "name": "Meet the prerequisites",
-              "text": "Python 3.10 or newer, git on your PATH, Docker Desktop running, and an embeddings server — by default LM Studio serving nomic-embed-text-v1.5 at http://127.0.0.1:1234/v1."
+              "text": "Python 3.10 or newer, Git, a running Docker daemon for standard setup, and a configured embedding endpoint. Standalone generation also needs a model provider."
             },
             {
               "@type": "HowToStep",
@@ -93,7 +93,7 @@
             {
               "@type": "HowToStep",
               "name": "Install the package",
-              "text": "python3 -m pip install skelpr — or pip install \"skelpr[mcp]\" for the MCP server. Then check it with skelpr --version."
+              "text": "python -m pip install --upgrade skelpr. From 0.3.6 the default install includes CLI and MCP. Check the installed version with skelpr --version."
             },
             {
               "@type": "HowToStep",

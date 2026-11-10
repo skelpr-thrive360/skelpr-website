@@ -5,14 +5,10 @@
 > token-efficient context package with precise file:line citations. It retrieves
 > and cites — the agent still does the reasoning.
 
-Install is open (`pip install skelpr`); running is licensed per machine through a
-signed activation token — its signature is checked locally, and a managed seat then
-re-checks in with the activation service on its lease interval. Indexing, retrieval and
-review run locally, and there is no telemetry; credential-shaped values are masked before
-retrieved text reaches an agent, a model or a trace, and credential files such as `.env` and
-`*.pem` are excluded from the index. It speaks MCP, so agents such as Claude Code, Cursor,
-Windsurf, Cline and Antigravity call it as they are; the CLI covers the same retrieval path
-for review, diff and fix.
+Installation is public. Running requires a machine-bound lease obtained from the
+activation service. Managed leases check in during use. Hosted embedding and
+generation providers receive configured requests, and optional Langfuse tracing
+can include source and outputs. MCP uses the host agent for reasoning.
 
 ## Docs
 
@@ -21,8 +17,9 @@ for review, diff and fix.
 
 ## Evidence
 
-- The repository's MCP Agent A/B: 59% fewer agent tokens and 76% fewer files opened, at answer parity.
-- Prerequisites: Python 3.10+, Docker Desktop running, and an embeddings endpoint — the hosted one if the token carries the hosted-embeddings feature, otherwise a local server (LM Studio serving nomic-embed-text-v1.5 by default).
+- The historical Sock Shop report claimed 59% fewer tokens and 76% fewer file reads. Retained artifacts do not fully reconcile with the aggregate.
+- The ten-task Django case study reported 37.27% fewer tokens across successive builds informed by those questions. Neither study establishes general or frozen-release performance.
+- Standard setup uses Python 3.10+, Docker and a configured embedding endpoint. External PostgreSQL/Qdrant can replace Docker. Standalone generation requires a configured model provider. From 0.3.6, plain pip install skelpr includes CLI, MCP and local AST grammars.
 
 ## Facts
 

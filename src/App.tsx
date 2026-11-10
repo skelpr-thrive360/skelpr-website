@@ -56,10 +56,11 @@ function App() {
               <a className="button text-button" href="#benchmark">See the benchmark <ArrowRight size={16} /></a>
             </div>
             <div className="hero-proof">
-              <span><strong>-59%</strong> agent tokens</span>
+              <span><strong>-59%</strong> historical Sock Shop tokens</span>
               <span><strong>-76%</strong> files opened</span>
               <span><strong>-69%</strong> cache-read tokens</span>
             </div>
+            <p className="hero-boundary">Historical Sock Shop figures. Retained artifacts do not fully reproduce the aggregate. Savings vary by task and model.</p>
             <p className="hero-boundary">Skelpr retrieves and cites — your agent still does the reasoning.<br />It speaks MCP (Model Context Protocol), so agents such as Claude Code, Cursor and Antigravity can call it as they are.</p>
           </div>
           <HeroVisual />
@@ -71,7 +72,7 @@ function App() {
         <RealWorldSection />
         <IdentitySection open={isDetailed('product')} onToggle={() => toggleDetails('product')} />
         <ModesSection open={isDetailed('modes')} onToggle={() => toggleDetails('modes')} />
-        <WorkflowSection open={isDetailed('workflow')} onToggle={() => toggleDetails('workflow')} />
+        <WorkflowSection />
         <BenchmarkSection />
         {/* Private launch: section parked — see the import note above. */}
         {/* <ArchitectureSection open={isDetailed('architecture')} onToggle={() => toggleDetails('architecture')} /> */}
