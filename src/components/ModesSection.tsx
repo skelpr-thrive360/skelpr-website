@@ -12,12 +12,12 @@ export function ModesSection({ open, onToggle }: { open: boolean; onToggle: () =
       <div className="two-column-heading"><h2>One retrieval engine.<br /><em>Two ways to use it.</em></h2><p>Use the standalone workflow when skelpr should run end to end. Use Agent Integration when an existing coding agent should bring its own reasoning.</p></div>
       <div className="mode-switcher" role="tablist" aria-label="skelpr integration modes">
         {modeOptions.map((option) => (
-          <button key={option.value} className={mode === option.value ? 'active' : ''} onClick={() => setMode(option.value)} role="tab" aria-selected={mode === option.value}>
+          <button key={option.value} className={mode === option.value ? 'active' : ''} onClick={() => setMode(option.value)} role="tab" aria-selected={mode === option.value} id={'mode-tab-' + option.value} aria-controls="mode-panel">
             <span>{option.chip}</span> {option.title} <small>{option.sub}</small>
           </button>
         ))}
       </div>
-      <div className="mode-panel"><div className="mode-panel-heading"><div><span className="mode-number">{current.chip}</span><h3>{current.heading}</h3></div><span className="mode-chip">{current.panelChip}</span></div><p>{current.body}</p><div className="mode-facts"><div><span>LLM needed</span><strong>{current.llm}</strong></div><div><span>Retrieval</span><strong>skelpr hybrid engine</strong></div><div><span>Reasoning</span><strong>{current.reasoning}</strong></div><div><span>Best for</span><strong>{current.bestFor}</strong></div></div><DetailButton open={open} onClick={onToggle} /><SectionDetail open={open}><div className="section-detail"><span className="detail-label">WHEN THIS FITS — AND WHEN IT DOESN’T</span><p>{modesDetail}</p></div></SectionDetail></div>
+      <div className="mode-panel" id="mode-panel" role="tabpanel" aria-labelledby={`mode-tab-${mode}`}><div className="mode-panel-heading"><div><span className="mode-number">{current.chip}</span><h3>{current.heading}</h3></div><span className="mode-chip">{current.panelChip}</span></div><p>{current.body}</p><div className="mode-facts"><div><span>LLM needed</span><strong>{current.llm}</strong></div><div><span>Retrieval</span><strong>skelpr hybrid engine</strong></div><div><span>Reasoning</span><strong>{current.reasoning}</strong></div><div><span>Best for</span><strong>{current.bestFor}</strong></div></div><DetailButton open={open} onClick={onToggle} /><SectionDetail open={open}><div className="section-detail"><span className="detail-label">WHEN THIS FITS — AND WHEN IT DOESN’T</span><p>{modesDetail}</p></div></SectionDetail></div>
     </section>
   )
 }

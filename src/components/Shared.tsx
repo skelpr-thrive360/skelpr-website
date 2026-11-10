@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { ArrowRight, Check, ChevronDown, UserX } from 'lucide-react'
+import { ArrowRight, Check, ChevronDown } from 'lucide-react'
 import { gsap, getLenis, ScrollTrigger, smoothEase } from '../lib/anim'
 
 /**
@@ -184,12 +184,12 @@ export type WaitlistSubmitDetails = { trap: string }
 
 type WaitlistPhase =
   | { kind: 'form' }
-  | { kind: 'joined'; duplicate: boolean }
-  | { kind: 'withdrawn' }
+  | { kind: 'joined' }
 
 /**
- * Self-contained waitlist form: join → "you're on the list", re-join →
- * duplicate state with a withdraw option, withdraw → removed + re-join link.
+ * Self-contained waitlist form: join → "you're on the list". The message is the same
+ * for new and repeat emails so the form never reveals who is already signed up. Withdrawals are handled by hand (theskelpr@gmail.com): the public
+ * form cannot prove that the person asking owns the address.
  *
  * One form on the page, in the waitlist section. The hero used to render a second,
  * compact copy of it — same fields, same submit, `hero-email` instead of
@@ -204,23 +204,19 @@ export function WaitlistForm() {
   // Honeypot: visually hidden field humans never tab into.
   const [trap, setTrap] = useState('')
 
-  const post = async (action: 'join' | 'withdraw') => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
     if (pending) return
     setPending(true)
     const { submitWaitlistEmail } = await import('../lib/waitlist')
-    const result = await submitWaitlistEmail(email, { action, trap })
+    const result = await submitWaitlistEmail(email, { trap })
     setPending(false)
     if (result.ok) {
       setError('')
-      setPhase(action === 'withdraw' ? { kind: 'withdrawn' } : { kind: 'joined', duplicate: Boolean(result.duplicate) })
+      setPhase({ kind: 'joined' })
     } else {
       setError(result.error)
     }
-  }
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    void post('join')
   }
 
   if (phase.kind === 'joined') {
@@ -228,24 +224,8 @@ export function WaitlistForm() {
       <div className="waitlist-success" role="status">
         <span><Check size={15} /></span>
         <div>
-          <strong>{phase.duplicate ? 'You’re already on the list.' : 'You’re on the list.'}</strong>
-          <small>
-            {phase.duplicate
-              ? <>This email was already registered — no need to sign up twice. Changed your mind? <button type="button" className="waitlist-link" onClick={() => void post('withdraw')}>{pending ? 'Withdrawing…' : 'Withdraw from the waitlist'}</button></>
-              : 'Thanks — we’ll share updates when there’s news.'}
-          </small>
-        </div>
-      </div>
-    )
-  }
-
-  if (phase.kind === 'withdrawn') {
-    return (
-      <div className="waitlist-success removed" role="status">
-        <span className="removed"><UserX size={15} /></span>
-        <div>
-          <strong>You’ve been removed from the waitlist.</strong>
-          <small>Sorry to see you go. <button type="button" className="waitlist-link" onClick={() => setPhase({ kind: 'form' })}>Join again</button></small>
+          <strong>You’re on the list.</strong>
+          <small>Thanks — we’ll share updates when there’s news.</small>
         </div>
       </div>
     )

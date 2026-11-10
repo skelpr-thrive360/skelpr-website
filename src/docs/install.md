@@ -101,6 +101,9 @@ BM25 operates over indexed text independently of language.
 A vendor-supplied wheel can be installed directly. Offline installation also needs
 local copies of its dependencies for your Python version and operating system.
 
+`x.x.x` is whatever your install reports: this page does not pin a release number, which
+changes with every publish.
+
 ```bash
 python -m pip install --no-index --find-links ./wheelhouse skelpr
 ```

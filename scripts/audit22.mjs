@@ -3,6 +3,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { stripTags } from './lib/visible-text.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const dist = join(root, 'dist')
@@ -11,10 +12,8 @@ const docs = readFileSync(join(dist, 'docs/index.html'), 'utf8')
 const robots = readFileSync(join(dist, 'robots.txt'), 'utf8')
 const sitemap = readFileSync(join(dist, 'sitemap.xml'), 'utf8')
 
-const strip = (html) => html
-  .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-  .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-  .replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+// Linear-scan tag stripping from ./lib/visible-text.mjs — not tag-matching regexes.
+const strip = (html) => stripTags(html).replace(/\s+/g, ' ').trim()
 
 const homeText = strip(home)
 const docsText = strip(docs)
@@ -58,7 +57,7 @@ canon.startsWith('https://') && docsCanon.startsWith('https://') && sitemapHosts
 h1s(home) === 1 && h1s(docs) === 1 ? ok(10, 'Exactly one <h1> per page') : no(10, 'h1 count', `home ${h1s(home)}, docs ${h1s(docs)}`)
 
 const ogOk = ['og:title', 'og:description', 'og:image', 'og:url', 'twitter:card', 'twitter:image'].every((p) => home.includes(`property="${p}"`) || home.includes(`name="${p}"`))
-const ogImg = meta(home, /<meta\s+property="og:image"\s+content="([^"]+)"/).replace('https://www.skelpr.com', '');
+const ogImg = new URL(meta(home, /<meta\s+property="og:image"\s+content="([^"]+)"/)).pathname;
 ogOk && existsSync(join(dist, ogImg)) ? ok(11, 'Social preview tags + image ship', ogImg) : no(11, 'social preview');
 /viewport/.test(home) && /viewport/.test(docs) ? ok(12, 'Viewport meta on both pages') : no(12, 'no viewport')
 

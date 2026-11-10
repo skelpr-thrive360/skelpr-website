@@ -14,13 +14,13 @@ export function BrandMark() {
           name, so nothing is announced twice. */}
       <img
         className="brand-mark brand-mark-light"
-        src="/brand/logo-skeplr.png"
+        src="/brand/logo-skelpr.png"
         alt="Skelpr"
         draggable={false}
       />
       <img
         className="brand-mark brand-mark-dark"
-        src="/brand/logo-skeplr-dark.png"
+        src="/brand/logo-skelpr-dark.png"
         alt="Skelpr"
         draggable={false}
       />

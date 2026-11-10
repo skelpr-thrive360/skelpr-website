@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build every brand asset on the site from `brand-source/mainlogo-skeplr.png`.
+"""Build every brand asset on the site from `brand-source/mainlogo-skelpr.png`.
 
 One script, one source. The supplied logo is flat-colour art on an opaque
 near-white page: 84% of the file is paper, and the rest is three inks — a dark
@@ -20,7 +20,7 @@ out of it:
    that single ink for `--ink-1`'s dark value and leaves the network and the green
    alone, so it is the same drawing in the other theme rather than a second logo.
 
-3. **Plates** — `logo-skeplr.png` and `logo-skeplr-dark.png`, the full mark at its
+3. **Plates** — `logo-skelpr.png` and `logo-skelpr-dark.png`, the full mark at its
    native resolution, tight to the ink. Large-surface assets: the social card, a
    docs header, a README banner. Not the 20px header mark, where the whole mark is
    a smear — see the small-surface rule below.
@@ -55,7 +55,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-# --- the source's own inks, measured from brand-source/mainlogo-skeplr.png -----
+# --- the source's own inks, measured from brand-source/mainlogo-skelpr.png -----
 INK = (0x14, 0x17, 0x18)       # the loaded node
 LINK = (0xC4, 0xC4, 0xC4)      # the network it was loaded from
 ACCENT = (0x02, 0x8E, 0x63)    # the located one
@@ -266,7 +266,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", default="public", help="site public directory (default: public)")
     parser.add_argument("--source-dir", default="brand-source", help="source logo directory")
-    parser.add_argument("--source", default="mainlogo-skeplr.png", help="the supplied logo")
+    parser.add_argument("--source", default="mainlogo-skelpr.png", help="the supplied logo")
     parser.add_argument("--card-template", default="og-card-template.png",
                         help="pristine social card, relative to --source-dir")
     args = parser.parse_args()
@@ -293,8 +293,8 @@ def main() -> int:
     # 1. Plates: the whole mark at native resolution, tight to the ink. Large
     #    surfaces only — upscaling past ~575px would invent detail that is not
     #    there, and down to header sizes the whole mark is a smear.
-    light_path = brand / "logo-skeplr.png"
-    dark_path = brand / "logo-skeplr-dark.png"
+    light_path = brand / "logo-skelpr.png"
+    dark_path = brand / "logo-skelpr-dark.png"
     mark.save(light_path, optimize=True)
     dark.save(dark_path, optimize=True)
 

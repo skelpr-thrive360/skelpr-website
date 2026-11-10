@@ -46,7 +46,7 @@ const prerequisites: Prerequisite[] = [
     index: '03',
     chip: 'CLI mode only',
     title: 'A model to reason with',
-    body: 'ask, chat, review and fix need a generation model. Run one locally — qwen2.5-14b-instruct with as much context as your hardware allows — or skip the hardware and configure an API key instead. MCP mode needs none of this: the agent’s own model does the reasoning, and Skelpr only retrieves.',
+    body: 'ask, chat, review and fix need a generation model. Run qwen2.5-14b-instruct locally, or configure an API key and skip the hardware. MCP mode needs neither: your agent reasons, Skelpr only retrieves.',
     facts: [
       { label: 'Local model', value: 'qwen2.5-14b-instruct' },
       { label: 'or an API key', value: 'Gemini · OpenAI · Anthropic · OpenRouter · Groq' },

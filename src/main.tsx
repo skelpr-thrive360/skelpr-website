@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
+import { Analytics } from '@vercel/analytics/react'
 // Self-hosted type: IBM Plex Sans/Mono for UI and code, Source Serif 4 for display.
 import '@fontsource-variable/ibm-plex-sans/wght.css'
 import '@fontsource-variable/source-serif-4/wght.css'
@@ -19,6 +20,7 @@ const container = document.getElementById('root')!
 const app = (
   <StrictMode>
     <App />
+    <Analytics />
   </StrictMode>
 )
 
