@@ -17,8 +17,8 @@ npm run preview    # serve dist/
 ```
 
 The site uses React, TypeScript and Vite, with plain CSS. Runtime dependencies
-include GSAP and Lenis for motion, Lucide icons, React Markdown and remark-gfm,
-and bundled fonts. `package.json` is the complete dependency list.
+include GSAP for detail-panel transitions, Lucide icons, React Markdown and
+remark-gfm, and bundled fonts. Scrolling uses the browser. `package.json` is the complete dependency list.
 
 `dist/` is static output. Both pages contain rendered text before JavaScript runs;
 the browser hydrates that markup. Keep browser APIs out of component render paths.
@@ -120,7 +120,10 @@ an answer. Keep local run directories and session paths out of this export.
 
 Sock Shop is the first/default tab; Django is the second. Both provide task tables
 and side-by-side answers. Django answer text loads only when its study is selected.
-The six-step workflow explains the agent/MCP contract without engine algorithms.
+Four primary metrics appear above each Django answer; full token and tool counts
+remain available in a disclosure. Answers can be expanded without changing the
+retained text. The six-step workflow explains the agent/MCP contract without engine
+algorithms.
 
 | Metric | Native | Skelpr MCP |
 |---|---:|---:|
@@ -155,12 +158,13 @@ npm run audit:contrast
 
 Do not hand-edit the generated palette block in `src/styles.css`.
 See [MOTION.md](./MOTION.md) for scrolling and animation controls. Keep content
-visible without JavaScript and respect reduced-motion preferences.
+visible without JavaScript and respect reduced-motion preferences. Wheel and touch
+scrolling are native; content does not fade out or move as readers scroll.
 
 ## Brand assets
 
 `scripts/build-brand-assets.py` generates logos, icons and the social card from
-`brand-source/mainlogo-skeplr.png` and `brand-source/og-card-template.png`.
+`brand-source/mainlogo-skelpr.png` and `brand-source/og-card-template.png`.
 It requires Pillow. Preserve both light and dark variants.
 
 ```bash
@@ -173,8 +177,9 @@ as well as HTML metadata; the generator replaces the artwork, not the typography
 ## Access request backend
 
 `VITE_WAITLIST_ENDPOINT` is read at build time; see [`.env.example`](./.env.example).
-Rebuild after changing it. If unset, the form uses a session-local stub and sends
-nothing to a backend. Configure the real endpoint before publishing access requests.
+Set it in the hosting provider's build environment as well as local development,
+then rebuild. Without it, the development stub sends and stores nothing; it cannot
+register an access request. Configure the real endpoint before publishing the form.
 
 ### Google Apps Script setup
 
@@ -185,15 +190,20 @@ nothing to a backend. Configure the real endpoint before publishing access reque
 4. Copy the `/exec` URL to `VITE_WAITLIST_ENDPOINT` and rebuild the site.
 5. Open the endpoint signed out. Confirm a JSON response with `ok: true` and
    `schema: "progress-v4"`, without a sign-in redirect.
-6. Submit a test request and confirm its row in the Sheet. Check duplicate and
-   withdrawal behavior too.
+6. Submit a test request and confirm its row in the Sheet. Repeat it: there should
+   be one row and the same success response. Confirm withdrawal requests are refused.
 
 For updates, use **Deploy → Manage deployments → Edit → New version → Deploy**
 to keep the same URL. Saving the script alone does not update the deployment.
 A new deployment has a new URL and requires rebuilding the site with that URL.
 
-The script maintains `Timestamp | Email | Progress`, rejects honeypot submissions,
-and supports duplicate detection and withdrawal. A replacement backend must
-accept the client's `email`, `action` and `trap` JSON fields and return the
-`ok`, `duplicate`, `removed` or `error` fields it expects. A generic form endpoint
-is not a drop-in replacement for this contract.
+The script maintains `Timestamp | Email | Progress`, deduplicates under a script
+lock, and silently drops honeypot submissions. New and existing emails receive
+identical success responses, so the endpoint does not disclose list membership.
+Removals are handled manually in the Sheet after contacting `theskelpr@gmail.com`;
+the public endpoint refuses withdrawal because it cannot verify email ownership.
+
+The client posts JSON containing `email` and `trap`, with a `text/plain` content
+type. A replacement backend must return JSON containing `ok: true` on success or
+`ok: false` with an `error` message. Do not reintroduce duplicate-membership flags,
+public deletion or responses containing Sheet data.

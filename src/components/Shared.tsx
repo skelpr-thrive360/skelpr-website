@@ -1,18 +1,8 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { ArrowRight, Check, ChevronDown, UserX } from 'lucide-react'
-import { gsap, getLenis, ScrollTrigger, smoothEase } from '../lib/anim'
+import { ArrowRight, Check, ChevronDown } from 'lucide-react'
+import { gsap, ScrollTrigger } from '../lib/anim'
 
-/**
- * Document-space top of `element`, read from layout rather than from the
- * painted box.
- *
- * `getBoundingClientRect()` answers "where is this drawn?", and the page draws
- * blocks somewhere other than where they live: every block the choreography
- * retracts carries a 20px transform, and a block still travelling is anywhere at
- * all. Landing a jump on that number aims at the paint, not at the heading the
- * reader named. `offsetTop` walks the layout instead — it is immune to every
- * transform on the page — so a jump lands where the target actually sits.
- */
+/** Document-space position, independent of transforms. */
 export function documentTop(element: HTMLElement) {
   let top = 0
   for (let node: HTMLElement | null = element; node; node = node.offsetParent as HTMLElement | null) {
@@ -21,16 +11,6 @@ export function documentTop(element: HTMLElement) {
   return top
 }
 
-/**
- * Offset-aware smooth scroll: clears the sticky header, and skips easing for
- * visitors who asked for reduced motion.
- *
- * The glide rides Lenis when it is running, so an anchor click lands with the
- * same easing vocabulary as the wheel scrolling around it. One duration rule
- * scales with distance (capped, so a footer jump is a deliberate glide, not a
- * commute), and a wheel input mid-flight hands control straight back — Lenis
- * treats fresh user scroll as authoritative over a running programmatic one.
- */
 /**
  * The scroll position that puts `target` just clear of the sticky header.
  *
@@ -65,25 +45,6 @@ export function scrollToElement(target: HTMLElement, offset = 16) {
     window.scrollTo({ top, behavior: 'auto' })
     return
   }
-  const lenis = getLenis()
-  if (lenis) {
-    // Lenis animates from its own record of the scroll position, and that record
-    // can be left behind by a scroll Lenis did not perform: the browser landing
-    // a fragment on load, a restored position, or a gesture handed to a nested
-    // scroller. A glide started from a stale record first drags the page back to
-    // where Lenis thought it was, which is what a click that settles in the
-    // wrong section looks like from the outside. `resize()` is Lenis's own way
-    // of re-reading where the page really is, so the walk starts from here.
-    if (Math.abs(lenis.animatedScroll - window.scrollY) > 1) lenis.resize()
-    const distance = Math.abs(top - window.scrollY)
-    // ~0.5s for a hop, ~1.4s for the full page — past that the ride stops
-    // getting longer and just starts feeling stuck.
-    const duration = Math.min(Math.max(distance / 2400, 0.5), 1.4)
-    lenis.scrollTo(top, { duration, easing: smoothEase })
-    return
-  }
-  // Lenis not running (no JS motion consent, or init hasn't landed yet):
-  // fall back to the browser's own smooth behaviour.
   window.scrollTo({ top, behavior: 'smooth' })
 }
 
@@ -97,26 +58,7 @@ export function DetailButton({ open, onClick }: { open: boolean; onClick: () => 
   return <button className="detail-button" onClick={onClick} aria-expanded={open}><span>{open ? 'Hide technical details' : 'View technical details'}</span><ChevronDown size={14} className={open ? 'rotate' : ''} /></button>
 }
 
-/**
- * The technical-detail block, opened and closed as motion rather than as a mount.
- *
- * Mounting and unmounting made the panel pop and the whole page below it jump —
- * at the exact moment a reader has asked for more, which is the worst place on a
- * page to look abrupt. Animating the shell's height keeps the document
- * continuous, and the block stays mounted while it closes so the sentence does
- * not disappear from under the cursor.
- *
- * Two details matter as much as the tween. `display: none` is restored once a
- * close settles, so closed detail is out of the accessibility tree and out of
- * find-in-page exactly as it was when unmounted. And ScrollTrigger is refreshed
- * when a tween settles: every trigger below this block has just moved, and a
- * stale start value is how a reveal ends up firing a screen late.
- *
- * Height is measured from the shell's own `scrollHeight` rather than the child's
- * `offsetHeight`, because the child carries a top margin that the collapsed shell
- * clips — measuring the child would leave that gap to be added at the end, as a
- * visible pop when the height hands back to `auto`.
- */
+/** Animate user-opened details; remove closed content from navigation. */
 export function SectionDetail({ open, children }: { open: boolean; children: ReactNode }) {
   const shell = useRef<HTMLDivElement>(null)
 
@@ -164,7 +106,7 @@ export function SectionDetail({ open, children }: { open: boolean; children: Rea
   }, [open])
 
   return (
-    <div className="detail-reveal" ref={shell}>
+    <div className="detail-reveal" ref={shell} inert={!open} style={{ display: open ? undefined : 'none' }}>
       {children}
     </div>
   )
@@ -184,12 +126,12 @@ export type WaitlistSubmitDetails = { trap: string }
 
 type WaitlistPhase =
   | { kind: 'form' }
-  | { kind: 'joined'; duplicate: boolean }
-  | { kind: 'withdrawn' }
+  | { kind: 'joined' }
 
 /**
- * Self-contained waitlist form: join → "you're on the list", re-join →
- * duplicate state with a withdraw option, withdraw → removed + re-join link.
+ * Self-contained waitlist form: join → "you're on the list". The message is the same
+ * for new and repeat emails so the form never reveals who is already signed up. Withdrawals are handled by hand (theskelpr@gmail.com): the public
+ * form cannot prove that the person asking owns the address.
  *
  * One form on the page, in the waitlist section. The hero used to render a second,
  * compact copy of it — same fields, same submit, `hero-email` instead of
@@ -204,23 +146,23 @@ export function WaitlistForm() {
   // Honeypot: visually hidden field humans never tab into.
   const [trap, setTrap] = useState('')
 
-  const post = async (action: 'join' | 'withdraw') => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
     if (pending) return
     setPending(true)
     const { submitWaitlistEmail } = await import('../lib/waitlist')
-    const result = await submitWaitlistEmail(email, { action, trap })
+    const result = await submitWaitlistEmail(email, { trap })
     setPending(false)
     if (result.ok) {
       setError('')
-      setPhase(action === 'withdraw' ? { kind: 'withdrawn' } : { kind: 'joined', duplicate: Boolean(result.duplicate) })
+      if (result.stub) {
+        setError('Email updates are not configured here. Nothing was sent. Use the access email link to contact us.')
+      } else {
+        setPhase({ kind: 'joined' })
+      }
     } else {
       setError(result.error)
     }
-  }
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    void post('join')
   }
 
   if (phase.kind === 'joined') {
@@ -228,24 +170,8 @@ export function WaitlistForm() {
       <div className="waitlist-success" role="status">
         <span><Check size={15} /></span>
         <div>
-          <strong>{phase.duplicate ? 'You’re already on the list.' : 'You’re on the list.'}</strong>
-          <small>
-            {phase.duplicate
-              ? <>This email is registered. <button type="button" className="waitlist-link" onClick={() => void post('withdraw')}>{pending ? 'Withdrawing…' : 'Withdraw from the waitlist'}</button></>
-              : 'We’ll email release updates. For a license, use the access link.'}
-          </small>
-        </div>
-      </div>
-    )
-  }
-
-  if (phase.kind === 'withdrawn') {
-    return (
-      <div className="waitlist-success removed" role="status">
-        <span className="removed"><UserX size={15} /></span>
-        <div>
-          <strong>You’ve been removed from the waitlist.</strong>
-          <small><button type="button" className="waitlist-link" onClick={() => setPhase({ kind: 'form' })}>Join again</button></small>
+          <strong>You’re on the list.</strong>
+          <small>Thanks — we’ll share updates when there’s news.</small>
         </div>
       </div>
     )

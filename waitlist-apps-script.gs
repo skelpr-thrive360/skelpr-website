@@ -6,7 +6,8 @@
  * What it does:
  *  - Receives POST { email, action, trap } from the website forms.
  *    action="join" (default): appends one row per unique email.
- *    action="withdraw": deletes the row for that email (no-op if absent).
+ *    action="withdraw" is REFUSED: anyone can send a POST, so a public delete
+ *    would let anyone remove anyone else. Removals are done by hand in the Sheet.
  *  - Sheet columns: Timestamp | Email | Progress. Progress is meant for YOU to
  *    edit manually: Pending / Reached out / Success / Declined (new rows start
  *    as "Pending").
@@ -34,8 +35,15 @@ function doPost(e) {
     var trap = String(data.trap || '').trim()
 
     // Honeypot filled → almost certainly a bot. Answer ok so it learns nothing.
-    if (trap || !EMAIL_RE.test(email)) {
-      return json_({ ok: true })
+    if (trap) return json_({ ok: true })
+
+    if (action === 'withdraw') {
+      return json_({ ok: false, error: 'To be removed, email theskelpr@gmail.com.' })
+    }
+
+    // A leading = + - @ would be stored as a live Sheets formula (formula injection).
+    if (!EMAIL_RE.test(email) || email.length > 254 || /^[=+\-@]/.test(email)) {
+      return json_({ ok: false, error: 'Enter a valid email address.' })
     }
 
     var lock = LockService.getScriptLock()
@@ -44,18 +52,14 @@ function doPost(e) {
       var ss = SpreadsheetApp.getActiveSpreadsheet()
       var sheet = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME)
       ensureHeader_(sheet)
+      // Repeat emails are not appended, but the response is identical to a new
+      // join so the public endpoint cannot be used to test list membership.
       var match = findRow_(sheet, email)
-
-      if (action === 'withdraw') {
-        if (match) sheet.deleteRow(match)
+      if (!match) {
+        sheet.appendRow([new Date(), email, PROGRESS_DEFAULT])
         safe_(function () { refreshDataStyling_(sheet) })
-        return json_({ ok: true, removed: Boolean(match) })
       }
-
-      if (match) return json_({ ok: true, duplicate: true })
-      sheet.appendRow([new Date(), email, PROGRESS_DEFAULT])
-      safe_(function () { refreshDataStyling_(sheet) })
-      return json_({ ok: true, duplicate: false })
+      return json_({ ok: true })
     } finally {
       lock.releaseLock()
     }

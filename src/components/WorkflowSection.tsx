@@ -14,7 +14,7 @@ export function WorkflowSection() {
     <section className="workflow-section content-section" id="workflow">
       <div className="section-kicker">How it works</div>
       <div className="workflow-heading">
-        <div><h2>Ask. Retrieve.<br /><em>Check the source.</em></h2></div>
+        <div><h2>From question to source evidence</h2></div>
         <p>The agent sends a question through MCP and receives source excerpts with <code>file:line</code> ranges. It uses that evidence to answer or edit. If context is missing, it can request more.</p>
       </div>
       <div className="ownership-legend"><span><i className="legend-agent" /> Your agent: question, answer and edits</span><span><i className="legend-skelpr" /> Skelpr: evidence and configured checks</span></div>
