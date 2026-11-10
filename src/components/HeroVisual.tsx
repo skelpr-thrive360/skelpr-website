@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type RefObject } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type RefObject } from 'react'
 import { heroIcons, heroStages } from '../data/siteData'
 
 // Node centres in viewBox units (x/6 and y/4 give the % position of the card
@@ -82,25 +82,21 @@ type Metrics = { w: number; h: number; cw: number; ch: number }
 
 function useCanvasMetrics(ref: RefObject<HTMLDivElement | null>) {
   const [metrics, setMetrics] = useState<Metrics | null>(null)
-  useLayoutEffect(() => {
+  useEffect(() => {
     const canvas = ref.current
-    if (!canvas) return
+    const card = canvas?.querySelector<HTMLElement>('.hero-node')
+    if (!canvas || !card) return
     const measure = () => {
-      const card = canvas.querySelector('.hero-node')
-      if (!card) return
-      const canvasBox = canvas.getBoundingClientRect()
-      const cardBox = card.getBoundingClientRect()
-      setMetrics({
-        w: canvasBox.width,
-        h: canvasBox.height,
-        cw: cardBox.width,
-        ch: cardBox.height,
-      })
+      setMetrics({ w: canvas.clientWidth, h: canvas.clientHeight, cw: card.offsetWidth, ch: card.offsetHeight })
     }
-    measure()
-    if (typeof ResizeObserver === 'undefined') return
+    if (typeof ResizeObserver === 'undefined') {
+      measure()
+      window.addEventListener('resize', measure)
+      return () => window.removeEventListener('resize', measure)
+    }
     const observer = new ResizeObserver(measure)
     observer.observe(canvas)
+    observer.observe(card)
     return () => observer.disconnect()
   }, [ref])
   return metrics
@@ -125,7 +121,7 @@ type EdgeAnchor = ReturnType<typeof edgeAnchor>
 // supposed to arrive at.) Perpendicular normals give a quarter turn; opposing ones
 // give an S-curve. The pull is capped by the shorter axis, so a connector can
 // never overshoot its own endpoints.
-function linkPath(from: EdgeAnchor, to: EdgeAnchor) {
+function linkCurve(from: EdgeAnchor, to: EdgeAnchor) {
   const dx = to.x - from.x
   const dy = to.y - from.y
   const pull = Math.min(Math.abs(dx), Math.abs(dy)) * 0.55
@@ -135,10 +131,39 @@ function linkPath(from: EdgeAnchor, to: EdgeAnchor) {
   return `M${round(from.x)} ${round(from.y)} C${round(c1.x)} ${round(c1.y)} ${round(c2.x)} ${round(c2.y)} ${round(to.x)} ${round(to.y)}`
 }
 
+function useHeroMotion(ref: RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    const canvas = ref.current
+    const hero = canvas?.parentElement
+    if (!canvas || !hero) return
+
+    const preference = window.matchMedia('(prefers-reduced-motion: reduce)')
+    let inView = typeof IntersectionObserver === 'undefined'
+    const sync = () => {
+      const playing = inView && !preference.matches && !document.hidden
+      hero.toggleAttribute('data-motion', playing)
+      if (playing && !hero.hasAttribute('data-arrived')) hero.setAttribute('data-arrived', '')
+    }
+    const observer = typeof IntersectionObserver === 'undefined' ? null : new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting
+      sync()
+    })
+    observer?.observe(hero)
+    preference.addEventListener('change', sync)
+    document.addEventListener('visibilitychange', sync)
+    sync()
+    return () => {
+      observer?.disconnect()
+      preference.removeEventListener('change', sync)
+      document.removeEventListener('visibilitychange', sync)
+      hero.removeAttribute('data-motion')
+    }
+  }, [ref])
+}
+
 export function HeroVisual() {
   const [stage, setStage] = useState(0)
   const [engaged, setEngaged] = useState(false)
-  const [drawn, setDrawn] = useState(false)
   const compact = useCompactLayout()
   const canvasRef = useRef<HTMLDivElement>(null)
   const metrics = useCanvasMetrics(canvasRef)
@@ -147,7 +172,7 @@ export function HeroVisual() {
 
   // Rebuilt whenever the canvas or the cards change size, so the curves stay
   // glued to the edge midpoints at any viewport.
-  const paths = useMemo(() => {
+  const curves = useMemo(() => {
     if (!metrics) return []
     const half = { w: metrics.cw / 2, h: metrics.ch / 2 }
     const centreOf = (index: number) => ({
@@ -155,27 +180,13 @@ export function HeroVisual() {
       y: (layout.nodes[index].y / 400) * metrics.h,
     })
     return layout.links.map((link) =>
-      linkPath(
+      linkCurve(
         edgeAnchor(centreOf(link.from), link.fromEdge, half),
         edgeAnchor(centreOf(link.to), link.toEdge, half),
       ),
     )
   }, [layout, metrics])
-
-  // The walkthrough is visitor-driven: the connectors draw once and then flow
-  // (see `hero-flow`), and the stage follows hover, focus and click. There is no
-  // autoplay carousel.
-  // The pieces are placed first (see useScrollChoreography) and the wiring
-  // follows: drawing while cards are still travelling would glue curves to
-  // positions the cards have left. 1250ms is when the last step card has landed,
-  // with the trace panel still settling — close enough that the draw reads as
-  // the next beat rather than a second animation. Reduced motion skips the wait:
-  // nothing is arriving there either.
-  useEffect(() => {
-    const wait = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1250
-    const timer = window.setTimeout(() => setDrawn(true), wait)
-    return () => window.clearTimeout(timer)
-  }, [])
+  useHeroMotion(canvasRef)
 
   return (
     <div className="hero-visual" aria-label="Interactive MCP Agent workflow walkthrough">
@@ -187,35 +198,28 @@ export function HeroVisual() {
       </div>
       <div className="hero-canvas" ref={canvasRef}>
         <svg
-          className={drawn ? 'hero-lines is-drawn' : 'hero-lines'}
+          className="hero-lines"
           viewBox={`0 0 ${metrics?.w ?? 600} ${metrics?.h ?? 400}`}
           preserveAspectRatio="none"
           role="img"
           aria-label="Agent to retrieval to cited context path"
         >
-          {paths.map((d, index) => (
+          {curves.map((path, index) => (
             <path
-              // Position, not geometry: two connectors can share a `d` (an
-              // unmeasured canvas collapses them all to the same point), and a
-              // key that changes with every resize would remount the paths and
-              // restart the draw-and-flow animation.
               key={index}
-              d={d}
+              d={path}
               className={stage >= index + 1 ? '' : 'muted-path'}
               vectorEffect="non-scaling-stroke"
-              style={{ transitionDelay: `${index * 120}ms` }}
             />
           ))}
         </svg>
         {heroStages.map((stageItem, index) => {
           const Icon = heroIcons[stageItem.id]
-          const point = layout.nodes[index]
           return (
             <button
               key={stageItem.id}
               type="button"
               className={`hero-node ${stageItem.className} ${stage === index ? 'active' : ''} ${stage > index ? 'done' : ''}`}
-              style={{ left: `${point.x / 6}%`, top: `${point.y / 4}%` }}
               onMouseEnter={() => {
                 setStage(index)
                 setEngaged(true)

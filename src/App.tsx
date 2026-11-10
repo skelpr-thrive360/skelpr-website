@@ -1,26 +1,25 @@
 import { useState } from 'react'
-import { ArrowDown, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { Header } from './components/Header'
 import { HeroVisual } from './components/HeroVisual'
 import { ProblemSection } from './components/ProblemSection'
 import { IdentitySection } from './components/IdentitySection'
 import { ModesSection } from './components/ModesSection'
 import { WorkflowSection } from './components/WorkflowSection'
+import { WorkflowMap } from './components/WorkflowMap'
 import { BenchmarkSection } from './components/BenchmarkSection'
-// Private launch: architecture stays out of the public page for now.
-// import { ArchitectureSection } from './components/ArchitectureSection'
 import { RealWorldSection } from './components/RealWorldSection'
 import { PrerequisitesSection } from './components/PrerequisitesSection'
 import { FaqSection } from './components/FaqSection'
 import { Footer, InstallSection, WaitlistSection } from './components/WaitlistInstall'
-import { useSmoothScroll } from './hooks/useSmoothScroll'
 import { useScrollChoreography } from './hooks/useScrollChoreography'
 import { useHashScroll } from './hooks/useHashScroll'
 import { useSectionSpy } from './hooks/useSectionSpy'
 import { useThemeEffect } from './lib/theme'
+import { djangoTotals, reduction } from './data/djangoCaseStudy'
+import { sockShopTotals } from './data/siteData'
 
 function App() {
-  useSmoothScroll()
   useScrollChoreography()
   useSectionSpy()
   useHashScroll()
@@ -43,39 +42,43 @@ function App() {
       <a className="skip-link" href="#top">Skip to main content</a>
       <Header />
 
-      <main id="top">
+      <main id="top" tabIndex={-1}>
         <section className="hero">
           <div className="hero-copy">
-            {/* The brand in the page's first line of text — a crawler used to meet
-                "skelpr" for the first time in the lede. One word, no layout change. */}
-            <div className="eyebrow"><span className="status-dot" /> Skelpr — code intelligence for agents</div>
-            <h1>Don’t give an agent the whole repo.<br /><em>Give it the right code.</em></h1>
-            <p className="hero-lede">Skelpr finds the right code for AI agents, PR reviews, and fixes — grounded in syntax-aware context and precise <code>file:line</code> citations.</p>
+            <div className="eyebrow"><span className="status-dot" /> Skelpr · repository context over MCP and CLI</div>
+            <h1>Repository context.<br />Within your token budget.</h1>
+            <p className="hero-lede">Give your coding agent relevant source excerpts with <code>file:line</code> ranges. Set context limits and reduce repeated searches across your repository.</p>
             <div className="hero-actions">
-              <a className="button primary" href="#workflow">Explore skelpr <ArrowDown size={16} /></a>
-              <a className="button text-button" href="#benchmark">See the benchmark <ArrowRight size={16} /></a>
+              <a className="button primary" href="/docs">Install and connect <ArrowRight size={16} /></a>
+              <a className="button text-button" href="#benchmark">Compare case studies <ArrowRight size={16} /></a>
             </div>
-            <div className="hero-proof">
-              <span><strong>-59%</strong> historical Sock Shop tokens</span>
-              <span><strong>-76%</strong> files opened</span>
-              <span><strong>-69%</strong> cache-read tokens</span>
-            </div>
-            <p className="hero-boundary">Historical Sock Shop figures. Retained artifacts do not fully reproduce the aggregate. Savings vary by task and model.</p>
-            <p className="hero-boundary">Skelpr retrieves and cites — your agent still does the reasoning.<br />It speaks MCP (Model Context Protocol), so agents such as Claude Code, Cursor and Antigravity can call it as they are.</p>
+            <ul className="hero-proof" aria-label="Benchmark highlights">
+              <li>
+                <span className="hero-study-name">Sock Shop</span>
+                <span className="hero-study-metric"><strong>{sockShopTotals.tokenReduction}</strong> fewer reported tokens</span>
+                <span className="hero-study-detail">{sockShopTotals.filesOpened.join(' → ')} files opened</span>
+                <span className="hero-study-detail">Gemini · Antigravity · 7 tasks</span>
+              </li>
+              <li>
+                <span className="hero-study-name">Django</span>
+                <span className="hero-study-metric"><strong>{reduction(djangoTotals.tokens)}%</strong> fewer total tokens</span>
+                <span className="hero-study-detail">{djangoTotals.nativeReads.join(' → ')} native search/read calls</span>
+                <span className="hero-study-detail">GPT-6 Astra · Codex · 10 tasks</span>
+              </li>
+            </ul>
+            <p className="hero-boundary">Retained Sock Shop artifacts only partly reproduce the reported totals. Django results span builds tuned on those tasks.</p>
+            <p className="hero-boundary">Works with MCP clients such as Codex, Claude Code and Cursor. Your agent chooses when to call Skelpr and remains responsible for its answer.</p>
           </div>
           <HeroVisual />
         </section>
 
-        <div className="signal-strip"><span>REPOSITORY UNDERSTANDING</span><span className="signal-line" /><span>RETRIEVAL ≠ REASONING</span><span className="signal-line" /><span>EVERY CLAIM HAS A LOCATION</span></div>
-
         <ProblemSection open={isDetailed('problem')} onToggle={() => toggleDetails('problem')} />
-        <RealWorldSection />
         <IdentitySection open={isDetailed('product')} onToggle={() => toggleDetails('product')} />
         <ModesSection open={isDetailed('modes')} onToggle={() => toggleDetails('modes')} />
         <WorkflowSection />
         <BenchmarkSection />
-        {/* Private launch: section parked — see the import note above. */}
-        {/* <ArchitectureSection open={isDetailed('architecture')} onToggle={() => toggleDetails('architecture')} /> */}
+        <RealWorldSection />
+        <WorkflowMap />
         <PrerequisitesSection />
         <InstallSection />
         {/* Directly before the ask: what is still open, at the moment of deciding. */}

@@ -1,82 +1,32 @@
-import { Check, Network, Search, Sparkles } from 'lucide-react'
+import { Check, Network, Search, Terminal } from 'lucide-react'
 
 export type Mode = 'standalone' | 'agent'
 
-export type WorkflowStep = {
-  id: string
-  label: string
-  owner: 'agent' | 'skelpr'
-  simple: string
-  technical: string
-  code: string
-  accent: string
-}
-
-export const workflowSteps: WorkflowStep[] = [
-  {
-    id: 'task',
-    label: 'Task',
-    owner: 'agent',
-    simple: 'A developer asks the agent a question about a repository.',
-    technical: 'The external coding agent receives a repository question, review, or fix request.',
-    code: '“does a recommendations service exist?”',
-    accent: 'cyan',
-  },
-  {
-    id: 'mcp',
-    label: 'MCP Server',
-    owner: 'skelpr',
-    simple: 'The agent asks skelpr for focused code intelligence instead of opening everything.',
-    technical: 'The vendor-neutral skelpr MCP Server exposes skelpr_search and related tools over MCP.',
-    code: 'skelpr_search(query, top_k=5)',
-    accent: 'blue',
-  },
-  {
-    id: 'retrieve',
-    label: 'Retrieve',
-    owner: 'skelpr',
-    simple: 'Several kinds of evidence are combined: exact matches, symbols, relationships, and meaning.',
-    technical: 'HybridRetriever fuses BM25, symbol, file and available vector candidates with reciprocal rank fusion. Indexed relationships guide bounded evidence selection.',
-    code: 'BM25 + symbols + vectors → RRF',
-    accent: 'blue',
-  },
-  {
-    id: 'rank',
-    label: 'Rank + cite',
-    owner: 'skelpr',
-    simple: 'The strongest snippets are ranked, de-duplicated, and labeled with exact file locations.',
-    technical: 'RRF preserves independent source ranks. Selection retains distinct relevant functions in the same file and fits cited source evidence to a bounded budget.',
-    code: '[LEXICAL] deploy/kubernetes/...:1-23',
-    accent: 'green',
-  },
-  {
-    id: 'reason',
-    label: 'Reason',
-    owner: 'agent',
-    simple: 'The agent thinks with the small, relevant context and prepares an answer or change.',
-    technical: 'The external agent owns conversation, reasoning, planning, task decomposition, and normal editing.',
-    code: 'context → agent LLM → answer / edit plan',
-    accent: 'amber',
-  },
-  {
-    id: 'verify',
-    label: 'Verify',
-    owner: 'skelpr',
-    simple: 'Validation runs configured commands in Docker, or on the host when local fallback is explicitly enabled.',
-    technical: 'skelpr_validate runs configured test, lint, and typecheck commands through DockerRunner. Host execution requires sandbox.allow_local_fallback.',
-    code: 'skelpr_validate(["test", "lint"])',
-    accent: 'red',
-  },
+// Public workflow: inputs, evidence and agent responsibility.
+export const workflowSteps = [
+  { id: 'task', label: 'Ask', owner: 'agent', title: 'Start with a repository question', description: 'Ask your coding agent about a behavior, a cross-file flow or a change. The agent decides whether to call Skelpr.', example: 'Where is a request validated before it is saved?', note: 'Your existing chat and model stay in place.' },
+  { id: 'mcp', label: 'Call MCP', owner: 'agent', title: 'Send the complete question', description: 'The agent calls skelpr_search with the required query argument. It can leave the context budget automatic or set an explicit limit.', example: 'skelpr_search({query: "Where is a request validated before it is saved?"})', note: 'Install the integration, reconnect the client and allow tool access first.' },
+  { id: 'retrieve', label: 'Retrieve', owner: 'skelpr', title: 'Collect related source evidence', description: 'Skelpr finds source excerpts relevant to the question, including related code across files. It returns context rather than generating the final answer.', example: 'Repository question → related source excerpts', note: 'The indexed checkout and configured providers determine what is available.' },
+  { id: 'cite', label: 'Cite', owner: 'skelpr', title: 'Return a bounded response', description: 'Excerpts include file paths and line ranges. Context limits keep responses bounded; coverage notes identify missing or omitted evidence.', example: 'Source excerpt + file:line range + coverage note', note: 'Missing evidence can require a focused follow-up request.' },
+  { id: 'reason', label: 'Answer or edit', owner: 'agent', title: 'Use the evidence', description: 'The agent explains the code or proposes a change using the cited source. It can request missing context or use native tools where needed.', example: 'Evidence → cited answer or proposed edit', note: 'Accurate retrieval does not guarantee an accurate answer. Check the citations.' },
+  { id: 'verify', label: 'Validate', owner: 'skelpr', title: 'Run configured checks', description: 'When requested, skelpr_validate runs configured test, lint or typecheck commands. Validation uses Docker by default; host execution requires explicit opt-in.', example: 'skelpr_validate({only: ["test", "lint"]})', note: 'Review the commands and results before accepting a change.' },
 ]
 
+export const sockShopTotals = {
+  tokens: [766_393, 312_056],
+  filesOpened: [113, 27],
+  tokenReduction: '59.3%',
+} as const
+
+// Task token totals retain the precision of the historical report.
 export const benchmarkTasks = [
-  ['service_architecture', 'retrieval', 95, 95, '79.8k → 62.0k'],
-  ['request_flow', 'retrieval', 100, 100, '140.5k → 59.4k'],
-  ['monitoring_stack', 'retrieval', 88, 82, '158.9k → 41.2k'],
-  ['dependency_impact', 'dependency', 92, 92, '176.1k → 52.6k'],
-  ['fix_catalogue_image', 'fix', 84, 92, '72.9k → 46.2k'],
-  ['negative_missing_service', 'negative', 60, 60, '88.7k → 26.1k'],
-  ['exact_file_catalogue', 'exact_file', 100, 100, '49.4k → 24.7k'],
+  ['service_architecture', 'retrieval', 95, 95, [79_800, 62_000]],
+  ['request_flow', 'retrieval', 100, 100, [140_500, 59_400]],
+  ['monitoring_stack', 'retrieval', 88, 82, [158_900, 41_200]],
+  ['dependency_impact', 'dependency', 92, 92, [176_100, 52_600]],
+  ['fix_catalogue_image', 'fix', 84, 92, [72_900, 46_200]],
+  ['negative_missing_service', 'negative', 60, 60, [88_700, 26_100]],
+  ['exact_file_catalogue', 'exact_file', 100, 100, [49_400, 24_700]],
 ] as const
 
 export type QaVerdict = 'better' | 'same' | 'weaker'
@@ -230,97 +180,18 @@ export const benchmarkQa: { task: string; question: string; verdict: QaVerdict; 
   },
 ]
 
-export const heroIcons = { agent: Sparkles, mcp: Network, retrieval: Search, result: Check } as const
+export const heroIcons = { agent: Terminal, mcp: Network, retrieval: Search, result: Check } as const
 
 export const heroStages: { id: keyof typeof heroIcons; label: string; detail: string; code: string; className: string }[] = [
-  { id: 'agent', label: 'You ask', detail: 'A question about the codebase', code: '“does a recommendations service exist?”', className: 'node-agent' },
-  { id: 'mcp', label: 'skelpr MCP', detail: 'The agent calls a focused tool instead of reading files', code: 'skelpr_search(query, top_k=5)', className: 'node-mcp' },
-  { id: 'retrieval', label: 'Hybrid retrieval', detail: 'BM25, symbol and vector candidates fused', code: 'BM25 + symbols + vectors → RRF', className: 'node-retrieval' },
-  { id: 'result', label: 'Cited answer', detail: 'Evidence with exact file:line locations', code: '[SYMBOL] skelpr/engine.py:354-379', className: 'node-result' },
+  { id: 'agent', label: 'Question', detail: 'Example: a cross-file code question.', code: 'Where is a request validated before it is saved?', className: 'node-agent' },
+  { id: 'mcp', label: 'MCP call', detail: 'Your agent sends the question to Skelpr.', code: 'skelpr_search({query: "Where is a request validated before it is saved?"})', className: 'node-mcp' },
+  { id: 'retrieval', label: 'Evidence', detail: 'Source excerpts within a context limit.', code: 'Excerpts + file:line ranges + coverage notes', className: 'node-retrieval' },
+  { id: 'result', label: 'Agent answer', detail: 'The agent checks the evidence and cites the source.', code: 'Read evidence → answer or edit → verify', className: 'node-result' },
 ]
-
-export const architectureNodes = [
-  { id: 'repo', label: 'Repository files', meta: 'source text', group: 'Ingestion' },
-  { id: 'scan', label: 'Repo scanner', meta: 'walk + filter', group: 'Ingestion' },
-  { id: 'ast', label: 'AST extraction', meta: 'tree-sitter / regex', group: 'Ingestion' },
-  { id: 'chunk', label: 'Symbol chunker', meta: 'line fallback', group: 'Ingestion' },
-  { id: 'store', label: 'PostgreSQL', meta: 'metadata + RLS', group: 'Data stores' },
-  { id: 'vector', label: 'Qdrant', meta: 'vectors + state', group: 'Data stores' },
-  { id: 'lexical', label: 'BM25', meta: 'postings + term cache', group: 'Retrieval core' },
-  { id: 'symbol', label: 'Symbol', meta: 'definitions + refs', group: 'Retrieval core' },
-  { id: 'graph', label: 'Relationships', meta: 'bounded source tracing', group: 'Retrieval core' },
-  { id: 'hybrid', label: 'Hybrid retriever', meta: 'fusion + citations', group: 'Retrieval core' },
-  { id: 'mcp', label: 'MCP server', meta: 'agent integration', group: 'MCP Agent' },
-]
-
-// Default desktop arrangement: four columns across three staggered rows.
-// Percentages of the map box (node centers).
-export const architectureDesktopLayout: { id: string; x: number; y: number }[] = [
-  { id: 'scan', x: 12, y: 25 }, { id: 'repo', x: 12, y: 51 },
-  { id: 'ast', x: 32, y: 25 }, { id: 'chunk', x: 32, y: 51 }, { id: 'vector', x: 32, y: 86 },
-  { id: 'lexical', x: 58, y: 25 }, { id: 'store', x: 58, y: 51 }, { id: 'symbol', x: 58, y: 86 },
-  { id: 'mcp', x: 85, y: 25 }, { id: 'hybrid', x: 85, y: 51 }, { id: 'graph', x: 85, y: 86 },
-]
-
-// Narrow screens: two columns × six rows so nothing ever overlaps; the map box
-// grows taller via CSS at the same breakpoint.
-export const architectureMobileLayout: { id: string; x: number; y: number }[] = [
-  { id: 'repo', x: 27, y: 14 }, { id: 'scan', x: 73, y: 14 },
-  { id: 'ast', x: 27, y: 28.5 }, { id: 'chunk', x: 73, y: 28.5 },
-  { id: 'store', x: 27, y: 43 }, { id: 'vector', x: 73, y: 43 },
-  { id: 'lexical', x: 27, y: 57.5 }, { id: 'symbol', x: 73, y: 57.5 },
-  { id: 'graph', x: 27, y: 72 }, { id: 'hybrid', x: 73, y: 72 },
-  { id: 'mcp', x: 50, y: 86.5 },
-]
-
-export const architectureEdges = [
-  ['repo', 'scan'], ['scan', 'ast'], ['ast', 'chunk'], ['chunk', 'store'], ['chunk', 'vector'],
-  ['store', 'lexical'], ['store', 'symbol'], ['store', 'graph'], ['vector', 'hybrid'], ['lexical', 'hybrid'],
-  ['symbol', 'hybrid'], ['graph', 'hybrid'], ['hybrid', 'mcp'],
-]
-
 
 export const modeOptions = [
-  { value: 'agent' as Mode, chip: 'MCP AGENT', title: 'Agent Integration', sub: 'MCP Server', heading: 'Agent Integration (MCP Server)', panelChip: 'NO LLM KEY REQUIRED', bestFor: 'Enhancing an existing agent', llm: 'Agent brings its own', reasoning: 'External agent', body: 'Skelpr runs as a code intelligence backend for agents such as Claude Code, Cursor and Antigravity, or any MCP-compatible agent. The agent’s LLM handles reasoning; skelpr provides retrieval and validation.' },
-  { value: 'standalone' as Mode, chip: 'CLI', title: 'Standalone Package', sub: 'CLI + Own LLM', heading: 'Standalone Package (CLI + Own LLM)', panelChip: 'FULL PIPELINE', bestFor: 'Self-contained workflow', llm: 'Your endpoint', reasoning: 'skelpr model router', body: 'You run skelpr commands directly. Skelpr handles retrieval, context building, LLM calls, patching, and validation end to end through your configured endpoint.' },
+  { value: 'agent' as Mode, chip: 'MCP', title: 'Coding agent', sub: 'Use your existing client', heading: 'Connect through MCP', panelChip: 'YOUR AGENT REASONS', bestFor: 'Existing agent workflows', llm: 'Your coding agent', reasoning: 'Your coding agent', body: 'Connect Codex, Claude Code, Cursor or another MCP client. Skelpr returns repository evidence; your agent writes the answer or edit. Reconnect after setup and allow tool access in the client.' },
+  { value: 'standalone' as Mode, chip: 'CLI', title: 'Terminal', sub: 'Use a configured model', heading: 'Run commands directly', panelChip: 'GENERATION PROVIDER REQUIRED', bestFor: 'Terminal workflows', llm: 'Configured provider', reasoning: 'Configured model', body: 'Run ask, chat, review or fix from the terminal. Skelpr supplies repository context to your configured generation model. Review proposed changes and run the relevant checks.' },
 ]
 
-export const modesDetail = 'MCP exposes retrieval and validation to the host agent. Standalone CLI generation uses your configured model provider. The optional HTTP API exposes authenticated routes for application and CI integration.'
-
-export const architectureCopy = (id: string, detailMode: 'simple' | 'technical') => {
-  const simple: Record<string, string> = {
-    repo: 'The repository is the source of truth. Skelpr scans eligible tracked and non-ignored untracked text files.',
-    scan: 'The scanner walks the repository, respects ignore rules, and classifies files.',
-    ast: 'Code structure is extracted when possible. A regex fallback keeps indexing functional.',
-    chunk: 'Code is split around symbols such as functions, classes, and methods.',
-    store: 'Metadata, hashes, files, chunks, and symbols are stored here with tenant isolation.',
-    vector: 'Embeddings support semantic search, with an in-memory fallback when needed.',
-    lexical: 'Exact terms and filenames surface concrete matches first.',
-    symbol: 'Indexed definitions and bounded text/import references add structural context.',
-    graph: 'Indexed imports and source references help select related evidence. Runtime dispatch may remain unresolved.',
-    hybrid: 'The orchestrator combines retrieval sources, then reranks and cites the best evidence.',
-    mcp: 'The MCP server gives an external agent a compact, standard integration surface.',
-  }
-  const technical: Record<string, string> = {
-    repo: 'scan_repository() prefers git ls-files and filters non-text files before indexing.',
-    scan: 'Repo Scanner applies .skelpr.yaml ignore patterns and records language metadata and hashes.',
-    ast: 'tree_sitter_indexer.extract() emits symbols/imports; language-aware regex extraction is the fallback.',
-    chunk: 'chunk_by_symbols() aligns chunks to outermost symbol spans and falls back to overlapping line windows.',
-    store: 'PostgreSQL stores file/chunk/symbol/import records and index state under tenant-aware metadata access.',
-    vector: 'VectorStore uses Qdrant when reachable; otherwise an in-memory cosine index tracks degraded state.',
-    lexical: 'LexicalRetriever uses BM25 postings across metadata backends. A disposable SQLite term cache speeds persistent-index startup. Ripgrep serves explicit live-checkout verification.',
-    symbol: 'SymbolIndex reads extracted definitions. SCIP binary detection exists, but SCIP index decoding is not implemented.',
-    graph: 'Import/reference relationships guide query evidence selection. Diff review can use graph neighbors and a static graph summary, which is excluded from query RRF fusion.',
-    hybrid: 'HybridRetriever fuses independent candidate ranks with RRF, selects distinct spans and related execution evidence, and hydrates current source within bounded context.',
-    mcp: 'mcp_server registers skelpr_search, get_context, find_symbol, dependencies, validate, health, and AST patching.',
-  }
-  return detailMode === 'simple' ? simple[id] : technical[id]
-}
-
-export const architectureBackend = (id: string) => {
-  const backends: Record<string, string> = {
-    repo: 'tracked files / filesystem', scan: 'git ls-files → os.walk', ast: 'tree-sitter → regex-fallback', chunk: 'symbol spans → line windows',
-    store: 'PostgreSQL → in-memory store', vector: 'Qdrant → memory cosine', lexical: 'BM25 + persistent term cache', symbol: 'AST / regex definitions', graph: 'imports + references', hybrid: 'RRF + budgeted evidence selection', mcp: 'stdio MCP protocol',
-  }
-  return backends[id]
-}
+export const modesDetail = 'MCP retrieval needs no Skelpr generation key. Hosted embeddings may still need credentials. Standalone generation and embeddings are configured separately. Installing an MCP server makes tools available; it does not force an agent to call them.'

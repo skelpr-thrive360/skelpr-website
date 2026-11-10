@@ -1,29 +1,40 @@
 # Skelpr
 
-> Surgical code retrieval for AI agents, PR reviews, and fixes. Skelpr finds the
-> parts of a repository that matter, ranks them, and hands the agent a small,
-> token-efficient context package with precise file:line citations. It retrieves
-> and cites — the agent still does the reasoning.
+> Repository evidence with file:line citations, within a context budget.
+> Connect a coding agent over MCP or use the standalone CLI with a configured
+> generation provider. In MCP mode, the agent decides when to call Skelpr.
 
-Installation is public. Running requires a machine-bound lease obtained from the
-activation service. Managed leases check in during use. Hosted embedding and
-generation providers receive configured requests, and optional Langfuse tracing
-can include source and outputs. MCP uses the host agent for reasoning.
+## Setup and data handling
 
-## Docs
+- Python 3.10+. Standard setup uses Docker for PostgreSQL, Qdrant and isolated
+  validation. External database services are supported.
+- Configure an embedding endpoint for semantic search. Standalone generation
+  needs a separate model provider. From 0.3.6, plain pip install skelpr includes
+  CLI and MCP support.
+- Running requires activation. Each activated machine uses one license seat;
+  managed leases check in during use.
+- Hosted embeddings receive indexed text and queries. Standalone generation
+  receives prompts and selected source context. Optional Langfuse tracing can
+  include source and outputs. The coding agent has its own data policy.
+- Context limits can exclude relevant evidence. Check reported gaps and request
+  more context when needed. Empty search results do not prove absence.
 
-- [Install & activate](https://www.skelpr.com/docs): prerequisites, pip install on Linux/macOS/Windows, activation with your token, first run, troubleshooting, uninstall.
-- [Home](https://www.skelpr.com/): problem, integration modes, benchmark evidence, requirements, waitlist.
+## Case studies
 
-## Evidence
+- Sock Shop: the historical report claimed 59% fewer tokens and 76% fewer file
+  reads. Retained artifacts do not fully reconcile with the published aggregate.
+- Django, ten Codex tasks: total tokens 437,997 to 274,749 (37.27% fewer), native
+  search/read calls 28 to 9, combined rubric score 89/96 to 91/96. Total wall time
+  was 534.40 to 521.25 seconds; four tasks were slower with Skelpr.
+- Django totals include cached input and output tokens. These are retained
+  matched comparisons across successive builds; the questions informed tuning.
+  Q8 and Q10 used seeded defects. Neither study establishes general performance
+  or results for one frozen release.
 
-- The historical Sock Shop report claimed 59% fewer tokens and 76% fewer file reads. Retained artifacts do not fully reconcile with the aggregate.
-- The ten-task Django case study reported 37.27% fewer tokens across successive builds informed by those questions. Neither study establishes general or frozen-release performance.
-- Standard setup uses Python 3.10+, Docker and a configured embedding endpoint. External PostgreSQL/Qdrant can replace Docker. Standalone generation requires a configured model provider. From 0.3.6, plain pip install skelpr includes CLI, MCP and local AST grammars.
+## Links
 
-## Facts
-
-- Name: Skelpr
-- Website: https://www.skelpr.com
-- Docs: https://www.skelpr.com/docs
+- [Case studies](https://www.skelpr.com/#benchmark): Sock Shop and Django comparisons.
+- [Install and activate](https://www.skelpr.com/docs): prerequisites, providers,
+  MCP setup, CLI commands, troubleshooting and uninstall.
+- [Home](https://www.skelpr.com/): product, integration modes and requirements.
 - Contact: theskelpr@gmail.com

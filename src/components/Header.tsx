@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ArrowRight, Menu, X } from 'lucide-react'
 import { BrandMark } from './BrandMark'
 import { ThemeToggle } from './ThemeToggle'
@@ -16,34 +16,40 @@ export function Header() {
   const scrolled = useScrolled()
   const active = useActiveSection()
   const closeNav = () => setMobileNav(false)
+  useEffect(() => {
+    if (!mobileNav) return
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileNav(false)
+        document.getElementById('menu-toggle')?.focus()
+      }
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [mobileNav])
   return (
     <header className={scrolled ? 'site-header is-scrolled' : 'site-header'}>
       <a className="brand" href="#top" aria-label="skelpr home">
         <BrandMark />
         <span>skelpr</span>
       </a>
-      <nav className={mobileNav ? 'main-nav open' : 'main-nav'} aria-label="Primary navigation">
+      <nav id="primary-nav" className={mobileNav ? 'main-nav open' : 'main-nav'} aria-label="Primary navigation">
         {navItems.map((item) => (
           <a key={item.id} href={`#${item.id}`} aria-current={active === item.id ? 'location' : undefined} onClick={closeNav}>{item.label}</a>
         ))}
         {/* A page, not a section: /docs is its own document, so unlike the three
             above it takes no active state and never appears in the section spy. */}
         <a href="/docs" onClick={closeNav}>Docs</a>
-        {/* The header's waitlist CTA is hidden at phone widths, where the hamburger
-            took the free space — and the hero used to carry a second copy of the
-            form, so a phone had a route to it above the fold and a desktop had two.
-            One conversion point per width: the drawer carries the link here, the
-            header carries it there, and the hero carries none. */}
-        <a className="nav-join" href="#waitlist" onClick={closeNav}>Join waitlist</a>
+        <a className="nav-join" href="#install" onClick={closeNav}>Install</a>
+        <a className="nav-join" href="#waitlist" onClick={closeNav}>Request access</a>
         {/* GitHub link temporarily disabled: <a href="https://github.com/skelpr-thrive360/skelpr" target="_blank" rel="noreferrer">GitHub <ExternalLink size={13} /></a> */}
       </nav>
       <div className="header-actions">
         <ThemeToggle />
-        <button className="menu-button" onClick={() => setMobileNav(!mobileNav)} aria-label={mobileNav ? 'Close menu' : 'Open menu'}>
+        <button id="menu-toggle" className="menu-button" onClick={() => setMobileNav(!mobileNav)} aria-expanded={mobileNav} aria-controls="primary-nav" aria-label={mobileNav ? 'Close menu' : 'Open menu'}>
           {mobileNav ? <X size={20} /> : <Menu size={20} />}
         </button>
-        <a className="nav-waitlist" href="#waitlist">Join waitlist</a>
-        <a className="header-cta" href="#install">Get started <ArrowRight size={15} /></a>
+        <a className="header-cta" href="#install">Install <ArrowRight size={15} /></a>
       </div>
       {/* Decorative: the rail reports scroll position, which a screen reader
           already gets from the document itself. */}

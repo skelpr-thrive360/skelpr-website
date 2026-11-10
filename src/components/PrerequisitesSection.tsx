@@ -16,53 +16,41 @@ type Prerequisite = {
 
 const prerequisites: Prerequisite[] = [
   {
-    index: '01',
-    chip: 'Required for setup',
-    title: 'A running Docker daemon',
-    body: 'skelpr setup talks to the Docker daemon to start the metadata store, the vector store and the validation sandbox. Docker Desktop or Docker Engine must be ready first — if it is not running, setup stops after step 1 and says so rather than half-configuring the machine.',
+    index: '01', chip: 'Standard setup', title: 'Docker',
+    body: 'Start Docker Desktop or Docker Engine before running skelpr setup. Setup starts the repository stores and prepares isolated validation.',
     facts: [
-      { label: 'Postgres 16', value: 'port 5434' },
+      { label: 'PostgreSQL', value: 'port 5434' },
       { label: 'Qdrant', value: 'ports 6333 / 6334' },
-      { label: 'Sandbox image', value: 'skelpr-runner:latest' },
     ],
-    note: 'Docker is optional if you configure external PostgreSQL and Qdrant. In-memory fallback is process-local. Host validation requires sandbox.allow_local_fallback: true. Setup resumes stopped containers and gives new containers named data volumes.',
+    note: 'External PostgreSQL and Qdrant can replace the bundled services. Running validation on the host requires explicit opt-in.',
   },
   {
-    index: '02',
-    chip: 'For semantic retrieval',
-    title: 'An embeddings endpoint, hosted or your own',
-    body: 'Indexing sends source chunks to the configured embedding endpoint. Vector search embeds queries. BM25 and symbol retrieval can work without vectors. Choose a local endpoint or configure a hosted provider and its credentials. An eligible lease can obtain credentials for the Skelpr hosted endpoint once that endpoint is configured.',
-    model: [
-      { label: 'Model', value: 'nomic-ai/nomic-embed-text-v1.5' },
-      { label: 'Format', value: 'GGUF' },
-      { label: 'Quantization', value: 'Q8_0' },
-      { label: 'Architecture', value: 'nomic-bert' },
-      { label: 'Domain', value: 'embedding' },
-      { label: 'Size on disk', value: '~146 MB' },
-    ],
-    note: 'Match embeddings.model to the model served at embeddings.endpoint. Keyless non-strict initialization can fall back to deterministic hashing. Strict indexing and credentialed endpoints refuse that substitution. Changing embedding models requires rebuilding the vector index.',
-  },
-  {
-    index: '03',
-    chip: 'CLI mode only',
-    title: 'A model to reason with',
-    body: 'ask, chat, review and fix need a generation model. Run qwen2.5-14b-instruct locally, or configure an API key and skip the hardware. MCP mode needs neither: your agent reasons, Skelpr only retrieves.',
+    index: '02', chip: 'Semantic search', title: 'An embedding provider',
+    body: 'Choose a local or hosted endpoint. Hosted embeddings receive indexed source text and search queries. Check the endpoint and credentials before indexing.',
     facts: [
-      { label: 'Local model', value: 'qwen2.5-14b-instruct' },
-      { label: 'or an API key', value: 'Gemini · OpenAI · Anthropic · OpenRouter · Groq' },
-      { label: 'Configuration', value: 'skelpr setup (interactive)' },
+      { label: 'Where it runs', value: 'Local or hosted' },
+      { label: 'Configuration', value: 'embeddings in .skelpr.yaml' },
     ],
-    note: 'Generation and embeddings have separate configuration blocks. Either endpoint can be local or hosted. Interactive setup verifies credentials before saving a reference.',
+    note: 'Match the configured model to the endpoint. Changing the embedding model requires rebuilding the vector index.',
+  },
+  {
+    index: '03', chip: 'Standalone CLI', title: 'A generation provider',
+    body: 'ask, chat, review and fix use a configured generation model. MCP retrieval uses your coding agent for reasoning and needs no separate Skelpr generation key.',
+    facts: [
+      { label: 'Where it runs', value: 'Local or hosted' },
+      { label: 'Setup', value: 'skelpr setup' },
+    ],
+    note: 'Generation and embeddings have separate settings. Hosted generation receives your prompt and selected source context.',
   },
 ]
 
 export function PrerequisitesSection() {
   return (
-    <section className="prereq-section act-wash content-section" id="prerequisites">
+    <section className="prereq-section content-section" id="prerequisites">
       <div className="section-kicker">Before you start</div>
       <div className="two-column-heading">
-        <h2>What has to be running<br /><em>before the first index.</em></h2>
-        <p>Start Docker and configure the embedding endpoint before the standard setup. Standalone CLI workflows also need generation. The install guide covers external services and failure behavior.</p>
+        <h2>What you need to run Skelpr</h2>
+        <p>Use Python 3.10+, Git and an activated license. Standard setup also needs Docker and an embedding endpoint. Configure generation only for standalone CLI workflows.</p>
       </div>
       <div className="prereq-list">
         {prerequisites.map((item) => (
@@ -102,17 +90,11 @@ export function PrerequisitesSection() {
         ))}
       </div>
       <div className="prereq-verify">
-        <p><strong>Check the embedding endpoint before you index.</strong> This example checks the default local model. Match its name to your server and inspect the reported indexing backends. Hosted endpoints also need valid configuration and credentials.</p>
+        <p><strong>Check your setup.</strong> Run diagnostics from the repository after configuration. Resolve provider and service errors before indexing.</p>
         <div className="prereq-code">
-          <div className="code-top"><span>VERIFY</span><span>bash</span></div>
-          {/* Split across lines to the width of the install snippet next door: this
-              panel scrolls sideways on a phone rather than wrapping, like every other
-              figure on the page, so the line length is the overflow. */}
-          <pre><code>{'curl -s http://127.0.0.1:1234/v1/embeddings \\'}{'\n'}
-{'  -H \'Content-Type: application/json\' \\'}{'\n'}
-{'  -d \'{"input":["hi"],'}{'\n'}
-{'       '}<span className="string">{'"model":"text-embedding-nomic-embed-text-v1.5@q8_0"}\''}</span></code></pre>
-          <div className="code-footer"><Check size={14} /> example for the default local endpoint</div>
+          <div className="code-top"><span>DIAGNOSTICS</span><span>terminal</span></div>
+          <pre><code>{'skelpr license\nskelpr doctor --verbose'}</code></pre>
+          <div className="code-footer"><Check size={14} /> <a href="/docs#troubleshooting">Troubleshooting commands</a></div>
         </div>
       </div>
     </section>

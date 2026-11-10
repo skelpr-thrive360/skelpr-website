@@ -64,6 +64,9 @@
 .docs-aside {
   position: sticky;
   top: calc(var(--header-h) + var(--space-5));
+  max-height: calc(100dvh - var(--header-h) - var(--space-5) * 2);
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .docs-toc-label {
@@ -103,9 +106,9 @@
   border-left-color: var(--accent);
 }
 
-/* The rail follows the reader: full ink and the accent rule on the active one. */
-.docs-toc-list a.is-active {
+.docs-toc-list a[aria-current="location"] {
   color: var(--ink-1);
+  font-weight: 700;
   border-left-color: var(--accent);
 }
 
@@ -186,7 +189,7 @@
    `scroll-margin-top` is *added* to the scroll padding, never clamped against it:
    reserving the header in both places put a followed link ~100px below the line
    the rail measures against, and the rail then lit the heading before the one
-   that was clicked. `useTocSpy.ts` reads the scroll padding as its reading line.
+   that was clicked. The contents tracker uses the scroll padding as its reference.
    The rule out-specifies the global `[id]` margin in styles.css. */
 .docs-prose h2,
 .docs-prose h3 {
@@ -263,7 +266,16 @@
   font-size: 0.9em;
 }
 
-/* Tables: the prerequisites and the two troubleshooting lists. */
+/* Tables scroll within the article instead of widening the page. */
+.docs-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: var(--space-5) 0;
+}
+
+.docs-table-scroll table {
+  margin: 0;
+}
 .docs-prose table {
   width: 100%;
   margin: var(--space-5) 0;

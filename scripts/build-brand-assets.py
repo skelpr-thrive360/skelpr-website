@@ -298,6 +298,10 @@ def main() -> int:
     mark.save(light_path, optimize=True)
     dark.save(dark_path, optimize=True)
 
+    # The header displays the mark at 32x18 CSS pixels. Keep 3x density.
+    mark.resize((96, 54), Image.LANCZOS).save(brand / "logo-mark.webp", lossless=True)
+    dark.resize((96, 54), Image.LANCZOS).save(brand / "logo-mark-dark.webp", lossless=True)
+
     # 2. Small surfaces: the detail crop, dark variant. ICO and the PNG links
     #    cannot read media queries, and the surfaces that composite transparency
     #    themselves (iOS home screen, browser tab strips) put it on dark, so the
@@ -338,7 +342,7 @@ def main() -> int:
           f"{'clean OK' if card['leftovers'] == 0 else 'FAIL'}")
 
     print("== written ==")
-    for path in sorted([*brand.glob("*.png"), public / "favicon.ico",
+    for path in sorted([*brand.glob("*.png"), *brand.glob("*.webp"), public / "favicon.ico",
                         public / "favicon.svg", public / "favicon-dark.svg"]):
         print(f"  {path}  ({path.stat().st_size:,} bytes)")
     return 0
