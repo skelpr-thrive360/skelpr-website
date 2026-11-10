@@ -11,14 +11,12 @@ import { RealWorldSection } from './components/RealWorldSection'
 import { PrerequisitesSection } from './components/PrerequisitesSection'
 import { FaqSection } from './components/FaqSection'
 import { Footer, InstallSection, WaitlistSection } from './components/WaitlistInstall'
-import { useSmoothScroll } from './hooks/useSmoothScroll'
 import { useScrollChoreography } from './hooks/useScrollChoreography'
 import { useHashScroll } from './hooks/useHashScroll'
 import { useSectionSpy } from './hooks/useSectionSpy'
 import { useThemeEffect } from './lib/theme'
 
 function App() {
-  useSmoothScroll()
   useScrollChoreography()
   useSectionSpy()
   useHashScroll()
@@ -41,11 +39,11 @@ function App() {
       <a className="skip-link" href="#top">Skip to main content</a>
       <Header />
 
-      <main id="top">
+      <main id="top" tabIndex={-1}>
         <section className="hero">
           <div className="hero-copy">
             <div className="eyebrow"><span className="status-dot" /> Skelpr · repository context over MCP and CLI</div>
-            <h1>Repository evidence.<br /><em>Within a context budget.</em></h1>
+            <h1>Repository context.<br />Within your token budget.</h1>
             <p className="hero-lede">Give your coding agent relevant source excerpts with <code>file:line</code> ranges. Set context limits and reduce repeated searches across your repository.</p>
             <div className="hero-actions">
               <a className="button primary" href="/docs">Install and connect <ArrowRight size={16} /></a>
@@ -61,8 +59,6 @@ function App() {
           </div>
           <HeroVisual />
         </section>
-
-        <div className="signal-strip"><span>CONTEXT LIMITS</span><span className="signal-line" /><span>FILE:LINE EVIDENCE</span><span className="signal-line" /><span>MCP + CLI</span></div>
 
         <ProblemSection open={isDetailed('problem')} onToggle={() => toggleDetails('problem')} />
         <IdentitySection open={isDetailed('product')} onToggle={() => toggleDetails('product')} />

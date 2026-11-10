@@ -69,7 +69,7 @@ export function BenchmarkSection() {
   return (
     <section className="benchmark-section act-wash content-section" id="benchmark">
       <div className="section-kicker">Benchmark evidence</div>
-      <div className="two-column-heading"><h2>Two repositories.<br /><em>Two agent setups.</em></h2><p>Start with Sock Shop on Gemini and Antigravity, then compare the Django study on Codex. Each study compares its own native-tools baseline with Skelpr MCP. These are separate case studies, not a head-to-head model comparison.</p></div>
+      <div className="two-column-heading"><h2>Compare the case studies</h2><p>Start with Sock Shop on Gemini and Antigravity, then compare the Django study on Codex. Each study compares its own native-tools baseline with Skelpr MCP. These are separate case studies, not a head-to-head model comparison.</p></div>
       <div className="case-study-switcher" role="tablist" aria-label="Benchmark case study">
         {(['sock-shop', 'django'] as const).map((value, index) => (
           <button type="button" key={value} id={`study-tab-${value}`} role="tab" aria-selected={study === value} aria-controls={`study-panel-${value}`} tabIndex={study === value ? 0 : -1} onClick={() => setStudy(value)} onKeyDown={(event) => {

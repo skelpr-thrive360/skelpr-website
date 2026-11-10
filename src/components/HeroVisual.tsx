@@ -165,12 +165,7 @@ export function HeroVisual() {
   // The walkthrough is visitor-driven: the connectors draw once and then flow
   // (see `hero-flow`), and the stage follows hover, focus and click. There is no
   // autoplay carousel.
-  // The pieces are placed first (see useScrollChoreography) and the wiring
-  // follows: drawing while cards are still travelling would glue curves to
-  // positions the cards have left. 1250ms is when the last step card has landed,
-  // with the trace panel still settling — close enough that the draw reads as
-  // the next beat rather than a second animation. Reduced motion skips the wait:
-  // nothing is arriving there either.
+  // Let the initial layout settle before revealing the connectors.
   useEffect(() => {
     const wait = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1250
     const timer = window.setTimeout(() => setDrawn(true), wait)

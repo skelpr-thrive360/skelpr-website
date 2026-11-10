@@ -22,7 +22,7 @@ import { WaitlistForm } from './Shared'
 
 export function WaitlistSection() {
   return (
-    <section className="waitlist-section act-wash content-section" id="waitlist"><div className="waitlist-panel"><div><span className="eyebrow">ACCESS AND UPDATES</span><h2>Need a license?<br /><em>Request access.</em></h2><p>The package is public. Running it requires an activation token; each activated machine uses one seat. Email us to request access. The waitlist is for release updates.</p><a className="button text-button" href="mailto:theskelpr@gmail.com?subject=Skelpr%20access">Request a token <ArrowRight size={16} /></a></div><WaitlistForm /></div>
+    <section className="waitlist-section act-wash content-section" id="waitlist"><div className="waitlist-panel"><div><span className="eyebrow">ACCESS AND UPDATES</span><h2>Request access</h2><p>The package is public. Running it requires an activation token; each activated machine uses one seat. Email us to request access. The waitlist is for release updates.</p><a className="button text-button" href="mailto:theskelpr@gmail.com?subject=Skelpr%20access">Request a token <ArrowRight size={16} /></a></div><WaitlistForm /></div>
     </section>
   )
 }
@@ -33,7 +33,7 @@ export function InstallSection() {
       <div className="section-kicker">Get started</div>
       <div className="install-layout">
         <div className="install-copy">
-          <h2>Install. Index.<br /><em>Connect your client.</em></h2>
+          <h2>Install and connect</h2>
           <p>Follow the setup guide to activate a machine and configure providers. Then index your repository and connect your MCP client.</p>
           {/* One link, to the page that owns the exact steps: the channel setup the
               snippet below assumes, the token, and the environment checks are all

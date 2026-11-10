@@ -3,7 +3,7 @@ export function RealWorldSection() {
     <section className="real-world-section act-wash content-section" id="example">
       <div className="section-kicker">Reading the evidence</div>
       <div className="real-world-grid">
-        <div><h2>No matches?<br /><em>Check the scope.</em></h2><p>An empty search result does not prove that a feature is absent. Check what was searched, which files were excluded and whether the scan completed.</p><p>Skelpr supports live-checkout verification for presence and absence questions. Treat an incomplete scan as inconclusive.</p></div>
+        <div><h2>Check what the search covered</h2><p>An empty search result does not prove that a feature is absent. Check what was searched, which files were excluded and whether the scan completed.</p><p>Skelpr supports live-checkout verification for presence and absence questions. Treat an incomplete scan as inconclusive.</p></div>
         <div className="evidence-window">
           <div className="window-top"><span>RESPONSE CHECKLIST</span></div>
           <div className="evidence-body">

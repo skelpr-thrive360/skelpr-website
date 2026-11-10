@@ -247,7 +247,7 @@ export function DocsApp() {
           </nav>
         </aside>
 
-        <main className="docs-main" id="docs-content">
+        <main className="docs-main" id="docs-content" tabIndex={-1}>
           <details className="docs-toc-mobile">
             <summary>On this page</summary>
             <Contents entries={entries} ids={entryIds} />
@@ -260,6 +260,7 @@ export function DocsApp() {
                 h2: ({ children }) => <h2 id={slugify(textOf(children))}>{children}</h2>,
                 h3: ({ children }) => <h3 id={slugify(textOf(children))}>{children}</h3>,
                 pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
+                table: ({ children }) => <div className="docs-table-scroll" role="region" aria-label="Documentation table, horizontally scrollable" tabIndex={0}><table>{children}</table></div>,
                 a: ({ href, children }) => {
                   const external = typeof href === 'string' && /^https?:/.test(href)
                   return (

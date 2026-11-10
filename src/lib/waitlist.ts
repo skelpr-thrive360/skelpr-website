@@ -26,7 +26,6 @@ export async function submitWaitlistEmail(
   }
   if (!WAITLIST_ENDPOINT) {
     // Local stub: nothing is stored, so the success state is reachable in dev.
-    console.info('[waitlist stub] email captured:', email)
     return { ok: true, stub: true }
   }
 
