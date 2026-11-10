@@ -1683,6 +1683,8 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
   font-size: var(--text-sm);
 }
 
+.terminal-body code { overflow-wrap: anywhere; }
+
 .terminal-prompt {
   color: var(--fg-positive);
 }
@@ -1960,6 +1962,78 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
 
 .benchmark-table {
   overflow-x: auto;
+}
+
+.django-results {
+  width: 100%;
+  min-width: 920px;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.django-results caption {
+  padding: var(--space-4) var(--space-5);
+  color: var(--ink-2);
+  text-align: left;
+}
+
+.django-results th,
+.django-results td {
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--rule);
+  text-align: left;
+}
+
+.django-results td { white-space: nowrap; }
+.django-results thead { background: var(--surface); }
+.django-results tbody th { font-weight: 500; }
+.django-results tfoot { background: var(--accent-wash); }
+.django-results tr.selected { background: var(--accent-wash); }
+.django-methodology { margin-top: var(--space-5); }
+
+.case-study-switcher {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-6) 0;
+}
+
+.case-study-switcher button {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  color: var(--ink-1);
+  text-align: left;
+}
+
+.case-study-switcher button[aria-selected="true"] {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+  box-shadow: inset 0 -3px var(--accent);
+}
+
+.case-study-switcher small { color: var(--ink-2); }
+.case-study-switcher span { font-weight: 600; }
+.case-task-button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--accent);
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.case-study-switcher button:focus-visible,
+.case-task-button:focus-visible,
+.benchmark-table:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
 }
 
 .table-row {
@@ -3982,6 +4056,8 @@ html[data-theme="dark"] .brand-mark-dark { display: block; }
   .mode-switcher {
     margin-top: var(--space-6);
   }
+  .case-study-switcher { grid-template-columns: minmax(0, 1fr); }
+  .case-study-switcher button { padding: var(--space-4); }
   .mode-switcher button {
     min-width: 0;
     flex: 1;

@@ -1,8 +1,8 @@
 # Install & activate Skelpr
 
-Skelpr supplies cited repository evidence to coding agents through MCP, or uses your
-configured generation provider through the standalone CLI. Installing is public.
-Running requires activation, with one seat per machine.
+Skelpr returns repository evidence with `file:line` citations and a context limit.
+Use it through your coding agent's MCP connection or the standalone CLI.
+Installation is public; running requires activation, with one seat per machine.
 
 This guide describes the 0.3.6 source and installation changes. Check the installed
 version with `skelpr --version`. Earlier releases may require the `mcp`, `ast`,
@@ -19,8 +19,8 @@ version with `skelpr --version`. Earlier releases may require the `mcp`, `ast`,
 | An embedding endpoint | Semantic indexing and vector retrieval |
 | A generation provider | Standalone `ask`, `chat`, `review` and `fix` |
 
-MCP uses your agent for generation. The agent chooses when to call Skelpr and may
-require tool approval. Installation guidance encourages use without guaranteeing it.
+MCP uses your agent for generation. The agent decides when to call tools and may
+require approval. Connecting Skelpr does not guarantee automatic use.
 
 ### Docker services
 
@@ -44,8 +44,8 @@ requires `sandbox.allow_local_fallback: true` and executes commands on your mach
 
 ### The embedding model
 
-Indexing embeds source chunks. Vector search embeds questions. BM25 and symbol
-retrieval can continue when vector retrieval is unavailable, with reduced recall.
+Configure the embedding provider before indexing. If it becomes unavailable,
+search can return reduced evidence from an existing index.
 
 The default local endpoint is `http://127.0.0.1:1234/v1`, with model
 `text-embedding-nomic-embed-text-v1.5@q8_0`. Load the model in an OpenAI-compatible
@@ -61,21 +61,17 @@ Hosted providers require their endpoint, model and credentials. An eligible leas
 can obtain a credential for the configured Skelpr hosted embedding endpoint.
 Simply activating a token does not select that endpoint.
 
-Keyless non-strict initialization can fall back to deterministic hashing.
-Strict indexing, credentialed endpoints and the watcher refuse this substitution.
 Changing embedding models requires rebuilding the vector index, even when their
 dimensions match. Configure the intended provider before indexing.
 
 ## Get a token
 
-Request access at [skelpr.com](/#waitlist). Your personal bearer token has the form
-`LDX1.<payload>.<signature>` and includes identity, features, expiry and seat terms.
-Keep it private.
+Request an activation token at [skelpr.com](/#waitlist). Keep it private.
 
 ## Install
 
-From 0.3.6, the default package includes the CLI, MCP SDK, PostgreSQL/Qdrant clients
-and local AST grammars. The optional HTTP API uses the `server` extra.
+From 0.3.6, plain installation includes the CLI, MCP integration and database
+clients. The optional HTTP API uses the `server` extra.
 
 ```bash
 python -m pip install --upgrade skelpr
@@ -91,12 +87,11 @@ missing, activate that environment or add its scripts directory to PATH.
 python -m pip install "skelpr[server]"   # optional HTTP API
 ```
 
-AST grammars cover Python, JavaScript, TypeScript, Go, Rust, Java, Ruby, C, C++ and
-C#. Parser loading is lazy and uses installed grammars. Unsupported syntax can
-fall back to regex extraction and line chunks, with less structural precision.
-BM25 operates over indexed text independently of language.
+Structured code support covers Python, JavaScript, TypeScript, Go, Rust, Java,
+Ruby, C, C++ and C#. Other indexed text remains searchable; source structure
+support varies by language and syntax.
 
-### Install without an index
+### Offline package installation
 
 A vendor-supplied wheel can be installed directly. Offline installation also needs
 local copies of its dependencies for your Python version and operating system.
@@ -120,8 +115,7 @@ To keep the token out of shell command history, read it from a private file.
 skelpr activate --file token.txt
 ```
 
-Activation verifies the token, requests a seat from the service and stores the
-returned machine-bound lease. Local state defaults to `~/.skelpr`, or
+Activation registers this machine and stores its lease. Local state defaults to `~/.skelpr`, or
 `%USERPROFILE%\.skelpr` on Windows. `SKELPR_HOME` relocates it. `SKELPR_LICENSE`
 and `SKELPR_LEASE` override stored credentials, which can explain why a newly
 saved activation is not the one being used.
@@ -158,21 +152,40 @@ separately configured model, database or telemetry connections.
 
 ## First run
 
-Start the embedding endpoint and Docker first. For an agent installation, skip
-standalone generation setup.
+Start Docker and the configured embedding endpoint. Choose a mode:
+
+| Mode | Who generates the answer? | Setup |
+|---|---|---|
+| MCP | Your coding agent | `skelpr setup --no-configure` |
+| Standalone CLI | Your configured model provider | `skelpr setup` in an interactive terminal |
+
+For MCP, run these commands from the repository you want to search:
 
 ```bash
 cd <your-repo>
 skelpr setup --no-configure
 skelpr init
+```
+
+Check the embedding endpoint and model in `.skelpr.yaml` before indexing. Then run:
+
+```bash
 skelpr index
 skelpr install-mcp
 ```
 
-Reconnect the agent and confirm it lists `skelpr_search`. To target one client,
-use `skelpr install-mcp --agent codex`, `--agent claude-code` or `--agent cursor`.
-`--yes` configures all detected clients. `--print` emits a manual JSON entry.
-Some clients use their own CLI configuration writer. Codex uses user scope.
+Reconnect the agent and confirm it lists `skelpr_search`.
+
+| Client setup | Command |
+|---|---|
+| Choose a detected client | `skelpr install-mcp` |
+| Configure Codex | `skelpr install-mcp --agent codex` |
+| Configure Claude Code | `skelpr install-mcp --agent claude-code` |
+| Configure Cursor | `skelpr install-mcp --agent cursor` |
+| Configure all detected clients | `skelpr install-mcp --yes` |
+| Get a manual JSON entry | `skelpr install-mcp --print` |
+
+Some clients use their own configuration commands. Codex uses user scope.
 
 For standalone CLI, run `skelpr setup` interactively to verify and save generation
 and embedding settings, then `skelpr init` and `skelpr index`.
@@ -189,9 +202,9 @@ running validation because those commands execute code from the checkout.
 ### MCP tool use
 
 Pass the complete question as `{"query": "your question"}` to `skelpr_search`.
-`question` is an accepted alias, although clients can require canonical `query`
-before sending. Leave budgets unset for automatic selection, or provide a limit.
-Budgets and dependency traversal are bounded and cannot guarantee full coverage.
+Use `query` for client compatibility; the server also accepts `question`.
+Leave budgets unset for automatic selection, or provide a limit. A context limit
+controls response size; it does not guarantee complete evidence.
 
 Cite returned file ranges or original `N|` source-line labels. Ask for missing
 evidence with `skelpr_get_context`, using `missing_evidence` and `exclude_span_ids`
@@ -209,10 +222,9 @@ skelpr watch
 skelpr watch --poll 1 --debounce 1.5
 ```
 
-Watch indexes once and then detects added, changed and removed files and HEAD
-changes. It polls repository state with a filesystem fallback outside Git.
-Detection is followed by a quiet debounce interval and indexing time, so it is
-not instantaneous. It is opt-in inside MCP and `serve`.
+Watch indexes once, then checks for added, changed and removed files and branch
+changes. Updates take the polling interval, a quiet debounce period and indexing
+time. Enable background updates explicitly for MCP and `serve`:
 
 ```yaml
 indexing:
@@ -222,10 +234,9 @@ indexing:
     debounce_seconds: 1.5
 ```
 
-`SKELPR_AUTO_REINDEX=1` enables it for the process. Strict embedding failures trigger
-backoff. PostgreSQL and Qdrant updates are not one cross-store transaction, so a
-failure partway through indexing can leave partial updates. Inspect diagnostics
-and complete a successful indexing pass after recovery.
+`SKELPR_AUTO_REINDEX=1` also enables background updates for the process. Failed
+updates can leave an incomplete index. Check diagnostics and finish a successful
+indexing pass after restoring the service.
 
 ## Check the license
 
@@ -234,9 +245,8 @@ skelpr license
 ```
 
 The output identifies credential sources, license and lease terms, seat and status.
-Exit `0` means active or explicit development mode. Exit `3` means unavailable.
-`activate` exits `1` when activation fails. The signed terms and issuer policy
-determine expiry and renewal behavior.
+A license refusal exits with `3`; failed activation exits with `1`.
+Expiry and renewal follow the license terms.
 
 ## What refuses without activation
 
@@ -249,7 +259,6 @@ determine expiry and renewal behavior.
 | HTTP API | Gated routes refuse, `/health` stays available |
 
 Help, version, activation, deactivation and license inspection remain accessible.
-`SKELPR_DEV=1` is an explicit development bypass. The Python client is not tamper-proof.
 
 ## Moving to another machine
 
@@ -273,16 +282,26 @@ one. A lease copied between machines does not authorize the destination.
 
 ## Benchmark scope
 
-The historical Sock Shop report claimed 59% fewer agent tokens across seven tasks.
-Some retained artifacts do not reproduce its aggregate or architecture row, so the
-report is historical evidence with known reconciliation gaps.
+The [benchmark section](/#benchmark) includes two separate case studies:
 
-The separate 2026-11-09 Django case study retained ten Codex comparisons with
-37.27% fewer total tokens, native search/read calls falling from 28 to 9, and
-combined rubric scores rising from 89/96 to 91/96. Summed wall time fell 2.46%.
-These were successive builds informed by the questions, with seeded defects in
-two isolated edit tasks and uncontrolled provider caching. They are not a frozen
-release evaluation or a guarantee for other repositories.
+- **Sock Shop:** the historical report claimed 59% fewer agent tokens across seven
+  tasks. Some retained artifacts do not reproduce its aggregate or architecture
+  row. It remains published with those limitations.
+- **Django:** ten retained Codex comparisons from 2026-11-09:
+
+| Django metric | Native tools | With Skelpr MCP |
+|---|---:|---:|
+| Total tokens, including cached input | 437,997 | 274,749 (37.27% fewer) |
+| Native search/read calls, excluding tests | 28 | 9 |
+| Combined rubric score | 89/96 | 91/96 |
+| Summed wall time | 534.40 s | 521.25 s |
+
+Six Django tasks finished faster; four were slower. These comparisons used
+successive Skelpr builds informed by the questions, seeded defects in two isolated
+edit tasks, and uncontrolled provider caching. They do not measure one frozen
+release or guarantee results on other repositories.
+
+[Download the Django metrics](/benchmarks/django-case-study-20261109/metrics.json).
 
 ## Uninstall
 

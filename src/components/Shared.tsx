@@ -231,8 +231,8 @@ export function WaitlistForm() {
           <strong>{phase.duplicate ? 'You’re already on the list.' : 'You’re on the list.'}</strong>
           <small>
             {phase.duplicate
-              ? <>This email was already registered — no need to sign up twice. Changed your mind? <button type="button" className="waitlist-link" onClick={() => void post('withdraw')}>{pending ? 'Withdrawing…' : 'Withdraw from the waitlist'}</button></>
-              : 'Thanks — we’ll share updates when there’s news.'}
+              ? <>This email is registered. <button type="button" className="waitlist-link" onClick={() => void post('withdraw')}>{pending ? 'Withdrawing…' : 'Withdraw from the waitlist'}</button></>
+              : 'We’ll email release updates. For a license, use the access link.'}
           </small>
         </div>
       </div>
@@ -245,7 +245,7 @@ export function WaitlistForm() {
         <span className="removed"><UserX size={15} /></span>
         <div>
           <strong>You’ve been removed from the waitlist.</strong>
-          <small>Sorry to see you go. <button type="button" className="waitlist-link" onClick={() => setPhase({ kind: 'form' })}>Join again</button></small>
+          <small><button type="button" className="waitlist-link" onClick={() => setPhase({ kind: 'form' })}>Join again</button></small>
         </div>
       </div>
     )

@@ -1,0 +1,488 @@
+{
+  "schema_version": 1,
+  "source_commit": "a2a0b4f2764f7b192bff4bb75ed56ce017931a71",
+  "canonical_metrics_sha256": "bc000f2a99fc669c3a0fff7dbd11874ab5615ed363988ee3e242aabd45f78b46",
+  "note": "Original retained answers. Links are displayed as source text. No answer text has been rewritten. Scores use task-specific rubrics.",
+  "rows": [
+    {
+      "id": "Q1",
+      "task": "Middleware lookup",
+      "maximum_score": 3,
+      "prompt": "Where is BaseHandler.load_middleware defined, and why does it iterate settings.MIDDLEWARE in reverse? Cite the implementation.",
+      "native": {
+        "answer": "`BaseHandler.load_middleware()` is defined at **`django/core/handlers/base.py:27`**.\n\nIt iterates `reversed(settings.MIDDLEWARE)` (`:41`) to build the chain **inside out**: each middleware receives the existing handler (`:55–63`) and becomes the new handler (`:97`). The completed chain is stored at `:104`.\n\nThus, the first middleware listed becomes the outermost wrapper: requests pass through middleware in configured order, while responses unwind in reverse order. For `[A, B]`, the resulting structure is effectively `A(B(view))`.",
+        "answer_sha256": "98ac4d1d7a939758711529493c0f83dd1c91c5274d634d1f4aa8042e27765fb7",
+        "result_sha256": "19c7c02e09634aaa9207119675f61a8bc4f63f44d5e83c64e1c763b7cc12d025",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "high",
+        "metrics": {
+          "result_sha256": "19c7c02e09634aaa9207119675f61a8bc4f63f44d5e83c64e1c763b7cc12d025",
+          "input_tokens": 13984,
+          "cached_input_tokens": 10368,
+          "uncached_input_tokens": 3616,
+          "output_tokens": 219,
+          "total_tokens": 14203,
+          "model_requests": 2,
+          "native_search_or_read_calls": 1,
+          "native_test_calls": 0,
+          "mcp_calls": 0,
+          "wall_seconds": 38.866032299993094,
+          "score": 3
+        }
+      },
+      "skelpr": {
+        "answer": "`BaseHandler.load_middleware()` is defined in **`django/core/handlers/base.py:27`**.\n\nIt iterates `settings.MIDDLEWARE` in reverse (`:41`) because it builds nested wrappers: each middleware receives the current handler (`:56–63`), then becomes the new handler (`:97`). Consequently, the **first configured middleware is outermost**—requests traverse middleware in configured order, while responses unwind in reverse order. The completed chain is stored in `self._middleware_chain` (`:100–104`).",
+        "answer_sha256": "534647a0e0e2f3dd41fe53377e0e17c9856f11cf2b990e651648a54131e5f7b0",
+        "result_sha256": "808129638f41e2cd6891da66386b8f8cd4ca042f83f4458154212dac60164f37",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "high",
+        "metrics": {
+          "result_sha256": "808129638f41e2cd6891da66386b8f8cd4ca042f83f4458154212dac60164f37",
+          "input_tokens": 13353,
+          "cached_input_tokens": 10496,
+          "uncached_input_tokens": 2857,
+          "output_tokens": 177,
+          "total_tokens": 13530,
+          "model_requests": 2,
+          "native_search_or_read_calls": 0,
+          "native_test_calls": 0,
+          "mcp_calls": 1,
+          "wall_seconds": 55.38853209995432,
+          "score": 3
+        }
+      }
+    },
+    {
+      "id": "Q2",
+      "task": "Request execution flow",
+      "maximum_score": 24,
+      "prompt": "Trace a synchronous WSGI request in this Django checkout from WSGIHandler.__call__ through middleware, URL resolution, and view execution, back to the WSGI server. Explain how an unresolved URL or an unhandled view exception becomes a response, and who closes response/request resources. Assume DEBUG=False and DEBUG_PROPAGATE_EXCEPTIONS=False. Cite the implementing functions with file:line references across the relevant modules.",
+      "native": {
+        "answer": "1. **Entry and middleware.** `WSGIHandler.__call__()` sets the script prefix, sends `request_started`, constructs `WSGIRequest`, and calls `get_response()` (`django/core/handlers/wsgi.py:120-124`). `BaseHandler.load_middleware()` builds nested middleware in reverse configuration order, wrapping each layer in exception conversion: requests enter in configured order; responses unwind outward (`django/core/handlers/base.py:27-104`). `get_response()` sets the default URLconf and invokes this chain (`django/core/handlers/base.py:138-143`).\n\n2. **Resolution and execution.** `resolve_request()` honors `request.urlconf`, resolves `request.path_info`, and stores `request.resolver_match` (`django/core/handlers/base.py:302-317`). `URLResolver.resolve()` traverses patterns and returns the matched callback/arguments (`django/urls/resolvers.py:671-718`). `_get_response()` runs view middleware, which can short-circuit; otherwise it applies transaction wrapping and calls the view. It validates the response, runs template-response middleware, and renders deferred responses (`django/core/handlers/base.py:176-226`). Exception middleware runs in reverse configured order and may supply a response (`django/core/handlers/base.py:90-95,358-367`).\n\n3. **Unresolved URL.** Resolution raises `Resolver404`, an `Http404` subclass (`django/urls/resolvers.py:717-718`; `django/urls/exceptions.py:4`). `convert_exception_to_response()` catches it; `response_for_exception()` invokes the resolved 404 handler (`django/core/handlers/exception.py:53-71,163-169`). Error handlers come from the URLconf or defaults; default `page_not_found()` returns a 404 (`django/urls/resolvers.py:743-751`; `django/conf/urls/__init__.py:8`; `django/views/defaults.py:79`).\n\n4. **Unhandled view exception.** If exception middleware declines, the exception escapes to conversion. An ordinary exception triggers `got_request_exception`, logging, and—with both flags false—`handler500(request)` (`django/core/handlers/exception.py:140-187`). Default `server_error()` returns 500 (`django/views/defaults.py:83-99`).\n\n5. **Return and cleanup.** WSGI sends status/headers through `start_response()` and returns the iterable (`django/core/handlers/wsgi.py:126-144`). The server must close it: `HttpResponseBase.close()` runs registered closers and signals `request_finished` (`django/http/response.py:338-350`). Registered `request.close()` closes uploaded files (`django/core/handlers/base.py:143`; `django/http/request.py:494-497`). Streaming/file closers are registered too (`django/http/response.py:518,584`); file-wrapper handling redirects closure to `response.close()` (`django/core/handlers/wsgi.py:134-143`).",
+        "answer_sha256": "198fae2de994f2569d53f83c53c4019ed7e98b7b45ca0690e4d059068c99b354",
+        "result_sha256": "096e8d397754b9000139a513d9247c59aac4c5bc5726933ce8ec33d00cb839f8",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "high",
+        "metrics": {
+          "result_sha256": "096e8d397754b9000139a513d9247c59aac4c5bc5726933ce8ec33d00cb839f8",
+          "input_tokens": 46131,
+          "cached_input_tokens": 16512,
+          "uncached_input_tokens": 29619,
+          "output_tokens": 1275,
+          "total_tokens": 47406,
+          "model_requests": 4,
+          "native_search_or_read_calls": 3,
+          "native_test_calls": 0,
+          "mcp_calls": 0,
+          "wall_seconds": 56.90348530001938,
+          "score": 24
+        }
+      },
+      "skelpr": {
+        "answer": "1. **Entry:** `WSGIHandler.__init__()` loads middleware. `__call__()` sets the script prefix, sends `request_started`, constructs `WSGIRequest`, and calls `get_response()` (`django/core/handlers/wsgi.py:113-127`).\n\n2. **Middleware:** `BaseHandler.load_middleware()` builds the chain backwards from `MIDDLEWARE`, wrapping each layer with `convert_exception_to_response()`: requests enter in configured order; responses unwind outward. Middleware can short-circuit. `get_response()` sets the root URLconf, invokes this chain, and registers `request.close` on the response (`django/core/handlers/base.py:27-152`).\n\n3. **Resolution and execution:** `_get_response()` calls `resolve_request()`, which selects `request.urlconf` or the default resolver, resolves `request.path_info`, and stores `request.resolver_match` (`django/core/handlers/base.py:176-185,302-317`). `URLResolver.resolve()` traverses patterns and returns the callback/arguments (`django/urls/resolvers.py:671-715`). Then `process_view` hooks may supply a response; otherwise Django applies atomic-view wrapping and invokes the view, adapting async callbacks if necessary. It validates the response, runs template-response middleware, and renders deferred responses (`django/core/handlers/base.py:183-228`).\n\n4. **Failures:** Unmatched URLs raise `Resolver404`, a subclass of `Http404` (`django/urls/resolvers.py:716-718`; `django/urls/exceptions.py:4-5`). Exception wrappers convert this into a handler404 response. View/render exceptions first reach `process_exception` middleware; otherwise they propagate to those wrappers. An ordinary unhandled exception sends `got_request_exception` and invokes handler500 under the assumed settings (`django/core/handlers/base.py:195-228,358-367`; `django/core/handlers/exception.py:25-187`). Error handlers come from the URLconf or Django defaults (`django/urls/resolvers.py:743-751`; `django/conf/urls/__init__.py:6-9`).\n\n5. **Return and cleanup:** `WSGIHandler.__call__()` calls `start_response()` with status, headers, and cookies, then returns the response iterable. File-wrapper support redirects file closure to `response.close()` (`django/core/handlers/wsgi.py:128-144`). The **WSGI server** must close it: `HttpResponseBase.close()` runs registered closers, marks it closed, and sends `request_finished` (`django/http/response.py:338-350`). Closers include streaming/file resources and `request.close()`, which closes uploaded files (`django/http/response.py:518,584`; `django/http/request.py:494-497`).",
+        "answer_sha256": "7499baacdb58ce4e1b0ce35c6b76472aa4a4dd5667c4a35dc29be4b570a7736c",
+        "result_sha256": "90f93f44a37add5bac3956092091c7f7666ce4f9c9a7d06eecad16131ac5b733",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "high",
+        "metrics": {
+          "result_sha256": "90f93f44a37add5bac3956092091c7f7666ce4f9c9a7d06eecad16131ac5b733",
+          "input_tokens": 27866,
+          "cached_input_tokens": 13824,
+          "uncached_input_tokens": 14042,
+          "output_tokens": 1065,
+          "total_tokens": 28931,
+          "model_requests": 3,
+          "native_search_or_read_calls": 1,
+          "native_test_calls": 0,
+          "mcp_calls": 1,
+          "wall_seconds": 50.54090959997848,
+          "score": 24
+        }
+      }
+    },
+    {
+      "id": "Q3",
+      "task": "WSGI and ASGI architecture",
+      "maximum_score": 30,
+      "prompt": "Compare the WSGI and ASGI request-lifecycle architecture in this Django checkout. Explain how synchronous/asynchronous middleware and views are adapted; where ATOMIC_REQUESTS applies and its restriction on async views; how view/template exceptions become responses; and how ASGI handles client disconnects and cleans up response resources. Identify the boundary functions and at least one implementation trade-off, with file:line evidence. Stay within Django code rather than speculating about asgiref internals.",
+      "native": {
+        "answer": "### Entry points and adaptation\n- **WSGI:** `WSGIHandler.__call__()` constructs the request, calls synchronous `get_response()`, invokes `start_response()`, and returns the response iterable. File-wrapper handling redirects closure to `response.close()` (`django/core/handlers/wsgi.py:120-144`).\n- **ASGI:** `ASGIHandler.__call__()` accepts HTTP only, enters `ThreadSensitiveContext`, and delegates to `handle()`. It reads the body before processing; `run_get_response()` calls `get_response_async()`, while `send_response()` emits ASGI messages (`django/core/handlers/asgi.py:161-206`, `228-237`, `298-349`).\n- **Middleware boundary:** `BaseHandler.load_middleware()` builds the chain backwards, selects modes using `sync_capable`/`async_capable`, and adapts individual boundaries and the outer chain. `adapt_method_mode()` uses `sync_to_async(..., thread_sensitive=True)` or `async_to_sync()`; matching modes remain unchanged. View/template hooks follow the handler mode, but exception hooks remain synchronous (`django/core/handlers/base.py:38-104`, `106-136`).\n- **View/render boundary:** `_get_response()` adapts async views with `async_to_sync()`; `_get_response_async()` adapts synchronous views with thread-sensitive `sync_to_async()`. Async rendering is awaited; synchronous rendering is similarly adapted (`django/core/handlers/base.py:193-203`, `247-264`, `282-295`).\n\n### Transactions and exceptions\n`make_view_atomic()` wraps only the view, per database with `ATOMIC_REQUESTS`, respecting `_non_atomic_requests`. Enabled atomic wrapping rejects async views with `RuntimeError`, including under WSGI. Middleware and deferred rendering sit outside this wrapper (`django/core/handlers/base.py:185-224`, `347-356`).\n\nView-call and render exceptions first visit `process_exception` hooks; the first response wins, otherwise the exception propagates. Template-response middleware itself lies outside those local catches (`django/core/handlers/base.py:198-226`, `358-367`). The surrounding `convert_exception_to_response()` wrappers convert escaping exceptions into responses, including middleware failures; async conversion bridges to synchronous exception handling. Known exceptions become 400/403/404 responses; unhandled exceptions normally become 500 responses, subject to debug/propagation settings (`django/core/handlers/exception.py:25-61`, `64-158`, `174-187`).\n\n### ASGI disconnects and cleanup\nAn early disconnect closes the body spool and aborts. Later, a `TaskGroup` runs the disconnect listener alongside response processing/sending: `RequestAborted` interrupts processing; the `RequestProcessed` sentinel terminates the listener after successful sending (`django/core/handlers/asgi.py:179-224`, `245-250`).\n\nThe body is context-managed; handled completion/disconnection closes an available response asynchronously, or emits `request_finished` when no response exists. Streaming iteration uses `aclosing()` (`django/core/handlers/asgi.py:185-218`, `319-339`). Responses register `request.close`; response closure runs resource closers and emits `request_finished` (`django/core/handlers/base.py:164-165`; `django/http/response.py:341-350`).\n\n**Trade-off:** separate synchronous/asynchronous response paths duplicate orchestration but avoid imposing an async context switch on WSGI—the explicit performance rationale (`django/core/handlers/base.py:154-160`).",
+        "answer_sha256": "6eb73fc5f38c525e8917233c7855af67f43abdd24766aab02d032de449f175e1",
+        "result_sha256": "16f77666bd99ec0e3f9b482d24b37f266c3aa9d3005bec4a19ef9638ef9ab294",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "high",
+        "metrics": {
+          "result_sha256": "16f77666bd99ec0e3f9b482d24b37f266c3aa9d3005bec4a19ef9638ef9ab294",
+          "input_tokens": 61594,
+          "cached_input_tokens": 49024,
+          "uncached_input_tokens": 12570,
+          "output_tokens": 1497,
+          "total_tokens": 63091,
+          "model_requests": 5,
+          "native_search_or_read_calls": 4,
+          "native_test_calls": 0,
+          "mcp_calls": 0,
+          "wall_seconds": 61.67082140001003,
+          "score": 26
+        }
+      },
+      "skelpr": {
+        "answer": "### Entry points and adaptation\n- `get_wsgi_application()` and `get_asgi_application()` initialize Django and return their handlers (`django/core/wsgi.py:5-13`; `django/core/asgi.py:5-13`).\n- WSGI’s synchronous `__call__()` constructs the request, calls `get_response()`, invokes `start_response()`, and returns the response iterable. ASGI’s asynchronous `__call__()` accepts HTTP scopes, enters `ThreadSensitiveContext`, and delegates to `handle()`, which reads the body and ultimately awaits response sending (`django/core/handlers/wsgi.py:113-144`; `django/core/handlers/asgi.py:150-227`).\n- `BaseHandler.load_middleware()` builds the chain backwards, selecting modes from `sync_capable`/`async_capable`. `adapt_method_mode()` bridges synchronous code with `sync_to_async(..., thread_sensitive=True)` and asynchronous code with `async_to_sync()`. View/template hooks match the handler’s mode; exception hooks remain synchronous (`django/core/handlers/base.py:27-135`).\n- `_get_response()` adapts async views to synchronous execution; `_get_response_async()` adapts synchronous views to thread-sensitive execution. Async rendering is awaited directly; synchronous rendering is similarly adapted (`django/core/handlers/base.py:176-300`).\n\n### Transactions and exceptions\n- `make_view_atomic()` wraps **only the view callback**, per database alias with `ATOMIC_REQUESTS`, respecting `_non_atomic_requests`. Middleware and deferred template rendering sit outside this wrapper. An eligible async view raises `RuntimeError(\"You cannot use ATOMIC_REQUESTS with async views.\")`, including under WSGI, because wrapping precedes adaptation (`django/core/handlers/base.py:176-300,347-358`).\n- View-call and template-render exceptions first reach `process_exception_by_middleware()`; its first response wins, otherwise the exception is re-raised. Async execution invokes this synchronous exception stack through `sync_to_async()` (`django/core/handlers/base.py:176-300,360-367`).\n- `convert_exception_to_response()` surrounds the core handler and each middleware layer. Its sync/async wrappers invoke `response_for_exception()`: recognized exceptions become 404/403/400 responses; otherwise Django signals the exception and uses technical/configured 500 handling, unless `DEBUG_PROPAGATE_EXCEPTIONS` requests propagation. Error template responses are rendered (`django/core/handlers/base.py:36-103`; `django/core/handlers/exception.py:25-61,64-187`).\n\n### ASGI disconnects and cleanup\n- During body reading, disconnect closes the spool and aborts. Afterwards, `TaskGroup` runs a disconnect listener alongside response processing: `RequestAborted` cancels processing; successful sending raises `RequestProcessed` to stop the listener. Both sentinel exceptions are suppressed (`django/core/handlers/asgi.py:169-267`).\n- The body file is context-managed. With a response, Django awaits adapted `response.close()`; without one, it sends `request_finished`. Streaming uses `aclosing(aiter(response))`. Registered closers include `request.close`; response closing runs closers, clears them, marks closure, and signals completion. WSGI instead relies on its server calling close (`django/core/handlers/asgi.py:175-217,319-339`; `django/core/handlers/base.py:154-165`; `django/http/response.py:338-350`).\n\n**Trade-off:** Django maintains separate sync/async response paths to avoid imposing async context-switch overhead on WSGI (`django/core/handlers/base.py:154-160`).",
+        "answer_sha256": "bdfbb0ffcef222426fc42161086aa422902f704bd9ec1ccb7dc2db4a1d59e284",
+        "result_sha256": "29f6fde34de53175968cbb4174cca849259346446636703c9acb2015ad6b8c9e",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "high",
+        "metrics": {
+          "result_sha256": "29f6fde34de53175968cbb4174cca849259346446636703c9acb2015ad6b8c9e",
+          "input_tokens": 28329,
+          "cached_input_tokens": 15616,
+          "uncached_input_tokens": 12713,
+          "output_tokens": 1145,
+          "total_tokens": 29474,
+          "model_requests": 3,
+          "native_search_or_read_calls": 1,
+          "native_test_calls": 0,
+          "mcp_calls": 1,
+          "wall_seconds": 56.47838609997416,
+          "score": 27
+        }
+      }
+    },
+    {
+      "id": "Q4",
+      "task": "QuerySet.exists() behavior",
+      "maximum_score": 6,
+      "prompt": "After list(qs) evaluates a Django QuerySet, does qs.exists() issue another SQL query? How does this differ for an unevaluated QuerySet? Cite the implementation.",
+      "native": {
+        "answer": "No. After `list(qs)`, the results are cached (`django/db/models/query.py:2326–2328`). On that same QuerySet, `exists()` returns `bool(self._result_cache)` without another query—even when the cache is empty (`django/db/models/query.py:1506–1512`).\n\nFor an unevaluated QuerySet, `exists()` calls `query.has_results()`, normally issuing an optimized existence query limited to one row (`django/db/models/sql/query.py:677–686`; `django/db/models/sql/compiler.py:1611–1616`). It doesn’t populate the QuerySet’s result cache, so subsequently evaluating `list(qs)` still queries the database.",
+        "answer_sha256": "1cc93227b7915bbca63aef2030c994d0efa3e72a67d2b45594ff5c4ff5404f43",
+        "result_sha256": "160771a1bce30823a7fdb519c02e7d0a243f8a4612f796134efda82a09bc8176",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "high",
+        "metrics": {
+          "result_sha256": "160771a1bce30823a7fdb519c02e7d0a243f8a4612f796134efda82a09bc8176",
+          "input_tokens": 24072,
+          "cached_input_tokens": 18944,
+          "uncached_input_tokens": 5128,
+          "output_tokens": 437,
+          "total_tokens": 24509,
+          "model_requests": 3,
+          "native_search_or_read_calls": 2,
+          "native_test_calls": 0,
+          "mcp_calls": 0,
+          "wall_seconds": 33.1755766000133,
+          "score": 5
+        }
+      },
+      "skelpr": {
+        "answer": "No. `list(qs)` fills `_result_cache` through `_fetch_all()` (`django/db/models/query.py:467-483`, `2326-2328`). Thereafter, `qs.exists()` returns `bool(self._result_cache)` without another SQL query—even if the cache is empty (`django/db/models/query.py:1506-1512`).\n\nFor an unevaluated QuerySet, `_result_cache` is `None`, so `exists()` calls `query.has_results()` instead. That delegates to the SQL compiler, which executes an existence check (`django/db/models/sql/query.py:683-686`; `django/db/models/sql/compiler.py:1611-1616`). It doesn’t populate the QuerySet’s result cache.",
+        "answer_sha256": "9907b896d0c31e9bcc1a4f664606a50427bc9f45805d1792e76b5e3f13f6228a",
+        "result_sha256": "e67026f80ab3f59b01557df8c23af9ad509ea64ae7035cbd8f082e1ea7e1f525",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "high",
+        "metrics": {
+          "result_sha256": "e67026f80ab3f59b01557df8c23af9ad509ea64ae7035cbd8f082e1ea7e1f525",
+          "input_tokens": 12824,
+          "cached_input_tokens": 4480,
+          "uncached_input_tokens": 8344,
+          "output_tokens": 219,
+          "total_tokens": 13043,
+          "model_requests": 2,
+          "native_search_or_read_calls": 0,
+          "native_test_calls": 0,
+          "mcp_calls": 1,
+          "wall_seconds": 29.368354199978057,
+          "score": 6
+        }
+      }
+    },
+    {
+      "id": "Q5",
+      "task": "Custom CSRF header test",
+      "maximum_score": 6,
+      "prompt": "Find Django's test that accepts a CSRF token in a customized request header. Which setting controls the header, what header does the test send, and what assertion shows acceptance? Cite the test and implementation.",
+      "native": {
+        "answer": "The test is `test_csrf_token_in_header_with_customized_name`:\n- **Setting:** `CSRF_HEADER_NAME`, overridden to `\"HTTP_X_CSRFTOKEN_CUSTOMIZED\"` (`tests/csrf_tests/tests.py:474-475`).\n- **Header:** `X-Csrftoken-Customized`, supplied as the request META key `HTTP_X_CSRFTOKEN_CUSTOMIZED` with `self._csrf_id_token` (`tests/csrf_tests/tests.py:479-482`).\n- **Acceptance:** `self.assertIsNone(resp)` after `process_view()`, showing no rejection response (`tests/csrf_tests/tests.py:485-486`).\n\nThe implementation reads the token from `request.META[settings.CSRF_HEADER_NAME]` (`django/middleware/csrf.py:386`).",
+        "answer_sha256": "9e35f5ae85775e54b45ff56e441f85b93001875e9f250c0ded5f91bfef35e7cd",
+        "result_sha256": "9939d3466d5ff2c69a19324eebe853ca0ad227a4f71257d689c7074ec48b11f2",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "high",
+        "metrics": {
+          "result_sha256": "9939d3466d5ff2c69a19324eebe853ca0ad227a4f71257d689c7074ec48b11f2",
+          "input_tokens": 23238,
+          "cached_input_tokens": 18688,
+          "uncached_input_tokens": 4550,
+          "output_tokens": 314,
+          "total_tokens": 23552,
+          "model_requests": 3,
+          "native_search_or_read_calls": 2,
+          "native_test_calls": 0,
+          "mcp_calls": 0,
+          "wall_seconds": 27.18642300000647,
+          "score": 6
+        }
+      },
+      "skelpr": {
+        "answer": "The test is `test_csrf_token_in_header_with_customized_name` in `tests/csrf_tests/tests.py:474-486`.\n\n- **Setting:** `CSRF_HEADER_NAME`, overridden to `'HTTP_X_CSRFTOKEN_CUSTOMIZED'`.\n- **Header sent:** `HTTP_X_CSRFTOKEN_CUSTOMIZED` in request metadata (HTTP header `X-Csrftoken-Customized`), containing `self._csrf_id_token`.\n- **Acceptance assertion:** `self.assertIsNone(resp)` after `process_view()`, showing no rejection response.\n\nThe implementation reads `request.META[settings.CSRF_HEADER_NAME]` when the POST token is absent (`django/middleware/csrf.py:367-389`), then validates its format and match against the CSRF secret (`django/middleware/csrf.py:393-401`).",
+        "answer_sha256": "9f06d7a7d6978b7adce39a2978925e2d90e94b08ef0b55bd44ed2a9bc24e9e87",
+        "result_sha256": "8f156fe98713cacb146b178c8f0be721a8b2714f6a57f94fa18c5437f4992b87",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "high",
+        "metrics": {
+          "result_sha256": "8f156fe98713cacb146b178c8f0be721a8b2714f6a57f94fa18c5437f4992b87",
+          "input_tokens": 13012,
+          "cached_input_tokens": 10496,
+          "uncached_input_tokens": 2516,
+          "output_tokens": 248,
+          "total_tokens": 13260,
+          "model_requests": 2,
+          "native_search_or_read_calls": 0,
+          "native_test_calls": 0,
+          "mcp_calls": 1,
+          "wall_seconds": 23.69111299997894,
+          "score": 6
+        }
+      }
+    },
+    {
+      "id": "Q6",
+      "task": "Verify absent integrations",
+      "maximum_score": 6,
+      "prompt": "A teammate says this Django checkout ships an admin GraphQL schema and a gRPC servicer. Verify both claims from this checkout. Report the evidence or the scope of searches that found no implementation, and distinguish third-party integrations.",
+      "native": {
+        "answer": "**Neither claim is supported by this checkout.**\n\n- **Admin GraphQL schema:** The built-in admin registers ordinary URL-based views: index, login/logout, password changes, autocomplete, JavaScript translations, and model-admin URLs—not a GraphQL endpoint (`django/contrib/admin/sites.py:258–318`). The database “schema” implementation is SQL schema editing, not GraphQL (`django/db/backends/base/schema.py:81–89`).\n\n- **gRPC servicer:** No implementation was found. Django’s declared runtime dependencies are `asgiref`, `sqlparse`, and Windows-only `tzdata`; its optional dependencies also contain no GraphQL or gRPC libraries (`pyproject.toml:9–13`, `pyproject.toml:42–44`).\n\n**Search scope:** I searched checkout-wide text, including hidden and ignored files but excluding `.git`, case-insensitively for `graphql`, `graphene`, `ariadne`, `strawberry`, `grpc`, `servicer`, and `protobuf`. There were **zero matches**. A filename search for GraphQL/gRPC/servicer names, `.proto` files, and `_pb2` generated modules likewise found none. These are bounded findings about this checkout, not claims about every Django-based application.\n\n**Third-party distinction:** Django explicitly supports composing external Python packages and reusable Django apps into a project (`docs/intro/reusable-apps.txt:19–25`). A separately installed GraphQL integration or application-specific gRPC service would therefore be distinct from something Django itself ships; neither integration appears here.",
+        "answer_sha256": "2af671b3d9869af2ed46319d616f90260619d0b3dae23764d74b1011b402dc6e",
+        "result_sha256": "8591a32bef5ff9cc712d110ec40c4f2b750820bbeb62f21969a32dc0d3e843f6",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "high",
+        "metrics": {
+          "result_sha256": "8591a32bef5ff9cc712d110ec40c4f2b750820bbeb62f21969a32dc0d3e843f6",
+          "input_tokens": 33171,
+          "cached_input_tokens": 21632,
+          "uncached_input_tokens": 11539,
+          "output_tokens": 1035,
+          "total_tokens": 34206,
+          "model_requests": 4,
+          "native_search_or_read_calls": 3,
+          "native_test_calls": 0,
+          "mcp_calls": 0,
+          "wall_seconds": 49.71936689998256,
+          "score": 5
+        }
+      },
+      "skelpr": {
+        "answer": "**Neither claim is supported by this checkout.**\n\n- **Admin GraphQL schema:** No implementation found. The built-in admin registers ordinary Django views for its index, login/logout, password changes, autocomplete, and model-specific URLs—not a GraphQL endpoint (`django/contrib/admin/sites.py:258–303`). The schema-related files found concern database schemas: `SchemaEditor` translates migration operations into SQL (`docs/ref/schema-editor.txt:9–19`).\n\n- **gRPC servicer:** No implementation found. Checkout-wide text searches found no occurrences of `grpc` or `servicer`; filename searches also found no `*.proto`, `*pb2*`, or `*grpc*` files.\n\n**Search scope:** The requested live verification included hidden and ignored files, excluding configured exclusions, `.git`, `.skelpr`, symlink targets, and binary text content. It found zero matches for `GraphQL`, `graphql`, `graphene`, `gRPC`, and `Servicer` (also `grpc`). A supplementary case-insensitive native search across the checkout, including hidden/ignored files and excluding `.git`/`.skelpr`, found no `graphql`, `graphene`, `strawberry`, `grpc`, `servicer`, or `protobuf` text matches.\n\n**Third-party distinction:** External packages or application code could add these integrations; that does not mean Django ships them. This checkout declares `asgiref`, `sqlparse`, and Windows-specific `tzdata` as runtime dependencies, with only Argon2/bcrypt optional dependencies—no GraphQL or gRPC integration dependencies (`pyproject.toml:9–13`, `pyproject.toml:42–44`). These findings concern this checkout, not the broader Django ecosystem.",
+        "answer_sha256": "136e570db0cba7fbc08a77cad203737b4872b4e2d61f667457a5124d25a7c78d",
+        "result_sha256": "e84996a852eb82d1f27c3cb2341340243f176d8761110c8f3f5cbe412adc8a35",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "high",
+        "metrics": {
+          "result_sha256": "e84996a852eb82d1f27c3cb2341340243f176d8761110c8f3f5cbe412adc8a35",
+          "input_tokens": 30177,
+          "cached_input_tokens": 25216,
+          "uncached_input_tokens": 4961,
+          "output_tokens": 977,
+          "total_tokens": 31154,
+          "model_requests": 4,
+          "native_search_or_read_calls": 2,
+          "native_test_calls": 0,
+          "mcp_calls": 1,
+          "wall_seconds": 52.80961280001793,
+          "score": 5
+        }
+      }
+    },
+    {
+      "id": "Q7",
+      "task": "Cache Vary impact",
+      "maximum_score": 8,
+      "prompt": "If Django's page-cache key stopped incorporating the request headers listed in Vary, which middleware paths would read or write incorrect entries, and which tests would detect it? Explain GET/HEAD behavior and cite the implementation and tests.",
+      "native": {
+        "answer": "**Both cache reads and writes would become unsafe:** requests for the same URL but different `Vary` header values could share another user’s or representation’s response.\n\n- **Key construction:** `learn_cache_key()` records normalized, sorted `Vary` header names; `get_cache_key()` retrieves them. Both call `_generate_cache_key()`, which hashes their request values (`django/utils/cache.py:354–371`, `399–403`, `426–444`). Ignoring those values collapses otherwise distinct variants.\n- **Writes:** `UpdateCacheMiddleware.process_response()` would store eligible responses under colliding keys, through both immediate `cache.set()` and deferred post-render callbacks (`django/middleware/cache.py:136–145`).\n- **Reads / GET versus HEAD:** `FetchFromCacheMiddleware.process_request()` checks the **GET key first for both methods**. HEAD falls back to a HEAD key only when the GET entry is absent; GET never reads HEAD entries. Other methods bypass caching. Misses enable updating; hits disable it (`django/middleware/cache.py:174–194`, `205–207`). Writes use the actual request method (`django/utils/cache.py:439`). Thus both GET lookup and HEAD’s two lookup paths become vulnerable, without eliminating method separation.\n- **Scope:** Combined `CacheMiddleware` and `@cache_page` inherit these paths (`django/middleware/cache.py:210–215`; `django/views/decorators/cache.py:23–27`).\n\n**Tests that detect the regression:**\n\n- `test_learn_cache_key`: asserts the exact Vary-dependent digest (`tests/cache/tests.py:2389–2399`).\n- `test_learn_cache_key_strips_whitespace`: requires different Cookie values to produce different keys (`tests/cache/tests.py:2402–2424`).\n- `test_learn_cache_key_no_header_collision`: requires distinct header combinations, including missing values, to remain distinct (`tests/cache/tests.py:2426–2443`).\n\n**HEAD coverage, not Vary-regression detection:** `CacheHEADTest.test_head_caches_correctly` verifies HEAD-only retrieval; `test_head_with_cached_get` verifies GET reuse for HEAD. Neither varies request headers, so neither alone would catch this defect (`tests/cache/tests.py:2562–2592`).",
+        "answer_sha256": "ae62828e47d1f86b27fcdc29a0636a65a21a9c4fe3b9eb30cce862c44bebf988",
+        "result_sha256": "c41ce802ac2512fb5085b45320423eeeac04eabde88a78bd66bfadb394d48bf2",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "high",
+        "metrics": {
+          "result_sha256": "c41ce802ac2512fb5085b45320423eeeac04eabde88a78bd66bfadb394d48bf2",
+          "input_tokens": 70239,
+          "cached_input_tokens": 53376,
+          "uncached_input_tokens": 16863,
+          "output_tokens": 1055,
+          "total_tokens": 71294,
+          "model_requests": 5,
+          "native_search_or_read_calls": 4,
+          "native_test_calls": 0,
+          "mcp_calls": 0,
+          "wall_seconds": 61.63585929997498,
+          "score": 7
+        }
+      },
+      "skelpr": {
+        "answer": "**Both cache reads and writes would lose variant isolation:** requests for the same URL/method but different relevant headers could share a response.\n\n- **Key construction:** `_generate_cache_key()` hashes the listed `request.META` header values alongside URL/method information. `learn_cache_key()` normalizes and stores the response’s `Vary` list; `get_cache_key()` retrieves that list. Ignoring its values breaks both callers (`django/utils/cache.py:354–371`, `384–444`).\n- **Reads:** `FetchFromCacheMiddleware.process_request()` would return another header variant’s cached response and suppress cache updating on that false hit (`django/middleware/cache.py:169–207`).\n- **Writes:** `UpdateCacheMiddleware.process_response()` would store eligible responses under colliding keys, through either its immediate `cache.set()` or post-render callback. This also affects automatically added `Vary: Authorization` (`django/middleware/cache.py:134–145`). Combined `CacheMiddleware`, including its cache-decorator use, inherits both paths (`django/middleware/cache.py:210–215`).\n\n**GET/HEAD:** Non-GET/HEAD requests bypass fetching and disable updating. Both GET and HEAD first look up the **GET** key; HEAD alone falls back to a **HEAD** key when the GET response is absent. Writes use `request.method`, so HEAD entries remain separate from GET entries, but each loses header isolation. GET never falls back to HEAD (`django/middleware/cache.py:174–194`; `django/utils/cache.py:439–444`).\n\n**Tests that detect the regression:**\n- `CacheUtils.test_learn_cache_key`: expects the Vary-dependent hash (`tests/cache/tests.py:2389–2400`).\n- `test_learn_cache_key_strips_whitespace`: different Cookie values must produce different keys (`tests/cache/tests.py:2402–2424`).\n- `test_learn_cache_key_no_header_collision`: distinct header assignments must remain distinct (`tests/cache/tests.py:2426–2443`). These also run through `PrefixedCacheUtils` inheritance (`tests/cache/tests.py:2534–2543`).\n\n**HEAD coverage, not Vary-regression detection:** `CacheHEADTest.test_head_caches_correctly` and `test_head_with_cached_get` verify HEAD-specific retrieval and GET reuse, respectively; neither varies request headers (`tests/cache/tests.py:2562–2592`).",
+        "answer_sha256": "60c85467e8033af8a18da60033557fa342e0e23c3739ab8b68e2b2f2da76ca5c",
+        "result_sha256": "8f2792d3010f7b9496380cf8c9c6990be7f1cdf37b55059b5911425b31f5a0cd",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "high",
+        "metrics": {
+          "result_sha256": "8f2792d3010f7b9496380cf8c9c6990be7f1cdf37b55059b5911425b31f5a0cd",
+          "input_tokens": 43588,
+          "cached_input_tokens": 31232,
+          "uncached_input_tokens": 12356,
+          "output_tokens": 974,
+          "total_tokens": 44562,
+          "model_requests": 4,
+          "native_search_or_read_calls": 2,
+          "native_test_calls": 0,
+          "mcp_calls": 1,
+          "wall_seconds": 70.20505370001774,
+          "score": 7
+        }
+      }
+    },
+    {
+      "id": "Q8",
+      "task": "Fix URL scheme validation",
+      "maximum_score": 2,
+      "prompt": "In this checkout URLValidator wrongly accepts schemes outside its configured allowlist. Fix it in place. Keep custom scheme lists, case-insensitive scheme matching, and existing URL validation behavior. Run the relevant tests and summarize the change.",
+      "native": {
+        "answer": "Fixed scheme allowlist enforcement before full URL validation, preserving custom lists and case-insensitive URL schemes (`django/core/validators.py:171`).\n\nAdded regression coverage for restricted/empty allowlists, mixed-case schemes, custom errors, and malformed URLs (`tests/validators/tests.py:766`).\n\nTests: validators and URLField suites, one worker — **50 tests run, 5 skipped, no failures**.",
+        "answer_sha256": "681da4fa6edc13464c6e3902dbf2ecc808651eee4fd6bc6c4eb6a9877180fccb",
+        "result_sha256": "038a9a8477f1d440ede2b6fec29bb30f06fd6457b23fc58e90083faceb8f3ba8",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "high",
+        "metrics": {
+          "result_sha256": "038a9a8477f1d440ede2b6fec29bb30f06fd6457b23fc58e90083faceb8f3ba8",
+          "input_tokens": 58410,
+          "cached_input_tokens": 42368,
+          "uncached_input_tokens": 16042,
+          "output_tokens": 1609,
+          "total_tokens": 60019,
+          "model_requests": 6,
+          "native_search_or_read_calls": 3,
+          "native_test_calls": 1,
+          "mcp_calls": 0,
+          "wall_seconds": 72.62632299999996,
+          "score": 2
+        }
+      },
+      "skelpr": {
+        "answer": "Fixed `URLValidator` to lowercase the URL’s scheme and check it against the configured allowlist before continuing existing validation (`django/core/validators.py:171–174`).\n\nAdded regression coverage for custom and empty allowlists, case-insensitive matching, rejected schemes, and error details (`tests/validators/tests.py:709–736`).\n\nTests: `python tests/runtests.py validators --parallel 1` — passed (37 tests, 5 skipped).",
+        "answer_sha256": "2a7e0740f7385f9140d2367f22221cb147adbd58cf469bc77cd9f3e86db93f44",
+        "result_sha256": "bd11667391027206b304e301ed813d6fed4713653c20f5a577cc2c4908425a48",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "high",
+        "metrics": {
+          "result_sha256": "bd11667391027206b304e301ed813d6fed4713653c20f5a577cc2c4908425a48",
+          "input_tokens": 37954,
+          "cached_input_tokens": 28800,
+          "uncached_input_tokens": 9154,
+          "output_tokens": 1094,
+          "total_tokens": 39048,
+          "model_requests": 4,
+          "native_search_or_read_calls": 1,
+          "native_test_calls": 1,
+          "mcp_calls": 1,
+          "wall_seconds": 63.63729310000008,
+          "score": 2
+        }
+      }
+    },
+    {
+      "id": "Q9",
+      "task": "Savepoint commit hooks",
+      "maximum_score": 8,
+      "prompt": "Trace Django transaction.on_commit() callbacks registered before, inside, and after a nested atomic() block whose savepoint rolls back, when the outer transaction commits. Explain which callbacks run, when, and in what order. Cite source and the test.",
+      "native": {
+        "answer": "Assume callbacks **A**, **B**, and **C** are registered before, inside, and after the inner block, **all within the outer `atomic()`**. The inner exception is caught outside the inner block, allowing the outer transaction to commit.\n\n**Result: A runs, then C; B never runs.** Neither surviving callback runs until the outer transaction commits and autocommit is restored.\n\n### Source trace\n\n1. **Register A:** `transaction.on_commit()` delegates to the connection. While inside an atomic block, the connection appends `(set(self.savepoint_ids), func, robust)` to its callback queue—capturing the savepoints active at registration. A’s snapshot does not contain the future inner savepoint (`django/db/transaction.py:143–148`; `django/db/backends/base/base.py:728–732`).\n\n2. **Enter the inner block and register B:** nested `atomic()` creates a savepoint and pushes its ID. B’s snapshot therefore includes that ID (`django/db/transaction.py:220–228`).\n\n3. **Roll back the inner block:** its exit pops the savepoint ID and rolls back to it. `savepoint_rollback()` removes every queued callback whose saved set contains that ID. Thus B is discarded, while A remains (`django/db/transaction.py:244–245,286–300`; `django/db/backends/base/base.py:405–420`).\n\n4. **Register C:** the inner savepoint is no longer active, so C is appended without that ID. The surviving queue is now `[A, C]` (`django/db/backends/base/base.py:730–732`).\n\n5. **Commit the outer block:** `Atomic.__exit__()` commits, then restores autocommit. Successful `commit()` sets a flag; restoring autocommit invokes `run_and_clear_commit_hooks()`. That method clears the stored queue and executes callbacks FIFO using `pop(0)` (`django/db/transaction.py:274–277,315–321`; `django/db/backends/base/base.py:324–330,488–492,749–766`).\n\n### Tests\n\n- **`test_discards_hooks_from_rolled_back_savepoint`** registers callbacks 1, 2, and 3 in successive nested blocks, rolls back the middle one, and asserts **`[1, 3]`** after outer commit (`tests/transaction_hooks/tests.py:158–176`). The helper registers actual `on_commit()` callbacks and checks notification order (`tests/transaction_hooks/tests.py:32–42`).\n- **`test_executes_only_after_final_transaction_committed`** verifies that exiting an inner block does not execute callbacks (`tests/transaction_hooks/tests.py:150–156`).\n- **`test_runs_hooks_in_order_registered`** verifies registration order across nesting (`tests/transaction_hooks/tests.py:229–236`).\n\nThis assumes callbacks return normally: with default `robust=False`, an exception from A prevents C from running (`django/db/backends/base/base.py:749–766`).",
+        "answer_sha256": "e8014c5fbb4f8d577640331b0e1a5a898e5e717ae350f5ac0c52649a4974adec",
+        "result_sha256": "4e538587a0df1a8b46435a0e6e82948e4ddaec1956f6180f5025c569f5352202",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "high",
+        "metrics": {
+          "result_sha256": "4e538587a0df1a8b46435a0e6e82948e4ddaec1956f6180f5025c569f5352202",
+          "input_tokens": 45643,
+          "cached_input_tokens": 30208,
+          "uncached_input_tokens": 15435,
+          "output_tokens": 1162,
+          "total_tokens": 46805,
+          "model_requests": 4,
+          "native_search_or_read_calls": 3,
+          "native_test_calls": 0,
+          "mcp_calls": 0,
+          "wall_seconds": 63.24973040000032,
+          "score": 8
+        }
+      },
+      "skelpr": {
+        "answer": "**The callbacks registered before and after the rolled-back nested block run, in registration order, after the outer transaction commits and autocommit is restored. The callback registered inside the rolled-back savepoint never runs.**\n\nAssuming all three registrations occur within the outer `atomic()` and callbacks return normally:\n\n1. **Before the nested block:** `transaction.on_commit()` delegates to the connection. Inside an atomic block, the connection queues `(set(self.savepoint_ids), func, robust)`, recording the savepoints active at registration. This callback does not include the later nested savepoint (`django/db/transaction.py:143-148`; `django/db/backends/base/base.py:727-732`).\n\n2. **Inside the nested block:** entering nested `atomic()` creates a savepoint and appends its ID. Consequently, this callback’s saved set includes that ID (`django/db/transaction.py:219-228`).\n\n3. **Nested rollback:** `Atomic.__exit__()` rolls back that savepoint. `savepoint_rollback()` filters the callback queue, removing entries whose saved sets contain the rolled-back ID. The inside callback is discarded; the earlier callback survives. Nothing executes at this point (`django/db/transaction.py:289-300`; `django/db/backends/base/base.py:404-420`).\n\n4. **After the nested block:** its savepoint ID has been popped, so the new callback is queued without that ID, behind the surviving earlier callback (`django/db/transaction.py:244-245`; `django/db/backends/base/base.py:730-732`).\n\n5. **Outer commit:** exiting the outer block commits, then restores autocommit. `commit()` marks hooks for execution; `set_autocommit(True)` invokes `run_and_clear_commit_hooks()`. That method drains the queue using `pop(0)`, preserving registration order: **before → after** (`django/db/transaction.py:275-277,315-321`; `django/db/backends/base/base.py:323-330,488-492,749-766`).\n\n**Tests:** `test_discards_hooks_from_rolled_back_savepoint` registers callbacks `1`, `2`, and `3` in successive nested blocks, deliberately rolls back the middle block, catches the exception, and asserts `self.assertDone([1, 3])` after outer exit (`tests/transaction_hooks/tests.py:158-176`). Its helpers register actual `on_commit()` callbacks and compare notifications in exact order (`tests/transaction_hooks/tests.py:27-42`). Separately, `test_executes_only_after_final_transaction_committed` asserts no notifications either inside the nested block or immediately after its successful exit, then verifies execution after outer commit (`tests/transaction_hooks/tests.py:150-156`).",
+        "answer_sha256": "e1f5713a28f5eefdf276a1445538725de9eff50e1c736a3c7e10ec543b04909d",
+        "result_sha256": "a3280a10731c14ac9a95750e4cc84eb066ab124dd3a9e9d6bd6d38e607382d27",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "high",
+        "metrics": {
+          "result_sha256": "a3280a10731c14ac9a95750e4cc84eb066ab124dd3a9e9d6bd6d38e607382d27",
+          "input_tokens": 24764,
+          "cached_input_tokens": 14208,
+          "uncached_input_tokens": 10556,
+          "output_tokens": 809,
+          "total_tokens": 25573,
+          "model_requests": 3,
+          "native_search_or_read_calls": 1,
+          "native_test_calls": 0,
+          "mcp_calls": 1,
+          "wall_seconds": 64.76728809999986,
+          "score": 8
+        }
+      }
+    },
+    {
+      "id": "Q10",
+      "task": "Fix multi-batch prefetch",
+      "maximum_score": 3,
+      "prompt": "In this checkout QuerySet.iterator(chunk_size=...) only prefetches related objects in its first batch. Fix it in place and add a regression covering at least three batches. Verify returned relations and query count, and preserve the missing-chunk-size error and normal iterator behavior.",
+      "native": {
+        "answer": "Fixed prefetching to run for every iterator batch (`django/db/models/query.py:604`).\n\nAdded a five-object, three-batch regression verifying all relations, four total queries, and zero extra queries when accessing relations (`tests/prefetch_related/tests.py:425`).\n\nValidation: **141 tests passed, 1 skipped**, covering missing-chunk-size errors and normal iterator behavior:\n```text\npython tests/runtests.py prefetch_related queries.test_iterator --parallel 1 --verbosity 1\n```",
+        "answer_sha256": "2ed2f23fdffe1cd07f38207d9b4731fc084510b8072ddbfda5ae55b312b1383b",
+        "result_sha256": "33adcdf2115853e09c63062e76be4747cdc7f196b6fb7ec59c70f0c5e63f4737",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "high",
+        "metrics": {
+          "result_sha256": "33adcdf2115853e09c63062e76be4747cdc7f196b6fb7ec59c70f0c5e63f4737",
+          "input_tokens": 51698,
+          "cached_input_tokens": 32256,
+          "uncached_input_tokens": 19442,
+          "output_tokens": 1214,
+          "total_tokens": 52912,
+          "model_requests": 5,
+          "native_search_or_read_calls": 3,
+          "native_test_calls": 1,
+          "mcp_calls": 0,
+          "wall_seconds": 69.3654359000002,
+          "score": 3
+        }
+      },
+      "skelpr": {
+        "answer": "Fixed prefetching to run for every iterator batch (`django/db/models/query.py:604`).\n\nExpanded regression coverage to five books across three batches, checking all returned authors and exactly four queries (`tests/prefetch_related/tests.py:414`). Missing-chunk-size validation and normal iterator behavior remain unchanged.\n\nVerification: `python tests/runtests.py prefetch_related queries.test_iterator --parallel 1` — 140 tests run successfully, 1 skipped.",
+        "answer_sha256": "00e495fc4ab3aaf3c9a9d6a9f0a5145a73828b3b2f1453d8bc642e4046fc6efa",
+        "result_sha256": "9ee2c9485823b020e68a9b2bcbd4cc49926896f203871ecfca1077de70f16b4c",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "high",
+        "metrics": {
+          "result_sha256": "9ee2c9485823b020e68a9b2bcbd4cc49926896f203871ecfca1077de70f16b4c",
+          "input_tokens": 35211,
+          "cached_input_tokens": 25600,
+          "uncached_input_tokens": 9611,
+          "output_tokens": 963,
+          "total_tokens": 36174,
+          "model_requests": 4,
+          "native_search_or_read_calls": 1,
+          "native_test_calls": 1,
+          "mcp_calls": 1,
+          "wall_seconds": 54.363166199999796,
+          "score": 3
+        }
+      }
+    }
+  ]
+}

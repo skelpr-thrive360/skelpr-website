@@ -8,13 +8,11 @@
 export const sectionIds = [
   'top',
   'problem',
-  'example',
   'product',
   'modes',
   'workflow',
   'benchmark',
-  // Private launch: the architecture section is parked.
-  // 'architecture',
+  'example',
   'prerequisites',
   'install',
   'faq',

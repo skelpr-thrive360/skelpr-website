@@ -279,7 +279,7 @@ export function DocsApp() {
 
           <nav className="docs-pager" aria-label="Where to go next">
             <a href="/">
-              <ArrowLeft size={15} /> The product site
+              <ArrowLeft size={15} /> Product overview
             </a>
             <a href="/#waitlist">Request access <ArrowRight size={15} /></a>
           </nav>
@@ -292,8 +292,8 @@ export function DocsApp() {
             <BrandMark />
             <span>skelpr</span>
           </a>
-          <p>Install and activate — the first two steps, in full.</p>
-          <span className="docs-footer-note">local-first · configurable providers</span>
+          <p>Setup, MCP connections and troubleshooting.</p>
+          <span className="docs-footer-note">MCP and CLI · licensed per machine</span>
         </div>
       </footer>
     </div>

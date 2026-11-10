@@ -6,8 +6,7 @@
  * (`/#workflow`). One list means the two headers cannot drift apart.
  */
 export const navItems = [
-  { id: 'workflow', label: 'How it works' },
+  { id: 'modes', label: 'MCP & CLI' },
+  { id: 'workflow', label: 'Workflow' },
   { id: 'benchmark', label: 'Benchmark' },
-  // Private launch: the architecture section is parked.
-  // { id: 'architecture', label: 'Architecture' },
 ] as const

@@ -35,7 +35,7 @@
          characters — `check:seo` enforces the band Google truncates past. -->
     <meta
       name="description"
-      content="Skelpr gives AI agents the right code instead of the whole repo: syntax-aware retrieval with file:line citations, over MCP for Claude Code, Cursor and Antigravity."
+      content="Skelpr returns repository evidence within a context budget, with file:line citations. Connect coding agents over MCP or use the standalone CLI."
     />
     <!-- `max-image-preview: large` is what lets the og card show full size. -->
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
@@ -49,24 +49,24 @@
     <meta property="og:site_name" content="Skelpr" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:url" content="https://www.skelpr.com/" />
-    <meta property="og:title" content="Skelpr — AI code retrieval for coding agents" />
+    <meta property="og:title" content="Skelpr — cited repository context for MCP and CLI" />
     <meta
       property="og:description"
-      content="Skelpr gives AI agents the right code instead of the whole repo: syntax-aware retrieval with file:line citations, over MCP for Claude Code, Cursor and Antigravity."
+      content="Skelpr returns repository evidence within a context budget, with file:line citations. Connect coding agents over MCP or use the standalone CLI."
     />
     <meta property="og:image" content="https://www.skelpr.com/brand/og-card.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Skelpr — surgical code retrieval for AI agents, with file:line citations." />
+    <meta property="og:image:alt" content="Skelpr — repository evidence with file:line citations." />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Skelpr — AI code retrieval for coding agents" />
+    <meta name="twitter:title" content="Skelpr — cited repository context for MCP and CLI" />
     <meta
       name="twitter:description"
-      content="Skelpr gives AI agents the right code instead of the whole repo: syntax-aware retrieval with file:line citations, over MCP for Claude Code, Cursor and Antigravity."
+      content="Skelpr returns repository evidence within a context budget, with file:line citations. Connect coding agents over MCP or use the standalone CLI."
     />
     <meta name="twitter:image" content="https://www.skelpr.com/brand/og-card.png" />
-    <meta name="twitter:image:alt" content="Skelpr — surgical code retrieval for AI agents, with file:line citations." />
-    <title>Skelpr — AI code retrieval for coding agents</title>
+    <meta name="twitter:image:alt" content="Skelpr — repository evidence with file:line citations." />
+    <title>Skelpr — cited repository context for MCP and CLI</title>
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -81,7 +81,7 @@
             "url": "https://www.skelpr.com/brand/logo-skeplr.png"
           },
           "email": "theskelpr@gmail.com",
-          "description": "Surgical code retrieval for AI agents, PR reviews, and fixes."
+          "description": "Repository evidence with file:line citations for coding agents and CLI workflows."
         },
         {
           "@type": "WebSite",
@@ -89,19 +89,22 @@
           "name": "Skelpr",
           "url": "https://www.skelpr.com/",
           "inLanguage": "en",
-          "publisher": { "@id": "https://www.skelpr.com/#organization" }
+          "publisher": {
+            "@id": "https://www.skelpr.com/#organization"
+          }
         },
         {
           "@type": "SoftwareApplication",
           "name": "Skelpr",
           "applicationCategory": "DeveloperApplication",
           "operatingSystem": "Linux, macOS, Windows",
-          "description": "Surgical code retrieval for AI agents, PR reviews, and fixes. Grounded in syntax-aware context and precise file:line citations.",
+          "description": "Skelpr returns repository evidence within a context budget, with file:line citations. Connect coding agents over MCP or use the standalone CLI.",
           "url": "https://www.skelpr.com/",
           "screenshot": "https://www.skelpr.com/brand/og-card.png",
-          "featureList": "BM25, symbol and vector retrieval with RRF; file:line citations; MCP for coding agents; standalone CLI for ask, review and fix",
-          "publisher": { "@id": "https://www.skelpr.com/#organization" },
-          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+          "featureList": "Budgeted repository evidence; file:line citations; MCP tools for coding agents; standalone CLI for ask, chat, review and fix",
+          "publisher": {
+            "@id": "https://www.skelpr.com/#organization"
+          }
         },
         {
           "@type": "FAQPage",
@@ -111,7 +114,7 @@
               "name": "What is Skelpr?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Skelpr supplies budgeted repository evidence for coding agents, PR reviews and fixes. It combines search results with source ranges. In MCP mode your agent owns reasoning and decides when to call the tools."
+                "text": "Skelpr returns repository evidence with file:line citations within a context budget. Connect it to a coding agent over MCP or use the CLI with your own generation provider. In MCP mode, the agent does the reasoning."
               }
             },
             {
@@ -119,7 +122,7 @@
               "name": "How is it different from grep or an embedding search?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Skelpr combines BM25, symbol and available vector candidates through reciprocal rank fusion, then selects related source evidence within a budget. The historical Sock Shop report claimed 59% fewer tokens, but retained artifacts do not fully reproduce that aggregate. Savings depend on the task and model."
+                "text": "Skelpr returns selected code excerpts and related evidence, with source ranges and response limits. This can replace repeated searches and file reads. A limit can exclude relevant code; check reported gaps and request more context when needed. Token savings depend on the task, model and repository."
               }
             },
             {
@@ -127,7 +130,7 @@
               "name": "Which agents can call it?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "MCP-compatible clients can call Skelpr. skelpr install-mcp detects supported clients, including Codex, Claude Code and Cursor. Manual configuration covers missed clients. Reconnect after installation and approve the tools as required by your client. The agent chooses whether to use them."
+                "text": "MCP-compatible clients can call Skelpr. skelpr install-mcp detects supported clients, including Codex, Claude Code and Cursor. Configure other clients manually. Reconnect after installation and approve tools as your client requires. The agent decides when to call them; installation does not guarantee tool use."
               }
             },
             {
@@ -135,7 +138,7 @@
               "name": "What do I need to run it?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Use Python 3.10 or newer and activate the machine. The standard setup needs a running Docker daemon for PostgreSQL, Qdrant and isolated validation. External database services can replace Docker. In-memory state lasts only for that process. Configure an embedding endpoint for semantic search and a generation provider for standalone ask, chat, review or fix."
+                "text": "Use Python 3.10 or newer and an activated license. Standard setup uses Docker for PostgreSQL, Qdrant and isolated validation. Configure an embedding endpoint for semantic search. Standalone ask, chat, review and fix also need a generation provider. External database services are supported; host validation requires explicit opt-in."
               }
             },
             {
@@ -151,7 +154,7 @@
               "name": "How do I get access?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "pip install skelpr is publicly available. Running requires a personal activation token. Request access, then run skelpr activate with your token. Each activated machine occupies one seat. skelpr license reports the current state."
+                "text": "Install with pip install skelpr. Running requires a personal activation token: request access, then run skelpr activate with your token. Each activated machine uses one seat. Run skelpr license to check the current state."
               }
             }
           ]
