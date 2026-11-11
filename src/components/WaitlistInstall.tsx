@@ -44,7 +44,7 @@ export function InstallSection() {
         <div className="install-copy">
           <div className="section-kicker">Get started</div>
           <h2>Install and connect</h2>
-          <p>These commands connect Skelpr to a coding agent over MCP. The setup guide also covers <a href="/docs#first-run">standalone CLI setup</a>.</p>
+          <p>These commands connect Skelpr to a coding agent over MCP. See <a href="/docs#check-the-generated-config">what to check after init</a> or follow the <a href="/docs#set-up-the-standalone-cli">standalone CLI setup</a>.</p>
           {/* One link, to the page that owns the exact steps: the channel setup the
               snippet below assumes, the token, and the environment checks are all
               spelled out there, so this section does not restate them. */}

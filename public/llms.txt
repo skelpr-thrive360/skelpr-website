@@ -13,6 +13,9 @@
   CLI and MCP support.
 - Running requires activation. Each activated machine uses one license seat;
   managed leases check in during use.
+- `skelpr init` writes `.skelpr.yaml` without prompting. The standalone
+  `skelpr setup --configure` wizard verifies both generation and embeddings.
+  Configure the embedding endpoint and model before `skelpr index`.
 - Hosted embeddings receive indexed text and queries. Hosted generation can
   receive prompts and selected source context. Remote storage and optional
   Langfuse tracing can receive source. The coding agent has its own data policy.

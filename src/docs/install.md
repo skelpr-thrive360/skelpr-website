@@ -61,8 +61,10 @@ Hosted providers require their endpoint, model and credentials. An eligible leas
 can obtain a credential for the configured Skelpr hosted embedding endpoint.
 Simply activating a token does not select that endpoint.
 
-Changing embedding models requires rebuilding the vector index, even when their
-dimensions match. Configure the intended provider before indexing.
+Choose the embedding model before indexing. To switch models in 0.3.6, give the
+new configuration a distinct `project` name in `.skelpr.yaml` and run
+`skelpr index --full`. This builds a separate vector collection. Skelpr refuses
+to replace a collection with incompatible dimensions.
 
 ## Get a token
 
@@ -155,14 +157,17 @@ separately configured model, database or telemetry connections.
 
 ## First run
 
-Start Docker and the configured embedding endpoint. Choose a mode:
+Start Docker, open a terminal in the repository you want to index, and choose a mode.
 
 | Mode | Who generates the answer? | Setup |
 |---|---|---|
 | MCP | Your coding agent | `skelpr setup --no-configure` |
-| Standalone CLI | Your configured model provider | `skelpr setup` in an interactive terminal |
+| Standalone CLI | Your configured model provider | `skelpr setup --configure` in an interactive terminal |
 
-For MCP, run these commands from the repository you want to search:
+### Set up MCP
+
+Use this path when your coding agent supplies the generation model. Set up
+PostgreSQL and Qdrant, then create the repository configuration.
 
 ```bash
 cd <your-repo>
@@ -170,14 +175,54 @@ skelpr setup --no-configure
 skelpr init
 ```
 
-Check the embedding endpoint and model in `.skelpr.yaml` before indexing. Then run:
+### Check the generated config
+
+`skelpr init` writes `.skelpr.yaml` in the repository root. It runs without
+prompts or model requests. It uses verified settings saved by the setup wizard
+when available. Otherwise it detects your stack and writes defaults, including
+validation commands where it recognizes the stack.
+
+For MCP, check the `embeddings` section. If you use a local OpenAI-compatible
+server such as LM Studio, start it and match the endpoint and loaded model ID.
+The defaults are:
+
+```yaml
+embeddings:
+  provider: compatible
+  endpoint: http://127.0.0.1:1234/v1
+  model: text-embedding-nomic-embed-text-v1.5@q8_0
+```
+
+For hosted embeddings, set the provider and model and reference the key from
+the process environment. For example, in a **new** checkout, set
+`SKELPR_EMBEDDING_KEY` securely and use this in place of plain `init`:
+
+```bash
+skelpr init --embedding-provider openai --embedding-model text-embedding-3-small --embedding-api-key-env SKELPR_EMBEDDING_KEY
+```
+
+The YAML stores `api_key_ref: env:SKELPR_EMBEDDING_KEY`. The MCP client must pass
+that variable to its server process. If you used the setup wizard, it stores
+provider keys separately and writes references to them.
+
+If `.skelpr.yaml` already exists, `init` refuses to overwrite it. Edit the
+existing file, or run the wizard again and use plain `skelpr init --force`
+to apply its saved model settings while preserving the other sections.
+Review `commands` before running validation. Those commands run code from the checkout.
+
+### Index and connect
+
+After configuring embeddings, build the first index and register your client.
 
 ```bash
 skelpr index
 skelpr install-mcp
 ```
 
-Reconnect the agent and confirm it lists `skelpr_search`.
+Wait for `Index complete` and check for `metadata=postgres` and `vectors=qdrant`
+in the summary. Reconnect the agent and confirm it lists `skelpr_search`. For a first
+check, ask Skelpr to find a symbol you know exists and verify the returned file
+and line range.
 
 | Client setup | Command |
 |---|---|
@@ -188,24 +233,46 @@ Reconnect the agent and confirm it lists `skelpr_search`.
 | Configure all detected clients | `skelpr install-mcp --yes` |
 | Get a manual JSON entry | `skelpr install-mcp --print` |
 
-Some clients use their own configuration commands. Codex uses user scope.
+In 0.3.6, Cursor and Claude Code use project settings by default. Codex uses a
+user-wide registration pinned to the checkout where you installed it. Tool
+calls to a user-wide registration require the matching absolute repository
+path. Refresh older user-wide entries from the intended checkout with
+`skelpr install-mcp --agent <id> --global --force`, then reconnect.
+If the Codex CLI is unavailable, use the TOML entry printed by the installer.
 
-For standalone CLI, run `skelpr setup` interactively to verify and save generation
-and embedding settings, then `skelpr init` and `skelpr index`.
+### Set up the standalone CLI
+
+Run `skelpr setup --configure` in an interactive terminal. After the Docker
+checks, the wizard asks for two model configurations. Use the arrow keys and
+Enter, or follow the numbered prompts if shown.
+
+1. **Generation model.** Choose a provider. For **Other**, enter the endpoint.
+   Then enter the model ID and API key.
+2. **Embedding model.** Repeat those steps for the embedding provider. API keys
+   are hidden as you type. With **Other**, leave the key blank if the endpoint
+   needs no authentication.
+3. **Verify both.** Skelpr sends small synthetic requests. Hosted providers may
+   charge for them. If a check fails, retry, edit the settings, or cancel.
+
+When the wizard says both connections verified, write the saved settings into the
+repository config, index, and try a question.
 
 ```bash
-skelpr ask "how does authentication token refresh work?"
-skelpr chat
-skelpr doctor --verbose
+skelpr init
+skelpr index
+skelpr ask "How does authentication token refresh work?"
 ```
 
-`init` detects language and validation commands. Review `.skelpr.yaml` before
-running validation because those commands execute code from the checkout.
+You can also run `skelpr chat` or check the setup with `skelpr doctor --verbose`.
+Starting with `skelpr index` in an interactive terminal can open the same wizard
+if both the repository config and saved setup settings are missing.
 
 ### MCP tool use
 
 Pass the complete question as `{"query": "your question"}` to `skelpr_search`.
 Use `query` for client compatibility; the server also accepts `question`.
+For a guarded user-wide registration in 0.3.6, include
+`"repository": "/absolute/path/to/your-repo"` in the tool arguments.
 Leave budgets unset for automatic selection, or provide a limit. A context limit
 controls response size; it does not guarantee complete evidence.
 
@@ -220,26 +287,28 @@ configuration error. Inspect skipped checks as well as the overall result.
 
 ### Keeping the index fresh
 
-```bash
-skelpr watch
-skelpr watch --poll 1 --debounce 1.5
-```
+In 0.3.6, MCP starts a background catch-up pass after the first licensed tool
+call. Normal `skelpr serve` starts it for its allowed startup repository.
+The watcher detects new, edited, and deleted files and branch switches in Git
+checkouts. It needs the configured embedding endpoint, PostgreSQL, and Qdrant.
+It retries pending updates when a backend returns.
 
-Watch indexes once, then checks for added, changed and removed files and branch
-changes. Updates take the polling interval, a quiet debounce period and indexing
-time. Enable background updates explicitly for MCP and `serve`:
+Use `skelpr watch` to watch from a terminal, or `skelpr index` to refresh
+immediately or index a folder outside Git. The default poll interval is one
+second, followed by a 1.5-second quiet period and the time needed to index.
+
+An older config with `indexing.watch.enabled: false` keeps watching off. Remove
+that setting or change it to `true`, then restart the client. To opt out in 0.3.6,
+set:
 
 ```yaml
 indexing:
   watch:
-    enabled: true
-    poll_seconds: 1.0
-    debounce_seconds: 1.5
+    enabled: false
 ```
 
-`SKELPR_AUTO_REINDEX=1` also enables background updates for the process. Failed
-updates can leave an incomplete index. Check diagnostics and finish a successful
-indexing pass after restoring the service.
+`SKELPR_AUTO_REINDEX=0` also turns it off for the server process and takes
+precedence over YAML. Earlier versions may require you to enable it explicitly.
 
 ## Check the license
 
@@ -273,7 +342,9 @@ one. A lease copied between machines does not authorize the destination.
 | Symptom | Action |
 |---|---|
 | Command missing | Activate the intended environment and check PATH |
+| `init` says the config exists | Edit `.skelpr.yaml`, or apply saved wizard settings as described above |
 | MCP missing after upgrade | Restart the agent and verify its configured executable |
+| MCP reports repository mismatch | Open the pinned checkout or reinstall from the intended repo |
 | Agent never calls a tool | Check tool discovery, approval settings and project instructions |
 | License refusal | Run `skelpr license` and follow its specific reason |
 | Due check-in fails | Restore access to the license service and retry |
