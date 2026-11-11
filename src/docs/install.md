@@ -4,9 +4,9 @@ Skelpr returns repository evidence with `file:line` citations and a context limi
 Use it through your coding agent's MCP connection or the standalone CLI.
 Installation is public; running requires activation, with one seat per machine.
 
-This guide describes the 0.3.6 source and installation changes. Check the installed
-version with `skelpr --version`. Earlier releases may require the `mcp`, `ast`,
-`postgres` and `vector` extras.
+This guide covers the published Skelpr 0.3.6 release. Check your installed version
+with `skelpr --version`. Earlier releases may require the `mcp`, `ast`, `postgres`
+and `vector` extras.
 
 ## Prerequisites
 
@@ -125,10 +125,15 @@ saved activation is not the one being used.
 
 ### What activation sends
 
-Activation and check-in send the token and a machine-id hash to the license
-service. Managed leases check in automatically during use, about every ten
-minutes. A due check-in that cannot reach the service prevents licensed work.
-Offline-tier leases renew near expiry when online renewal is allowed.
+Activation and check-in send the token, a machine-ID hash, the operating system
+and architecture, and the Skelpr version to the license service. These requests
+contain no repository source.
+
+A managed lease sets its own check-in interval. Skelpr checks in automatically
+when licensed work runs and a check-in is due. If the service is unreachable,
+work can continue until the lease expires. Restore the connection and retry a
+licensed command or MCP tool to renew the existing seat. Offline-tier leases
+renew near expiry when online renewal is allowed.
 
 Other connections depend on configuration.
 
@@ -161,7 +166,7 @@ Start Docker, open a terminal in the repository you want to index, and choose a 
 
 | Mode | Who generates the answer? | Setup |
 |---|---|---|
-| MCP | Your coding agent | `skelpr setup --no-configure` |
+| MCP search | Your coding agent | `skelpr setup --no-configure --no-sandbox` |
 | Standalone CLI | Your configured model provider | `skelpr setup --configure` in an interactive terminal |
 
 ### Set up MCP
@@ -171,9 +176,12 @@ PostgreSQL and Qdrant, then create the repository configuration.
 
 ```bash
 cd <your-repo>
-skelpr setup --no-configure
+skelpr setup --no-configure --no-sandbox
 skelpr init
 ```
+
+This skips the Docker validation image. Run `skelpr setup --no-configure` if you
+also want Docker-backed validation.
 
 ### Check the generated config
 
@@ -220,9 +228,9 @@ skelpr install-mcp
 ```
 
 Wait for `Index complete` and check for `metadata=postgres` and `vectors=qdrant`
-in the summary. Reconnect the agent and confirm it lists `skelpr_search`. For a first
-check, ask Skelpr to find a symbol you know exists and verify the returned file
-and line range.
+in the summary. By default the installer verifies MCP startup and reports index
+readiness. Restart or reconnect the client, then run `skelpr_health` and check the
+repository path. Ask for a known symbol and verify the returned file and line range.
 
 | Client setup | Command |
 |---|---|
@@ -232,13 +240,16 @@ and line range.
 | Configure Cursor | `skelpr install-mcp --agent cursor` |
 | Configure all detected clients | `skelpr install-mcp --yes` |
 | Get a manual JSON entry | `skelpr install-mcp --print` |
+| Write to a specific MCP JSON file | `skelpr install-mcp --mcp-config <file>` |
 
 In 0.3.6, Cursor and Claude Code use project settings by default. Codex uses a
 user-wide registration pinned to the checkout where you installed it. Tool
 calls to a user-wide registration require the matching absolute repository
 path. Refresh older user-wide entries from the intended checkout with
 `skelpr install-mcp --agent <id> --global --force`, then reconnect.
-If the Codex CLI is unavailable, use the TOML entry printed by the installer.
+If the Codex CLI is unavailable, run `skelpr install-mcp --agent codex` and use
+the TOML entry it prints. The installer also writes project guidance by default.
+Pass `--no-instructions` to skip that step.
 
 ### Set up the standalone CLI
 
@@ -270,7 +281,8 @@ if both the repository config and saved setup settings are missing.
 ### MCP tool use
 
 Pass the complete question as `{"query": "your question"}` to `skelpr_search`.
-Use `query` for client compatibility; the server also accepts `question`.
+Use `query` for client compatibility. The server accepts `question` when `query`
+is absent.
 For a guarded user-wide registration in 0.3.6, include
 `"repository": "/absolute/path/to/your-repo"` in the tool arguments.
 Leave budgets unset for automatic selection, or provide a limit. A context limit
@@ -285,10 +297,15 @@ literal terms and report scan limits. A bounded search cannot prove absence.
 explicitly enabled. Unknown check names or no configured checks produce a
 configuration error. Inspect skipped checks as well as the overall result.
 
+In 0.3.6, include the current source for the target symbol in `find_context`
+when calling `skelpr_apply_ast_patch`. The tool returns a diff for review and
+leaves the checkout unchanged.
+
 ### Keeping the index fresh
 
-In 0.3.6, MCP starts a background catch-up pass after the first licensed tool
-call. Normal `skelpr serve` starts it for its allowed startup repository.
+Background indexing is on by default in MCP and `skelpr serve`. MCP starts a
+catch-up pass after the first licensed tool call. `skelpr serve` watches its
+allowed startup repository.
 The watcher detects new, edited, and deleted files and branch switches in Git
 checkouts. It needs the configured embedding endpoint, PostgreSQL, and Qdrant.
 It retries pending updates when a backend returns.
@@ -310,15 +327,28 @@ indexing:
 `SKELPR_AUTO_REINDEX=0` also turns it off for the server process and takes
 precedence over YAML. Earlier versions may require you to enable it explicitly.
 
+## Common commands
+
+| Task | Command |
+|---|---|
+| Export cited source | `skelpr context "where is this defined?" --token-budget 1000` |
+| Review the last commit | `skelpr review --diff HEAD~1..HEAD` |
+| Generate a patch for review | `skelpr fix --issue "describe the bug"` |
+| Run a configured test check | `skelpr validate --only test` |
+| Start the optional HTTP API | `skelpr serve --host 127.0.0.1` |
+| Check for an update | `skelpr upgrade --check` |
+
+Use `skelpr <command> --help` for flags and examples.
+
 ## Check the license
 
 ```bash
 skelpr license
 ```
 
-The output identifies credential sources, license and lease terms, seat and status.
-A license refusal exits with `3`; failed activation exits with `1`.
-Expiry and renewal follow the license terms.
+`skelpr license` reads the local state. A refusal or `check-in due` exits with `3`.
+For `check-in due`, retry a licensed command or MCP tool with the service
+reachable. Failed `skelpr activate` exits with `1`.
 
 ## What refuses without activation
 
@@ -330,7 +360,8 @@ Expiry and renewal follow the license terms.
 | MCP tools | Refusal content explains the license issue |
 | HTTP API | Gated routes refuse, `/health` stays available |
 
-Help, version, activation, deactivation and license inspection remain accessible.
+Help, version, activation, deactivation, license inspection and `skelpr doctor`
+remain accessible.
 
 ## Moving to another machine
 
@@ -353,6 +384,7 @@ one. A lease copied between machines does not authorize the destination.
 | Memory backend reported | Configure persistent metadata and vector services, then index |
 | Embedding failure | Check endpoint, model and credential references |
 | Verification inconclusive | Inspect reported exclusions, bounds and ripgrep availability |
+| Custom-agent list or removal reports `Missing argument 'NAME'` in 0.3.6 | Use `skelpr register-agent unused unused --list` or `skelpr register-agent unused unused --remove <agent-key>` |
 
 ## Benchmark scope
 

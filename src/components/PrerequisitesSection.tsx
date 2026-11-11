@@ -17,7 +17,7 @@ type Prerequisite = {
 const prerequisites: Prerequisite[] = [
   {
     index: '01', chip: 'Standard setup', title: 'Docker',
-    body: 'Start Docker Desktop or Docker Engine before running skelpr setup. Setup starts the repository stores and prepares isolated validation.',
+    body: 'Start Docker Desktop or Docker Engine before running skelpr setup. Setup starts the repository stores and can build a validation image.',
     facts: [
       { label: 'PostgreSQL', value: 'port 5434' },
       { label: 'Qdrant', value: 'ports 6333 / 6334' },
@@ -38,7 +38,7 @@ const prerequisites: Prerequisite[] = [
     body: 'ask, chat, review and fix use a configured generation model. MCP retrieval uses your coding agent for reasoning and needs no separate Skelpr generation key.',
     facts: [
       { label: 'Where it runs', value: 'Local or hosted' },
-      { label: 'Setup', value: 'skelpr setup' },
+      { label: 'Setup', value: 'skelpr setup --configure' },
     ],
     note: 'Generation and embeddings have separate settings. Hosted generation receives your prompt and selected source context.',
   },

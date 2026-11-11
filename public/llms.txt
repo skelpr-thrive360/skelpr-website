@@ -11,11 +11,13 @@
 - Configure an embedding endpoint for semantic search. Standalone generation
   needs a separate model provider. From 0.3.6, plain pip install skelpr includes
   CLI and MCP support.
-- Running requires activation. Each activated machine uses one license seat;
-  managed leases check in during use.
-- `skelpr init` writes `.skelpr.yaml` without prompting. The standalone
+- Running requires activation. Each activated machine uses one license seat.
+  Managed leases check in automatically during licensed use at the interval set in the lease.
+- For MCP search, run `skelpr setup --no-configure --no-sandbox`. The standalone
   `skelpr setup --configure` wizard verifies both generation and embeddings.
-  Configure the embedding endpoint and model before `skelpr index`.
+  `skelpr init` writes `.skelpr.yaml` without prompting. Configure the embedding
+  endpoint and model before `skelpr index`. MCP and the HTTP API watch for
+  changes by default.
 - Hosted embeddings receive indexed text and queries. Hosted generation can
   receive prompts and selected source context. Remote storage and optional
   Langfuse tracing can receive source. The coding agent has its own data policy.
