@@ -4,9 +4,8 @@ Skelpr returns repository evidence with `file:line` citations and a context limi
 Use it through your coding agent's MCP connection or the standalone CLI.
 Installation is public; running requires activation, with one seat per machine.
 
-This guide covers the published Skelpr 0.3.6 release. Check your installed version
-with `skelpr --version`. Earlier releases may require the `mcp`, `ast`, `postgres`
-and `vector` extras.
+This guide covers [Skelpr 0.3.7](https://pypi.org/project/skelpr/0.3.7/).
+Check your installation with `skelpr --version`.
 
 ## Prerequisites
 
@@ -16,7 +15,7 @@ and `vector` extras.
 | Git on PATH | Diff, review, patch and Git-aware indexing |
 | ripgrep on PATH | Explicit live-checkout text and path verification |
 | A running Docker daemon | Standard `skelpr setup` and isolated validation |
-| An embedding endpoint | Semantic indexing and vector retrieval |
+| An embedding model | Both setup modes, semantic indexing and vector retrieval |
 | A generation provider | Standalone `ask`, `chat`, `review` and `fix` |
 
 MCP uses your agent for generation. The agent decides when to call tools and may
@@ -24,8 +23,10 @@ require approval. Connecting Skelpr does not guarantee automatic use.
 
 ### Docker services
 
-`skelpr setup` checks Docker, starts the databases and builds the validation image.
-Docker Desktop works on Windows/macOS. Docker Engine also works on Linux.
+Start Docker Desktop on Windows or macOS, or Docker Engine on Linux.
+`skelpr setup` starts the stores as needed and verifies a PostgreSQL login and
+a Qdrant API response. The standalone path builds or reuses the validation
+image by default. The MCP path builds it only when you add `--sandbox`.
 
 | Component | Default |
 |---|---|
@@ -61,7 +62,7 @@ Hosted providers require their endpoint, model and credentials. An eligible leas
 can obtain a credential for the configured Skelpr hosted embedding endpoint.
 Simply activating a token does not select that endpoint.
 
-Choose the embedding model before indexing. To switch models in 0.3.6, give the
+Choose the embedding model before indexing. To switch models, give the
 new configuration a distinct `project` name in `.skelpr.yaml` and run
 `skelpr index --full`. This builds a separate vector collection. Skelpr refuses
 to replace a collection with incompatible dimensions.
@@ -73,8 +74,8 @@ waitlist is for release updates. Keep your activation token private.
 
 ## Install
 
-From 0.3.6, plain installation includes the CLI, MCP integration and database
-clients. The optional HTTP API uses the `server` extra.
+Plain installation includes the CLI, MCP integration and database clients.
+The optional HTTP API uses the `server` extra.
 
 ```bash
 python -m pip install --upgrade skelpr
@@ -103,7 +104,7 @@ local copies of its dependencies for your Python version and operating system.
 python -m pip install --no-index --find-links ./wheelhouse skelpr
 ```
 
-`--version` and `--help` work before activation.
+`--version`, `--help`, and `--help-all` work before activation.
 
 ## Activate
 
@@ -162,37 +163,46 @@ separately configured model, database or telemetry connections.
 
 ## First run
 
-Start Docker, open a terminal in the repository you want to index, and choose a mode.
+Start Docker and open a terminal in the repository you want to index.
 
-| Mode | Who generates the answer? | Setup |
+```bash
+skelpr setup
+```
+
+When asked **Set up for a coding agent (MCP)?**, choose:
+
+| Answer | Use it for | Connections verified |
 |---|---|---|
-| MCP search | Your coding agent | `skelpr setup --no-configure --no-sandbox` |
-| Standalone CLI | Your configured model provider | `skelpr setup --configure` in an interactive terminal |
+| **Yes** (default) | Codex, Claude Code, Cursor, or another MCP client | Embeddings |
+| **No** | Standalone CLI | Embeddings and generation |
+
+Use `--embeddings-only` or `--configure` to choose a mode directly in a terminal.
 
 ### Set up MCP
 
-Use this path when your coding agent supplies the generation model. Set up
-PostgreSQL and Qdrant, then create the repository configuration.
+Choose your embedding provider and enter its exact model ID. For a local or
+custom endpoint, choose **Other**, enter the server's base URL, and leave
+the key blank if the server allows unauthenticated access. Start a local server
+and load the model before setup. Skelpr supports OpenAI-compatible `/embeddings`
+and falls back to a compatible `/embed` route when the first route is unavailable
+with HTTP 404 or 405.
 
-```bash
-cd <your-repo>
-skelpr setup --no-configure --no-sandbox
-skelpr init
-```
-
-This skips the Docker validation image. Run `skelpr setup --no-configure` if you
-also want Docker-backed validation.
+Setup verifies embeddings and writes `.skelpr.yaml`, preserving existing
+non-embedding settings. Continue to [Index and connect](#index-and-connect).
+The coding agent supplies generation. To add Docker-backed validation, use
+`skelpr setup --embeddings-only --sandbox` during setup or run
+`skelpr setup --no-configure` later.
 
 ### Check the generated config
 
-`skelpr init` writes `.skelpr.yaml` in the repository root. It runs without
-prompts or model requests. It uses verified settings saved by the setup wizard
-when available. Otherwise it detects your stack and writes defaults, including
-validation commands where it recognizes the stack.
+For scripts, `skelpr setup --no-configure --no-sandbox` starts and verifies
+the stores without running a model wizard. Then use `skelpr init` with explicit
+provider options or supply an existing repository config.
 
-For MCP, check the `embeddings` section. If you use a local OpenAI-compatible
-server such as LM Studio, start it and match the endpoint and loaded model ID.
-The defaults are:
+`skelpr init` writes `.skelpr.yaml` without prompts or model requests. It uses
+saved standalone settings when available, or detects your stack and writes
+defaults. For manual setup, verify the configured provider before indexing. For a local OpenAI-compatible server such as LM Studio, start the
+server and load the model ID in your YAML. The defaults are:
 
 ```yaml
 embeddings:
@@ -201,9 +211,10 @@ embeddings:
   model: text-embedding-nomic-embed-text-v1.5@q8_0
 ```
 
-For hosted embeddings, set the provider and model and reference the key from
-the process environment. For example, in a **new** checkout, set
-`SKELPR_EMBEDDING_KEY` securely and use this in place of plain `init`:
+For hosted embeddings, set the provider, endpoint and model in `embeddings`.
+Reference the key with `api_key_ref: env:SKELPR_EMBEDDING_KEY`. For example, in a
+**new** checkout, set that environment variable securely and use this in place
+of plain `init`:
 
 ```bash
 skelpr init --embedding-provider openai --embedding-model text-embedding-3-small --embedding-api-key-env SKELPR_EMBEDDING_KEY
@@ -214,8 +225,8 @@ that variable to its server process. If you used the setup wizard, it stores
 provider keys separately and writes references to them.
 
 If `.skelpr.yaml` already exists, `init` refuses to overwrite it. Edit the
-existing file, or run the wizard again and use plain `skelpr init --force`
-to apply its saved model settings while preserving the other sections.
+existing file, or use plain `skelpr init --force` to apply saved standalone
+model settings while preserving unrelated repository settings.
 Review `commands` before running validation. Those commands run code from the checkout.
 
 ### Index and connect
@@ -227,10 +238,12 @@ skelpr index
 skelpr install-mcp
 ```
 
-Wait for `Index complete` and check for `metadata=postgres` and `vectors=qdrant`
-in the summary. By default the installer verifies MCP startup and reports index
-readiness. Restart or reconnect the client, then run `skelpr_health` and check the
-repository path. Ask for a known symbol and verify the returned file and line range.
+Wait for `Index complete` and check for `metadata=postgres`, `vectors=qdrant`,
+and a working embedding backend in the summary. If you see `hashing-fallback`,
+check the endpoint and model before using semantic search. The MCP installer
+verifies startup and reports index readiness by default. Reconnect the client,
+run `skelpr_health`, and confirm the repository path. Ask for a known symbol and
+check the returned file and line range.
 
 | Client setup | Command |
 |---|---|
@@ -242,7 +255,7 @@ repository path. Ask for a known symbol and verify the returned file and line ra
 | Get a manual JSON entry | `skelpr install-mcp --print` |
 | Write to a specific MCP JSON file | `skelpr install-mcp --mcp-config <file>` |
 
-In 0.3.6, Cursor and Claude Code use project settings by default. Codex uses a
+Cursor and Claude Code use project settings by default. Codex uses a
 user-wide registration pinned to the checkout where you installed it. Tool
 calls to a user-wide registration require the matching absolute repository
 path. Refresh older user-wide entries from the intended checkout with
@@ -253,37 +266,32 @@ Pass `--no-instructions` to skip that step.
 
 ### Set up the standalone CLI
 
-Run `skelpr setup --configure` in an interactive terminal. After the Docker
-checks, the wizard asks for two model configurations. Use the arrow keys and
-Enter, or follow the numbered prompts if shown.
+Answer **No** to the MCP question in `skelpr setup`, or run
+`skelpr setup --configure` in a terminal.
 
-1. **Generation model.** Choose a provider. For **Other**, enter the endpoint.
-   Then enter the model ID and API key.
-2. **Embedding model.** Repeat those steps for the embedding provider. API keys
-   are hidden as you type. With **Other**, leave the key blank if the endpoint
-   needs no authentication.
-3. **Verify both.** Skelpr sends small synthetic requests. Hosted providers may
-   charge for them. If a check fails, retry, edit the settings, or cancel.
-
-When the wizard says both connections verified, write the saved settings into the
-repository config, index, and try a question.
+1. Choose a generation provider and an embedding provider. Enter each model ID
+   and supply credentials if the provider requires them. For **Other**, supply the
+   server's base URL and leave the key blank if authentication is optional.
+2. Skelpr verifies both connections with small synthetic requests. Hosted
+   providers may charge for these. If a check fails, retry, edit settings, or cancel.
+3. Run `skelpr index`. In a new checkout, it creates `.skelpr.yaml` from the
+   saved setup settings. If the file already exists, run `skelpr init --force`
+   first to apply newly verified standalone settings.
 
 ```bash
-skelpr init
 skelpr index
 skelpr ask "How does authentication token refresh work?"
 ```
 
-You can also run `skelpr chat` or check the setup with `skelpr doctor --verbose`.
-Starting with `skelpr index` in an interactive terminal can open the same wizard
-if both the repository config and saved setup settings are missing.
+Use `skelpr chat` for an interactive session or `skelpr doctor --verbose` to
+check the setup. Add `--no-sandbox` to setup if you only need indexing and answers.
 
 ### MCP tool use
 
 Pass the complete question as `{"query": "your question"}` to `skelpr_search`.
 Use `query` for client compatibility. The server accepts `question` when `query`
 is absent.
-For a guarded user-wide registration in 0.3.6, include
+For a guarded user-wide registration, include
 `"repository": "/absolute/path/to/your-repo"` in the tool arguments.
 Leave budgets unset for automatic selection, or provide a limit. A context limit
 controls response size; it does not guarantee complete evidence.
@@ -297,7 +305,7 @@ literal terms and report scan limits. A bounded search cannot prove absence.
 explicitly enabled. Unknown check names or no configured checks produce a
 configuration error. Inspect skipped checks as well as the overall result.
 
-In 0.3.6, include the current source for the target symbol in `find_context`
+Include the current source for the target symbol in `find_context`
 when calling `skelpr_apply_ast_patch`. The tool returns a diff for review and
 leaves the checkout unchanged.
 
@@ -308,14 +316,16 @@ catch-up pass after the first licensed tool call. `skelpr serve` watches its
 allowed startup repository.
 The watcher detects new, edited, and deleted files and branch switches in Git
 checkouts. It needs the configured embedding endpoint, PostgreSQL, and Qdrant.
-It retries pending updates when a backend returns.
+Failed updates retry with backoff. An existing PostgreSQL index can still
+serve lexical and symbol evidence while Qdrant is unavailable. Check
+`skelpr_health` for backend degradation or a required vector reindex.
 
 Use `skelpr watch` to watch from a terminal, or `skelpr index` to refresh
 immediately or index a folder outside Git. The default poll interval is one
 second, followed by a 1.5-second quiet period and the time needed to index.
 
 An older config with `indexing.watch.enabled: false` keeps watching off. Remove
-that setting or change it to `true`, then restart the client. To opt out in 0.3.6,
+that setting or change it to `true`, then restart the client. To opt out,
 set:
 
 ```yaml
@@ -338,7 +348,8 @@ precedence over YAML. Earlier versions may require you to enable it explicitly.
 | Start the optional HTTP API | `skelpr serve --host 127.0.0.1` |
 | Check for an update | `skelpr upgrade --check` |
 
-Use `skelpr <command> --help` for flags and examples.
+Use `skelpr --help` for the command overview, `skelpr --help-all` for all flags,
+or `skelpr <command> --help` for one command.
 
 ## Check the license
 
@@ -384,7 +395,7 @@ one. A lease copied between machines does not authorize the destination.
 | Memory backend reported | Configure persistent metadata and vector services, then index |
 | Embedding failure | Check endpoint, model and credential references |
 | Verification inconclusive | Inspect reported exclusions, bounds and ripgrep availability |
-| Custom-agent list or removal reports `Missing argument 'NAME'` in 0.3.6 | Use `skelpr register-agent unused unused --list` or `skelpr register-agent unused unused --remove <agent-key>` |
+| Check or remove a custom agent registration | Use `skelpr register-agent --list` or `skelpr register-agent --remove <agent-key>` |
 
 ## Benchmark scope
 

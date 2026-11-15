@@ -16,7 +16,7 @@ const faqs = [
   },
   {
     question: "What do I need to run it?",
-    answer: "Use Python 3.10 or newer, Git and an activation token. Standard setup uses Docker for PostgreSQL, Qdrant and isolated validation. Configure an embedding endpoint for semantic search. Standalone ask, chat, review and fix also need a generation provider. External database services are supported. Host validation requires explicit opt-in.",
+    answer: "Use Python 3.10 or newer, Git, an activation token, and Docker for standard setup. Both setup modes verify an embedding model. Standalone setup also verifies a generation model. MCP uses your coding agent and skips the Docker validation image by default.",
   },
   {
     question: "Does my code leave my machine?",

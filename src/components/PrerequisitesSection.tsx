@@ -17,16 +17,16 @@ type Prerequisite = {
 const prerequisites: Prerequisite[] = [
   {
     index: '01', chip: 'Standard setup', title: 'Docker',
-    body: 'Start Docker Desktop or Docker Engine before running skelpr setup. Setup starts the repository stores and can build a validation image.',
+    body: 'Start Docker Desktop or Docker Engine before running skelpr setup. Setup starts the repository stores as needed and verifies both connections.',
     facts: [
       { label: 'PostgreSQL', value: 'port 5434' },
       { label: 'Qdrant', value: 'ports 6333 / 6334' },
     ],
-    note: 'External PostgreSQL and Qdrant can replace the bundled services. Running validation on the host requires explicit opt-in.',
+    note: 'External PostgreSQL and Qdrant can replace the bundled services. MCP setup skips the Docker validation image by default.',
   },
   {
     index: '02', chip: 'Semantic search', title: 'An embedding provider',
-    body: 'Choose a local or hosted endpoint. Hosted embeddings receive indexed source text and search queries. Check the endpoint and credentials before indexing.',
+    body: 'Both setup modes verify a local or hosted embedding model before you index. Hosted embeddings receive indexed source text and search queries.',
     facts: [
       { label: 'Where it runs', value: 'Local or hosted' },
       { label: 'Configuration', value: 'embeddings in .skelpr.yaml' },

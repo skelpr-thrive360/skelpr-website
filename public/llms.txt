@@ -6,18 +6,19 @@
 
 ## Setup and data handling
 
-- Python 3.10+ and Git. Standard setup uses Docker for PostgreSQL, Qdrant and isolated
-  validation. External database services are supported.
-- Configure an embedding endpoint for semantic search. Standalone generation
-  needs a separate model provider. From 0.3.6, plain pip install skelpr includes
-  CLI and MCP support.
+- Python 3.10+ and Git. Standard setup verifies PostgreSQL and Qdrant, using
+  Docker for local services. Plain `pip install skelpr` includes CLI and MCP.
 - Running requires activation. Each activated machine uses one license seat.
   Managed leases check in automatically during licensed use at the interval set in the lease.
-- For MCP search, run `skelpr setup --no-configure --no-sandbox`. The standalone
-  `skelpr setup --configure` wizard verifies both generation and embeddings.
-  `skelpr init` writes `.skelpr.yaml` without prompting. Configure the embedding
-  endpoint and model before `skelpr index`. MCP and the HTTP API watch for
-  changes by default.
+- In Skelpr 0.3.7, run `skelpr setup` in a terminal and choose Yes for MCP or No
+  for the standalone CLI. Both modes verify embeddings. Standalone setup also
+  verifies generation. MCP setup writes `.skelpr.yaml` and skips the Docker
+  validation image by default. Direct options are `--embeddings-only` and
+  `--configure`. After setup, run `skelpr index`. For MCP, also run
+  `skelpr install-mcp`, reconnect the client, and call `skelpr_health`.
+- `skelpr setup --no-configure` sets up infrastructure only. `skelpr init`
+  writes repository configuration without prompting. MCP and the HTTP API
+  watch for changes by default.
 - Hosted embeddings receive indexed text and queries. Hosted generation can
   receive prompts and selected source context. Remote storage and optional
   Langfuse tracing can receive source. The coding agent has its own data policy.

@@ -44,7 +44,7 @@ export function InstallSection() {
         <div className="install-copy">
           <div className="section-kicker">Get started</div>
           <h2>Install and connect</h2>
-          <p>These commands connect Skelpr to a coding agent over MCP. See <a href="/docs#check-the-generated-config">what to check after init</a> or follow the <a href="/docs#set-up-the-standalone-cli">standalone CLI setup</a>.</p>
+          <p>Connect Skelpr to your coding agent and verify an embedding model before indexing. To use Skelpr without a coding agent, follow the <a href="/docs#set-up-the-standalone-cli">standalone CLI setup</a>.</p>
           {/* One link, to the page that owns the exact steps: the channel setup the
               snippet below assumes, the token, and the environment checks are all
               spelled out there, so this section does not restate them. */}
@@ -55,11 +55,13 @@ export function InstallSection() {
         </div>
         <div className="install-code">
           <div className="code-top"><span>MCP SETUP</span><span>bash</span></div>
-          <pre><code><span className="comment"># 0.3.6+ includes CLI and MCP</span>{'\n'}python -m pip install --upgrade <span className="string">skelpr</span>{'\n'}{'\n'}<span className="comment"># Once per machine, using the token from your access email</span>{'\n'}skelpr activate <span className="string">{'<token>'}</span>{'\n'}{'\n'}{`cd <your-repo>`}{'\n'}skelpr setup --no-configure --no-sandbox{'\n'}skelpr init{'\n'}<span className="comment"># Check the embedding endpoint and model in .skelpr.yaml</span>{'\n'}skelpr index{'\n'}skelpr install-mcp</code></pre>
+          <pre><code><span className="comment"># Install or upgrade Skelpr</span>{'\n'}python -m pip install --upgrade <span className="string">skelpr</span>{'\n'}{'\n'}<span className="comment"># Once per machine, using the token from your access email</span>{'\n'}skelpr activate <span className="string">{'<token>'}</span>{'\n'}{'\n'}{`cd <your-repo>`}{'\n'}skelpr setup --embeddings-only</code></pre>
+          <div className="code-footer">Choose an embedding model and wait for verification</div>
+          <pre><code>{'skelpr index\nskelpr install-mcp'}</code></pre>
           <div className="code-footer"><Check size={14} /> Reconnect the client and run skelpr_health</div>
         </div>
         <div className="install-note">
-          <p><strong>Requirements:</strong> Python 3.10+, Git, a running Docker daemon and a configured embedding endpoint for standard setup. <code>skelpr install-mcp</code> detects supported clients, including Codex, Claude Code and Cursor. Use the manual MCP configuration in the guide if a client is missed.</p>
+          <p><strong>Requirements:</strong> Python 3.10+, Git, a running Docker daemon and a working embedding endpoint. <code>skelpr install-mcp</code> detects supported clients, including Codex, Claude Code and Cursor. Use the manual MCP configuration in the guide if a client is missed.</p>
           <p><strong>Provider and license traffic.</strong> Activation and managed check-ins contact the license service. Hosted providers and optional tracing can receive source context and queries. See <a href="/docs#what-activation-sends">what each connection sends</a>.</p>
         </div>
       </div>

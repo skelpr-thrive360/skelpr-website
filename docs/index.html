@@ -100,7 +100,7 @@
             {
               "@type": "HowToStep",
               "name": "Install the package",
-              "text": "python -m pip install --upgrade skelpr. From 0.3.6 the default install includes CLI and MCP. Check the installed version with skelpr --version."
+              "text": "python -m pip install --upgrade skelpr. The default install includes CLI and MCP. Check the installed version with skelpr --version."
             },
             {
               "@type": "HowToStep",
@@ -110,7 +110,7 @@
             {
               "@type": "HowToStep",
               "name": "Prepare your repository",
-              "text": "For MCP search, run skelpr setup --no-configure --no-sandbox. For the standalone CLI, run skelpr setup --configure and verify both providers. Run skelpr init to create .skelpr.yaml, then check the embedding endpoint and model."
+              "text": "Run skelpr setup in a terminal from your repository. Choose Yes for MCP to verify embeddings and write .skelpr.yaml. Choose No for the standalone CLI to verify embeddings and generation. If the standalone repository already has a config, run skelpr init --force to apply the saved settings before indexing."
             },
             {
               "@type": "HowToStep",
