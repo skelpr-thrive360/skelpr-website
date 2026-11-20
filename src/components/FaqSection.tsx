@@ -19,6 +19,14 @@ const faqs = [
     answer: "Use Python 3.10 or newer, Git, an activation token, and Docker for standard setup. Both setup modes verify an embedding model. Standalone setup also verifies a generation model. MCP uses your coding agent and skips the Docker validation image by default.",
   },
   {
+    question: "Can I index several repositories together?",
+    answer: "Yes. Run setup, index and install-mcp from their shared non-Git parent folder. One root configuration controls the combined index, and evidence paths identify each child repository. Child configuration files are not merged. You can index each checkout separately if you need independent configurations.",
+  },
+  {
+    question: "Which files are excluded?",
+    answer: "Each checkout supplies tracked files and untracked files Git does not ignore. Skelpr adds automatic artifact exclusions and configured ignore rules. Generated defaults also exclude dependency folders and recognized credential files. Binary, unreadable and oversized content is skipped. The setup guide explains overrides and limits.",
+  },
+  {
     question: "Does my code leave my machine?",
     answer: "That depends on your configuration. Hosted embeddings receive indexed text and queries. Hosted generation can receive prompts and selected source context. Remote storage and optional Langfuse tracing can also receive source. Activation sends licensing data, and managed leases check in during use. Your coding agent has its own data policy.",
   },

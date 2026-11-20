@@ -108,7 +108,7 @@
           "description": "Skelpr returns repository evidence within a context budget, with file:line citations. Connect coding agents over MCP or use the standalone CLI.",
           "url": "https://www.skelpr.com/",
           "screenshot": "https://www.skelpr.com/brand/og-card.png",
-          "featureList": "Budgeted repository evidence; file:line citations; MCP tools for coding agents; standalone CLI for ask, chat, review and fix",
+          "featureList": "Budgeted repository evidence; multi-repo workspace indexing; file:line citations; automatic index refresh; MCP tools for coding agents; standalone CLI for ask, chat, review and fix",
           "publisher": {
             "@id": "https://www.skelpr.com/#organization"
           }
@@ -146,6 +146,22 @@
               "acceptedAnswer": {
                 "@type": "Answer",
                 "text": "Use Python 3.10 or newer, Git, an activation token, and Docker for standard setup. Both setup modes verify an embedding model. Standalone setup also verifies a generation model. MCP uses your coding agent and skips the Docker validation image by default."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can I index several repositories together?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. Run setup, index and install-mcp from their shared non-Git parent folder. One root configuration controls the combined index, and evidence paths identify each child repository. Child configuration files are not merged. You can index each checkout separately if you need independent configurations."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Which files are excluded?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Each checkout supplies tracked files and untracked files Git does not ignore. Skelpr adds automatic artifact exclusions and configured ignore rules. Generated defaults also exclude dependency folders and recognized credential files. Binary, unreadable and oversized content is skipped. The setup guide explains overrides and limits."
               }
             },
             {

@@ -10,12 +10,13 @@
   Docker for local services. Plain `pip install skelpr` includes CLI and MCP.
 - Running requires activation. Each activated machine uses one license seat.
   Managed leases check in automatically during licensed use at the interval set in the lease.
-- In Skelpr 0.3.7, run `skelpr setup` in a terminal and choose Yes for MCP or No
+- In Skelpr 0.3.8, run `skelpr setup` in a terminal and choose Yes for MCP or No
   for the standalone CLI. Both modes verify embeddings. Standalone setup also
   verifies generation. MCP setup writes `.skelpr.yaml` and skips the Docker
   validation image by default. Direct options are `--embeddings-only` and
   `--configure`. After setup, run `skelpr index`. For MCP, also run
   `skelpr install-mcp`, reconnect the client, and call `skelpr_health`.
+  No separate `init` step is needed after MCP setup.
 - `skelpr setup --no-configure` sets up infrastructure only. `skelpr init`
   writes repository configuration without prompting. MCP and the HTTP API
   watch for changes by default.
@@ -25,6 +26,31 @@
 - Request an activation token by email. The website waitlist is for release updates.
 - Context limits can exclude relevant evidence. Check reported gaps and request
   more context when needed. Empty search results do not prove absence.
+
+## Workspaces and indexing
+
+- Index one checkout or run setup, index and MCP installation once from a non-Git
+  parent containing multiple Git checkouts. One root configuration and combined
+  index cover the workspace; child configs are not merged. Source paths keep
+  checkout prefixes. A Git parent uses normal checkout/submodule indexing.
+- User-wide MCP registrations require `repository` to match the absolute indexed
+  root. For a combined workspace, supply the parent path, not a child checkout.
+- Each checkout supplies tracked files and non-ignored untracked files. Tracked
+  files can remain eligible despite `.gitignore`. Loose parent files outside Git
+  use Skelpr exclusions, not a parent `.gitignore`.
+- Automatic exclusions always add logs, temporary files, backups, bytecode, Python
+  tool caches and spreadsheet formats. Generated defaults also exclude dependency
+  and build folders and recognized credential files. A custom YAML `ignore` list
+  replaces the generated list; automatic exclusions still apply. Explicit `!`
+  overrides can keep text fixtures but cannot restore Git-excluded untracked files.
+- Recursive scanning has no configured depth limit and skips links/junctions.
+  Binary, unreadable and oversized content is skipped; `indexing.max_file_bytes`
+  defaults to 2,000,000 bytes. SQL, HTML, docs and patches can be indexed as text.
+- MCP watching starts after the first licensed tool call. It catches up after
+  restart and detects file changes, branch switches and child checkout membership
+  changes. It embeds changed content only and retires removed or excluded entries.
+  Defaults are 1-second polling plus a 1.5-second quiet period, then indexing time.
+  Required services and the MCP process must stay running; failures retry with backoff.
 
 ## Case studies
 

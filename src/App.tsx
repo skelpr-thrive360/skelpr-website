@@ -47,7 +47,7 @@ function App() {
           <div className="hero-copy">
             <div className="eyebrow"><span className="status-dot" /> Skelpr · repository context over MCP and CLI</div>
             <h1>Repository context.<br />Within your token budget.</h1>
-            <p className="hero-lede">Give your coding agent relevant source excerpts with <code>file:line</code> ranges. Set context limits and reduce repeated searches across your repository.</p>
+            <p className="hero-lede">Give your coding agent relevant source excerpts with <code>file:line</code> ranges. Set context limits and reduce repeated searches across one repository or a multi-repo workspace.</p>
             <div className="hero-actions">
               <a className="button primary" href="/docs">Install and connect <ArrowRight size={16} /></a>
               <a className="button text-button" href="#benchmark">Compare case studies <ArrowRight size={16} /></a>

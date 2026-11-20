@@ -44,7 +44,7 @@ export function InstallSection() {
         <div className="install-copy">
           <div className="section-kicker">Get started</div>
           <h2>Install and connect</h2>
-          <p>Connect Skelpr to your coding agent and verify an embedding model before indexing. To use Skelpr without a coding agent, follow the <a href="/docs#set-up-the-standalone-cli">standalone CLI setup</a>.</p>
+          <p>Run setup from your repository root or a non-Git parent workspace. Choose MCP and verify an embedding model; setup writes the configuration, so no separate <code>init</code> step is needed. For use without a coding agent, follow the <a href="/docs#set-up-the-standalone-cli">standalone CLI setup</a>.</p>
           {/* One link, to the page that owns the exact steps: the channel setup the
               snippet below assumes, the token, and the environment checks are all
               spelled out there, so this section does not restate them. */}
@@ -55,13 +55,14 @@ export function InstallSection() {
         </div>
         <div className="install-code">
           <div className="code-top"><span>MCP SETUP</span><span>bash</span></div>
-          <pre><code><span className="comment"># Install or upgrade Skelpr</span>{'\n'}python -m pip install --upgrade <span className="string">skelpr</span>{'\n'}{'\n'}<span className="comment"># Once per machine, using the token from your access email</span>{'\n'}skelpr activate <span className="string">{'<token>'}</span>{'\n'}{'\n'}{`cd <your-repo>`}{'\n'}skelpr setup --embeddings-only</code></pre>
-          <div className="code-footer">Choose an embedding model and wait for verification</div>
+          <pre><code><span className="comment"># Install or upgrade Skelpr</span>{'\n'}python -m pip install --upgrade <span className="string">skelpr</span>{'\n'}{'\n'}<span className="comment"># Once per machine, using the token from your access email</span>{'\n'}skelpr activate <span className="string">{'<token>'}</span>{'\n'}{'\n'}{`cd <repo-or-workspace>`}{'\n'}skelpr setup</code></pre>
+          <div className="code-footer">Answer Yes for MCP, choose an embedding model and wait for verification</div>
           <pre><code>{'skelpr index\nskelpr install-mcp'}</code></pre>
           <div className="code-footer"><Check size={14} /> Reconnect the client and run skelpr_health</div>
         </div>
         <div className="install-note">
           <p><strong>Requirements:</strong> Python 3.10+, Git, a running Docker daemon and a working embedding endpoint. <code>skelpr install-mcp</code> detects supported clients, including Codex, Claude Code and Cursor. Use the manual MCP configuration in the guide if a client is missed.</p>
+          <p><strong>Indexing scope.</strong> A workspace uses one combined index and each child checkout's Git ignore rules, plus Skelpr exclusions for logs, caches, temporary files and spreadsheets. MCP watches changes by default while running. See <a href="/docs#choose-an-indexing-root">workspace setup</a> and <a href="/docs#what-gets-indexed">file selection</a>.</p>
           <p><strong>Provider and license traffic.</strong> Activation and managed check-ins contact the license service. Hosted providers and optional tracing can receive source context and queries. See <a href="/docs#what-activation-sends">what each connection sends</a>.</p>
         </div>
       </div>

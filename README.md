@@ -5,6 +5,11 @@ Public copy describes repository evidence, context limits and MCP/CLI integratio
 Keep engine internals out of product copy. Source setup claims from the package;
 source performance claims from the saved benchmark evidence.
 
+The setup guide tracks **Skelpr 0.3.8**, including single-checkout and multi-repo
+workspace flows. When package behavior changes, sync `src/docs/install.md`, the
+homepage setup/FAQ copy, both pages' structured data, and `public/llms.txt`.
+Keep historical case-study measurements and answers unchanged.
+
 ## Develop and build
 
 Use Node 24, matching CI.

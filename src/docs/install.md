@@ -4,7 +4,7 @@ Skelpr returns repository evidence with `file:line` citations and a context limi
 Use it through your coding agent's MCP connection or the standalone CLI.
 Installation is public; running requires activation, with one seat per machine.
 
-This guide covers [Skelpr 0.3.7](https://pypi.org/project/skelpr/0.3.7/).
+This guide covers [Skelpr 0.3.8](https://pypi.org/project/skelpr/0.3.8/).
 Check your installation with `skelpr --version`.
 
 ## Prerequisites
@@ -161,9 +161,36 @@ separately configured model, database or telemetry connections.
 - If the service is unreachable during deactivation, ask the issuer to release the seat.
 - Deactivate before retiring a machine or deleting its Skelpr state.
 
+## Choose an indexing root
+
+| Layout | Where to run setup, indexing and MCP installation |
+|---|---|
+| One repository | Its checkout root |
+| Several independent repositories | Their shared **non-Git parent folder** |
+
+For a multi-repo workspace, use this layout:
+
+```text
+workspace/
+  .skelpr.yaml
+  api/          # Git checkout
+  web/          # Git checkout
+  admin/        # Git checkout
+  docs/         # Shared text files can be indexed too
+```
+
+- Run the setup flow **once from `workspace/`**, not once per child repository.
+- One root configuration controls one combined index. Child `.skelpr.yaml`
+  files are not merged. Evidence paths keep prefixes such as `api/src/app.py`.
+- If the parent is itself a Git repository, normal checkout and initialized
+  submodule indexing applies. Use a non-Git parent for independent checkouts.
+- Combined indexing does not create a parent Git history. Git-specific review
+  and patch commands still require a Git checkout. To keep indexes separate
+  instead, run the setup flow in each child.
+
 ## First run
 
-Start Docker and open a terminal in the repository you want to index.
+Start Docker and open a terminal at your chosen repository or workspace root.
 
 ```bash
 skelpr setup
@@ -188,7 +215,9 @@ and falls back to a compatible `/embed` route when the first route is unavailabl
 with HTTP 404 or 405.
 
 Setup verifies embeddings and writes `.skelpr.yaml`, preserving existing
-non-embedding settings. Continue to [Index and connect](#index-and-connect).
+non-embedding settings. **No separate `skelpr init` step is needed.** The MCP flow is
+`skelpr setup` → `skelpr index` → `skelpr install-mcp` from the same root.
+Continue to [Index and connect](#index-and-connect).
 The coding agent supplies generation. To add Docker-backed validation, use
 `skelpr setup --embeddings-only --sandbox` during setup or run
 `skelpr setup --no-configure` later.
@@ -199,7 +228,8 @@ For scripts, `skelpr setup --no-configure --no-sandbox` starts and verifies
 the stores without running a model wizard. Then use `skelpr init` with explicit
 provider options or supply an existing repository config.
 
-`skelpr init` writes `.skelpr.yaml` without prompts or model requests. It uses
+`skelpr init` is the non-interactive alternative for creating configuration,
+not an extra step after MCP setup. It writes `.skelpr.yaml` without model requests and uses
 saved standalone settings when available, or detects your stack and writes
 defaults. For manual setup, verify the configured provider before indexing. For a local OpenAI-compatible server such as LM Studio, start the
 server and load the model ID in your YAML. The defaults are:
@@ -245,6 +275,10 @@ verifies startup and reports index readiness by default. Reconnect the client,
 run `skelpr_health`, and confirm the repository path. Ask for a known symbol and
 check the returned file and line range.
 
+The non-Git-parent warning means the detected checkouts will share an index;
+it is informational. Check `scanned`, `indexed`, and `skipped` in the completion
+summary. A skipped oversized or unreadable file does not mean the whole run failed.
+
 | Client setup | Command |
 |---|---|
 | Choose a detected client | `skelpr install-mcp` |
@@ -256,9 +290,10 @@ check the returned file and line range.
 | Write to a specific MCP JSON file | `skelpr install-mcp --mcp-config <file>` |
 
 Cursor and Claude Code use project settings by default. Codex uses a
-user-wide registration pinned to the checkout where you installed it. Tool
+user-wide registration pinned to the repository or workspace root where you installed it. Tool
 calls to a user-wide registration require the matching absolute repository
-path. Refresh older user-wide entries from the intended checkout with
+path. For a combined workspace, pass the **parent workspace path**, not a child
+checkout path. Refresh older user-wide entries from the intended root with
 `skelpr install-mcp --agent <id> --global --force`, then reconnect.
 If the Codex CLI is unavailable, run `skelpr install-mcp --agent codex` and use
 the TOML entry it prints. The installer also writes project guidance by default.
@@ -292,7 +327,8 @@ Pass the complete question as `{"query": "your question"}` to `skelpr_search`.
 Use `query` for client compatibility. The server accepts `question` when `query`
 is absent.
 For a guarded user-wide registration, include
-`"repository": "/absolute/path/to/your-repo"` in the tool arguments.
+`"repository": "/absolute/path/to/your-indexed-root"` in the tool arguments.
+For a combined index, this is the workspace parent, not an individual child.
 Leave budgets unset for automatic selection, or provide a limit. A context limit
 controls response size; it does not guarantee complete evidence.
 
@@ -309,20 +345,50 @@ Include the current source for the target symbol in `find_context`
 when calling `skelpr_apply_ast_patch`. The tool returns a diff for review and
 leaves the checkout unchanged.
 
-### Keeping the index fresh
+## What gets indexed
+
+Scanning reaches nested directories without a configured depth limit. It
+includes eligible source, documentation and configuration text, not just known
+code extensions. It skips symbolic links and directory junctions.
+
+| Layer | Behavior |
+|---|---|
+| Each Git checkout | Includes tracked files and untracked files Git does not ignore. Already tracked files remain eligible even if a `.gitignore` pattern matches them. |
+| Automatic exclusions | Always adds logs and numbered log rotations, temporary files, editor backups, bytecode, common Python tool caches, and spreadsheet formats such as `.xlsx`. |
+| Generated YAML defaults | Also exclude dependency/build directories, lockfiles, minified outputs, recognized credential files, and Skelpr's generated state. |
+| Root `ignore` settings | Add or adjust exclusions in `.skelpr.yaml`. A custom list replaces the generated list; automatic exclusions still apply. |
+| Text and size checks | Skip binary, unreadable, or oversized content. `indexing.max_file_bytes` defaults to **2,000,000 bytes**; `0` removes the size cap. |
+
+In a parent workspace, each child checkout uses its own Git ignore rules.
+Loose parent files outside Git use Skelpr exclusions; a parent `.gitignore`
+outside a checkout is not applied. Keep sensitive loose files out with the root
+YAML `ignore` list.
+
+Keep the generated exclusions and append project-specific rules as needed.
+A `!fixtures/example.log` entry can retain a useful **text** fixture despite
+Skelpr exclusions. It cannot restore an untracked file excluded by Git or make
+binary spreadsheets readable. SQL, HTML and patch files remain eligible text;
+their names alone do not mark them as generated.
+
+## Keeping the index fresh
 
 Background indexing is on by default in MCP and `skelpr serve`. MCP starts a
 catch-up pass after the first licensed tool call. `skelpr serve` watches its
 allowed startup repository.
-The watcher detects new, edited, and deleted files and branch switches in Git
-checkouts. It needs the configured embedding endpoint, PostgreSQL, and Qdrant.
+The watcher handles checkouts, non-Git parent workspaces and plain folders. It
+detects new, edited and deleted files, branch switches, and child checkouts
+added, removed or renamed. Each pass embeds changed content only and removes
+stale entries for deleted or newly excluded files.
+It needs the configured embedding endpoint, PostgreSQL, and Qdrant.
 Failed updates retry with backoff. An existing PostgreSQL index can still
 serve lexical and symbol evidence while Qdrant is unavailable. Check
 `skelpr_health` for backend degradation or a required vector reindex.
 
-Use `skelpr watch` to watch from a terminal, or `skelpr index` to refresh
-immediately or index a folder outside Git. The default poll interval is one
-second, followed by a 1.5-second quiet period and the time needed to index.
+Keep the MCP server and required services running for automatic updates; no
+separate `skelpr watch` command is needed. Use `skelpr watch` to watch from a
+terminal, or `skelpr index` to refresh immediately. The default poll interval is
+one second, followed by a 1.5-second quiet period **plus actual indexing time**.
+This is not a guaranteed 2.5-second refresh. Hosted re-embedding may incur charges.
 
 An older config with `indexing.watch.enabled: false` keeps watching off. Remove
 that setting or change it to `true`, then restart the client. To opt out,
@@ -392,6 +458,8 @@ one. A lease copied between machines does not authorize the destination.
 | Due check-in fails | Restore access to the license service and retry |
 | No seats left | Release an old machine or contact the issuer |
 | Little or stale evidence | Run `skelpr doctor --verbose`, verify repository identity and index freshness |
+| Non-Git parent warning | Expected for a combined workspace; confirm the listed child repositories |
+| File scanned but skipped | Check the reported file's size and readability, plus `indexing.max_file_bytes` |
 | Memory backend reported | Configure persistent metadata and vector services, then index |
 | Embedding failure | Check endpoint, model and credential references |
 | Verification inconclusive | Inspect reported exclusions, bounds and ripgrep availability |

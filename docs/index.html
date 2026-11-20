@@ -29,7 +29,7 @@
          commands. Keep within the length band `check:seo` enforces. -->
     <meta
       name="description"
-      content="Install and activate Skelpr on Windows, macOS or Linux. Configure providers, index a repository, connect MCP clients and troubleshoot setup."
+      content="Install and activate Skelpr on Windows, macOS or Linux. Configure providers, index a repository or workspace, connect MCP clients and troubleshoot setup."
     />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
     <!-- Canonical host: https://www.skelpr.com — kept in sync with index.html,
@@ -42,7 +42,7 @@
     <meta property="og:title" content="Install &amp; activate Skelpr — setup guide | Skelpr docs" />
     <meta
       property="og:description"
-      content="Install and activate Skelpr on Windows, macOS or Linux. Configure providers, index a repository, connect MCP clients and troubleshoot setup."
+      content="Install and activate Skelpr on Windows, macOS or Linux. Configure providers, index a repository or workspace, connect MCP clients and troubleshoot setup."
     />
     <meta property="og:image" content="https://www.skelpr.com/brand/og-card.png" />
     <meta property="og:image:width" content="1200" />
@@ -52,7 +52,7 @@
     <meta name="twitter:title" content="Install &amp; activate Skelpr — setup guide | Skelpr docs" />
     <meta
       name="twitter:description"
-      content="Install and activate Skelpr on Windows, macOS or Linux. Configure providers, index a repository, connect MCP clients and troubleshoot setup."
+      content="Install and activate Skelpr on Windows, macOS or Linux. Configure providers, index a repository or workspace, connect MCP clients and troubleshoot setup."
     />
     <meta name="twitter:image" content="https://www.skelpr.com/brand/og-card.png" />
     <meta name="twitter:image:alt" content="Skelpr — repository evidence with file:line citations." />
@@ -84,7 +84,7 @@
         {
           "@type": "HowTo",
           "name": "Install and activate Skelpr",
-          "description": "Install, activate and connect Skelpr to an indexed repository.",
+          "description": "Install, activate and connect Skelpr to an indexed repository or multi-repo workspace.",
           "url": "https://www.skelpr.com/docs",
           "step": [
             {
@@ -109,13 +109,13 @@
             },
             {
               "@type": "HowToStep",
-              "name": "Prepare your repository",
-              "text": "Run skelpr setup in a terminal from your repository. Choose Yes for MCP to verify embeddings and write .skelpr.yaml. Choose No for the standalone CLI to verify embeddings and generation. If the standalone repository already has a config, run skelpr init --force to apply the saved settings before indexing."
+              "name": "Prepare your repository or workspace",
+              "text": "Run skelpr setup from a checkout or a non-Git parent containing several repositories. Choose Yes for MCP to verify embeddings and write .skelpr.yaml; no separate init step is needed. Choose No for standalone to verify embeddings and generation. Existing standalone configs may need skelpr init --force to apply saved settings."
             },
             {
               "@type": "HowToStep",
               "name": "Index and connect",
-              "text": "Run skelpr index. For MCP, run skelpr install-mcp, reconnect the client, and verify that a known symbol returns the correct file and lines. For the standalone CLI, try skelpr ask."
+              "text": "Run skelpr index from the same root. For MCP, run skelpr install-mcp, reconnect the client, and call skelpr_health with the absolute indexed root. Verify that a known symbol returns the correct file and lines. For the standalone CLI, try skelpr ask."
             }
           ]
         },
